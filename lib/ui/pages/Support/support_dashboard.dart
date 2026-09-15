@@ -1,7 +1,6 @@
 import 'package:primhub/ui/Shared_Custom/admin_mode_views.dart';
 import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 
 import 'package:go_router/go_router.dart';
@@ -37,6 +36,7 @@ import 'package:primhub/api/api_http.dart' as http;
 import 'package:primhub/ui/pages/Projects/Projects_Widgets/file_preview_manager.dart';
 import 'package:primhub/ui/pages/Support/Requests/export_functions.dart';
 import 'package:primhub/ui/Shared_Custom/animated_copy_widget.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class SupportDashboardPage extends StatefulWidget {
   const SupportDashboardPage({super.key});
@@ -1233,7 +1233,7 @@ class _DesktopRecordTable extends StatelessWidget {
                 children: [
                   AnimatedCopyWidget(
                     textToCopy: record['id']?.toString() ?? '',
-                    snackBarMessage: 'Código copiado al portapapeles',
+                    snackBarMessage: AppLocale.codeCopied.getString(context),
                     leadingText: Text(record['id']?.toString() ?? ''),
                     iconSize: 16,
                   ),

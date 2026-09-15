@@ -2,8 +2,8 @@ import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:primhub/ui/Shared_Custom/custom_button.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});

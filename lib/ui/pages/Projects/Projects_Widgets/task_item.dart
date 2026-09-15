@@ -1,5 +1,6 @@
 import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/api/access_control.dart';
 import 'package:primhub/ui/pages/Projects/Documents/documents_logic.dart';
 import 'package:primhub/ui/pages/Projects/Projects_Widgets/uu_requests_data_table.dart';
@@ -8,6 +9,7 @@ import 'package:primhub/ui/pages/Support/Requests/edit_request_dialog.dart';
 import 'package:primhub/ui/pages/Support/Requests/request_functions.dart';
 import 'package:primhub/ui/pages/Support/Requests/create_request_dialog.dart';
 import 'package:primhub/api/global_cache.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class TaskItem extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -166,7 +168,7 @@ class _TaskItemState extends State<TaskItem> {
                       if (AccessControl.canCreateRequests)
                         IconButton(
                           icon: const Icon(Icons.add_comment_outlined, size: 18, color: Colors.blue),
-                          tooltip: 'Crear Solicitud',
+                          tooltip: AppLocale.createRequest.getString(context),
                           constraints: const BoxConstraints(),
                           padding: const EdgeInsets.all(4),
                           onPressed: () async {
@@ -289,11 +291,11 @@ class _TaskItemState extends State<TaskItem> {
                   ),
                 )
               else
-                const Padding(
-                  padding: EdgeInsets.all(12.0),
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
                   child: Text(
-                    'No hay solicitudes relacionadas.',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    AppLocale.noRelatedRequests.getString(context),
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ),
             ],

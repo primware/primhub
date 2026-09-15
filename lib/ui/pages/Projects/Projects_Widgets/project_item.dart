@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:primhub/api/access_control.dart';
@@ -10,6 +9,7 @@ import 'package:primhub/ui/pages/Projects/dialogs/project_info_dialog.dart';
 import 'package:primhub/ui/pages/Projects/Projects_Widgets/phase_item.dart';
 import 'package:primhub/ui/pages/Projects/Projects_Widgets/task_item.dart';
 import 'package:primhub/api/global_cache.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class ProjectItem extends StatelessWidget {
   final Map<String, dynamic> project;
@@ -140,7 +140,7 @@ class ProjectItem extends StatelessWidget {
                   if (AccessControl.canEditProject)
                     IconButton(
                       icon: const Icon(Icons.edit, size: 20, color: Colors.blueGrey),
-                      tooltip: isArchived ? 'Reactivar Proyecto' : 'Editar Proyecto',
+                      tooltip: isArchived ? AppLocale.reactivateProject.getString(context) : AppLocale.editProject.getString(context),
                       onPressed: () {
                         onEdit('project', projId, {
                           'Name': project['Name'] ?? '',
@@ -260,9 +260,9 @@ class ProjectItem extends StatelessWidget {
                         spacing: 8,
                         runSpacing: 4,
                         children: [
-                          const Text(
-                            'Estructura del Proyecto',
-                            style: TextStyle(
+                          Text(
+                            AppLocale.projectStructure.getString(context),
+                            style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                               color: Colors.grey,
@@ -271,7 +271,7 @@ class ProjectItem extends StatelessWidget {
                           if (AccessControl.canCreateProjectItems && !isArchived)
                             TextButton.icon(
                               icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Nueva Fase', style: TextStyle(fontSize: 13)),
+                              label: Text(AppLocale.newPhase.getString(context), style: const TextStyle(fontSize: 13)),
                               style: TextButton.styleFrom(
                                 backgroundColor: uniformColor.withOpacity(0.08),
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

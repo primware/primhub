@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/api/api_http.dart' as http;
 import 'package:go_router/go_router.dart';
@@ -11,6 +10,7 @@ import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
 import 'package:primhub/ui/pages/Support/Requests/request_functions.dart';
 import 'package:flutter/services.dart';
 import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class ProjectCalendarDialog extends StatefulWidget {
   final Map<String, dynamic> project;
@@ -1060,7 +1060,7 @@ class _ProjectCalendarDialogState extends State<ProjectCalendarDialog> {
             children: [
               OutlinedButton.icon(
                 icon: const Icon(Icons.today, size: 16),
-                label: const Text('Ir a Hoy'),
+                label: Text(AppLocale.goToToday.getString(context)),
                 style: OutlinedButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1079,8 +1079,8 @@ class _ProjectCalendarDialogState extends State<ProjectCalendarDialog> {
                     });
                   }
                 },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'all', child: Text('Todo')),
+                itemBuilder: (context) => [
+                  PopupMenuItem(value: 'all', child: Text(AppLocale.allFilter.getString(context))),
                   PopupMenuItem(value: 'this_week', child: Text('Semanal')),
                   PopupMenuItem(
                     value: 'next_15_days',
@@ -1104,7 +1104,7 @@ class _ProjectCalendarDialogState extends State<ProjectCalendarDialog> {
                       const SizedBox(width: 6),
                       Text(
                         _timeFilter == 'all'
-                            ? 'Todo'
+                            ? AppLocale.allFilter.getString(context)
                             : _timeFilter == 'this_week'
                             ? 'Semanal'
                             : _timeFilter == 'next_15_days'
@@ -1154,8 +1154,8 @@ class _ProjectCalendarDialogState extends State<ProjectCalendarDialog> {
                           bottom: BorderSide(color: colorScheme.outlineVariant),
                         ),
                       ),
-                      child: const Text(
-                        'Actividad / Tarea',
+                      child: Text(
+                        AppLocale.activityTask.getString(context),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
@@ -1230,7 +1230,7 @@ class _ProjectCalendarDialogState extends State<ProjectCalendarDialog> {
                                               );
                                               ToastMessage.show(
                                                 context: context,
-                                                message: 'Ticket copiado',
+                                                message: AppLocale.ticketCopiedShort.getString(context),
                                                 type: ToastType.help,
                                               );
                                             },

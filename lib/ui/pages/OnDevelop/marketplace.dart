@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/Shared_Custom/custom_container.dart';
 import 'package:primhub/ui/Shared_Custom/custom_inputs.dart';
 import '../../Shared_Custom/custom_button.dart';
 import '../../widgets/custom_drawer.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class MarketplacePage extends StatelessWidget {
   const MarketplacePage({super.key});

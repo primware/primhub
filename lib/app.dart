@@ -13,8 +13,8 @@ import 'package:primhub/ui/pages/Metrics/client_workload_page.dart';
 import 'package:primhub/ui/pages/Login/login.dart';
 import 'package:primhub/ui/pages/Login/login_selection_page.dart';
 import 'package:primhub/ui/pages/Login/login_selection_args.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 final ValueNotifier<bool> sessionHydrated = ValueNotifier(false);
 

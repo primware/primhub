@@ -1,6 +1,5 @@
 import 'package:primhub/ui/Shared_Custom/admin_mode_views.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:primhub/api/access_control.dart';
@@ -30,6 +29,7 @@ import 'package:primhub/ui/pages/Projects/dialogs/project_calendar_dialog.dart';
 import 'package:primhub/ui/pages/Projects/Documents/project_form_page.dart';
 import 'package:primhub/ui/Shared_Custom/animated_copy_widget.dart';
 import 'package:primhub/ui/pages/Support/Requests/product_chip_form_dialog.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -1227,7 +1227,7 @@ class _SupportBpSelector extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
             ),
             CustomButton(
-              text: 'Filtrar',
+              text: AppLocale.filter.getString(context),
               onPressed: () {
                 onSelectionChanged(tempSelectedBpIds);
                 Navigator.of(context).pop();

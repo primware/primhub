@@ -1,7 +1,6 @@
 import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
@@ -25,6 +24,7 @@ import 'package:primhub/ui/pages/Support/Requests/bulk_edit_request_dialog.dart'
 import 'dart:math';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:primhub/ui/Shared_Custom/animated_copy_widget.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class RequestsDataTable extends StatefulWidget {
   final List<Map<String, dynamic>> requests;
@@ -176,7 +176,7 @@ class _RequestsDataTableState extends State<RequestsDataTable> {
                         children: [
                           AnimatedCopyWidget(
                             textToCopy: req['id'].toString(),
-                            snackBarMessage: 'Código copiado al portapapeles',
+                            snackBarMessage: AppLocale.codeCopied.getString(context),
                             leadingText: Text(req['id'].toString()),
                             iconSize: 16,
                           ),

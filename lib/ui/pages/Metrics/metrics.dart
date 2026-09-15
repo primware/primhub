@@ -1,6 +1,5 @@
 import 'package:primhub/ui/Shared_Custom/custom_toast.dart' hide ColorTheme;
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/pages/Metrics/custom_chart.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +25,7 @@ import 'package:primhub/ui/Shared_Custom/help_icon.dart';
 
 // Importante: Asegúrate de que esta ruta sea la correcta para tu clase GraphicsFunctions
 import 'graphic_functions.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class MetricsPage extends StatefulWidget {
   const MetricsPage({super.key});
@@ -1413,7 +1413,7 @@ class _MetricsPageState extends State<MetricsPage> {
               icon: Icons.confirmation_number_rounded,
               color: Colors.indigo,
               width: cardWidth,
-              tooltip: 'Muestra el total histórico de tus solicitudes activas vinculadas a fichas de horas.',
+              tooltip: AppLocale.totalRequestsTooltip.getString(context),
               onTap: () {
                 context.push(
                   '/metric-requests',
@@ -1429,7 +1429,7 @@ class _MetricsPageState extends State<MetricsPage> {
               icon: Icons.warning_amber_rounded,
               color: Colors.red,
               width: cardWidth,
-              tooltip: 'Muestra el total de solicitudes activas de prioridad Urgente o Alta vinculadas a fichas de horas.',
+              tooltip: AppLocale.criticalRequestsTooltip.getString(context),
               onTap: () {
                 context.push(
                   '/metric-requests',
@@ -1802,8 +1802,8 @@ class _MetricsPageState extends State<MetricsPage> {
                 );
               },
             ),
-      action: const Tooltip(
-        message: 'Muestra el estado histórico de tus solicitudes activas vinculadas a fichas de horas. Puedes hacer clic en los estados de la leyenda para ocultarlos o mostrarlos.',
+      action: Tooltip(
+        message: AppLocale.requestStatusInfo.getString(context),
         child: Icon(Icons.info_outline, color: Colors.grey, size: 20),
       ),
     );

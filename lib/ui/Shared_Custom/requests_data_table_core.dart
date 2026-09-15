@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +19,7 @@ import 'package:primhub/ui/Shared_Custom/responsive_data_table.dart';
 import 'package:primhub/ui/pages/Support/Requests/request_functions.dart';
 import 'package:primhub/ui/Shared_Custom/animated_copy_widget.dart';
 import 'package:primhub/ui/Shared_Custom/request_mobile_card.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class RequestsDataTableCore extends StatefulWidget {
   final List<Map<String, dynamic>>
@@ -258,8 +258,8 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
             children: [
               IconButton(
                 tooltip: AccessControl.canAddUpdates
-                    ? 'Responder'
-                    : 'Ver Actualizaciones',
+                    ? AppLocale.reply.getString(context)
+                    : AppLocale.viewUpdates.getString(context),
                 icon: Icon(
                   AccessControl.canAddUpdates ? Icons.reply : Icons.forum,
                 ),
@@ -269,7 +269,7 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
                 ),
               ),
               IconButton(
-                tooltip: 'Ver Adjuntos',
+                tooltip: AppLocale.viewAttachments.getString(context),
                 icon: const Icon(Icons.attach_file),
                 onPressed: () => showDialog(
                   context: context,
@@ -281,7 +281,7 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
               ),
               IconButton(
                 tooltip: AccessControl.canManageRequests
-                    ? 'Editar'
+                    ? AppLocale.edit.getString(context)
                     : AppLocale.viewDetails.getString(context),
                 icon: Icon(
                   AccessControl.canManageRequests
@@ -296,7 +296,7 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
         DataCell(
           AnimatedCopyWidget(
             textToCopy: alert['id']?.toString() ?? '',
-            snackBarMessage: 'Ticket copiado',
+            snackBarMessage: AppLocale.ticketCopiedShort.getString(context),
             leadingText: Text(alert['id']?.toString() ?? ''),
           ),
         ),

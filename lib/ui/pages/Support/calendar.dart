@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:primhub/ui/pages/Support/Requests/request_functions.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class CalendarContent extends StatefulWidget {
   final List<dynamic> requests;
@@ -361,11 +361,11 @@ class _CalendarContentState extends State<CalendarContent> {
             runSpacing: 8,
             alignment: WrapAlignment.center,
             children: [
-              _buildLegendItem(Colors.deepPurple, 'Urgente'),
-              _buildLegendItem(Colors.red.shade700, 'Alta'),
-              _buildLegendItem(Colors.orange.shade800, 'Media'),
-              _buildLegendItem(Colors.blue.shade700, 'Baja'),
-              _buildLegendItem(Colors.teal.shade600, 'Muy baja'),
+              _buildLegendItem(Colors.deepPurple, AppLocale.urgent.getString(context)),
+              _buildLegendItem(Colors.red.shade700, AppLocale.high.getString(context)),
+              _buildLegendItem(Colors.orange.shade800, AppLocale.medium.getString(context)),
+              _buildLegendItem(Colors.blue.shade700, AppLocale.low.getString(context)),
+              _buildLegendItem(Colors.teal.shade600, AppLocale.veryLow.getString(context)),
             ],
           ),
         ),

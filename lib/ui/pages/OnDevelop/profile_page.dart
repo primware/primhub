@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/api/api_http.dart' as http;
 
@@ -18,6 +17,7 @@ import 'package:primhub/api/global_cache.dart';
 import '../../Shared_Custom/custom_button.dart';
 import '../../Shared_Custom/custom_inputs.dart';
 import '../../Shared_Custom/custom_toast.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 
 class ProfilePage extends StatefulWidget {

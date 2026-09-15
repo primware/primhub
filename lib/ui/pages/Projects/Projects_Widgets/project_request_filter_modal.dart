@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:primhub/localization/app_locale.dart';
 
 import 'package:primhub/ui/Shared_Custom/custom_button.dart';
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
 import 'package:primhub/api/global_cache.dart';
 import 'package:primhub/ui/pages/Support/Requests/request_functions.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class ProjectRequestFilterModel {
   final List<String> phases;
@@ -314,7 +316,7 @@ class _ProjectRequestFilterModalState extends State<ProjectRequestFilterModal> {
       actions: [
         TextButton(onPressed: () => Navigator.pop(context, null), child: const Text('Cancelar')),
         CustomButton(
-          text: 'Aplicar Filtros',
+          text: AppLocale.applyFilters.getString(context),
           onPressed: () => Navigator.pop(context, _tempFilter),
         ),
       ],

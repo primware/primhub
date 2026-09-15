@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:primhub/api/access_control.dart';
+import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/pages/Projects/Projects_Widgets/task_item.dart';
 
 import 'package:primhub/ui/pages/Projects/dialogs/item_edit_dialog.dart';
 import 'package:primhub/ui/pages/Projects/dialogs/task_create_dialog.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class PhaseItem extends StatelessWidget {
   final Map<String, dynamic> phase;
@@ -78,7 +80,7 @@ class PhaseItem extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.add_task, size: 18, color: Colors.green),
-                    tooltip: 'Nueva Tarea',
+                    tooltip: AppLocale.newTask.getString(context),
                     constraints: const BoxConstraints(),
                     padding: const EdgeInsets.all(4),
                     onPressed: () {

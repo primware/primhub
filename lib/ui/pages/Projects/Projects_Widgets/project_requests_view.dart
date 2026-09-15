@@ -1,5 +1,6 @@
 import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/Shared_Custom/custom_skeleton.dart';
 import 'package:primhub/ui/pages/Support/Requests/request_functions.dart';
 import 'package:primhub/api/access_control.dart';
@@ -11,6 +12,7 @@ import 'package:primhub/ui/Shared_Custom/custom_inputs.dart';
 import 'package:primhub/ui/Shared_Custom/requests_data_table_core.dart'; // Usar el componente core
 
 import 'package:primhub/ui/pages/Projects/Projects_Widgets/project_request_filter_modal.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class ProjectRequestsView extends StatefulWidget {
   final String? filterType;
@@ -415,7 +417,7 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
       appBar: AppBar(
         title: Text(
           _projectName.isNotEmpty
-              ? 'Solicitudes del Proyecto $_projectName'
+              ? '${AppLocale.projectRequestsLabel.getString(context)}$_projectName'
               : 'Solicitudes de Proyecto',
         ),
         actions: [
@@ -435,8 +437,8 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
                 child: _isLoading
                     ? const SkeletonTable()
                     : _requests.isEmpty
-                        ? const Center(
-                            child: Text('No se encontraron solicitudes vinculadas.'),
+                        ? Center(
+                            child: Text(AppLocale.noLinkedRequestsFound.getString(context)),
                           )
                         : Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -524,7 +526,7 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
               width: double.infinity,
               child: CustomTextField(
                 controller: _searchController,
-                hintText: 'Buscar por ID o resumen...',
+                hintText: AppLocale.searchByIdOrSummary.getString(context),
                 prefixIcon: const Icon(Icons.search),
               ),
             ),
@@ -535,7 +537,7 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               CustomButton(
-                text: 'Filtros',
+                text: AppLocale.filters.getString(context),
                 onPressed: _showFilterModal,
                 icon: Icons.filter_list,
                 backgroundColor: _activeFilterCount > 0
@@ -558,7 +560,7 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
                 ),
               IconButton(
                 icon: const Icon(Icons.filter_alt_off),
-                tooltip: 'Limpiar filtros',
+                tooltip: AppLocale.clearFilters.getString(context),
                 onPressed: () {
                   setState(() {
                     _filters = const ProjectRequestFilterModel();
@@ -578,7 +580,7 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
     if (!AccessControl.canManageRequests) {
       ToastMessage.show(
         context: context,
-        message: 'No tienes permisos para eliminar solicitudes.',
+        message: AppLocale.noPermissionsToDelete.getString(context),
         type: ToastType.failure,
       );
       return;
@@ -587,17 +589,17 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => CustomModal(
-        title: 'Confirmar Eliminación',
-        content: const Text(
-          '¿Está seguro de que desea eliminar esta solicitud?',
+        title: AppLocale.confirmDeletion.getString(context),
+        content: Text(
+          AppLocale.confirmDeleteRequest.getString(context),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(AppLocale.cancel.getString(context)),
           ),
           CustomButton(
-            text: 'Eliminar',
+            text: AppLocale.delete.getString(context),
             backgroundColor: Colors.red,
             onPressed: () => Navigator.pop(context, true),
           ),
@@ -609,10 +611,10 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
       final success = await deleteRequestApi(id);
       if (mounted) {
         if (success) {
-          ToastMessage.show(context: context, message: 'Solicitud eliminada correctamente', type: ToastType.help);
+          ToastMessage.show(context: context, message: AppLocale.requestDeletedSuccessfully.getString(context), type: ToastType.help);
           _initData(showLoading: false);
         } else {
-          ToastMessage.show(context: context, message: 'Error al eliminar', type: ToastType.failure);
+          ToastMessage.show(context: context, message: AppLocale.errorDeletingRequest.getString(context), type: ToastType.failure);
         }
       }
     }

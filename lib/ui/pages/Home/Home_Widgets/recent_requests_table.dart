@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:primhub/ui/Shared_Custom/custom_button.dart';
@@ -12,6 +11,7 @@ import 'package:primhub/ui/widgets/duration_formatter.dart';
 import 'package:primhub/ui/pages/Support/Requests/request_functions.dart' as documents_logic;
 import 'package:flutter_html/flutter_html.dart';
 import 'package:primhub/ui/Shared_Custom/animated_copy_widget.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class RecentRequestsTable extends StatelessWidget {
   final List<Map<String, dynamic>> requests;
@@ -106,7 +106,7 @@ class _DesktopRequestTable extends StatelessWidget {
                 onPressed: () => GoRouter.of(context).push('/request-updates/${Uri.encodeComponent((alert['realId'] ?? alert['original']['id']).toString())}', extra: {'docNo': alert['code']}),
               ),
               IconButton(
-                tooltip: 'Ver Adjuntos',
+                tooltip: AppLocale.viewAttachments.getString(context),
                 icon: const Icon(Icons.attach_file),
                 onPressed: () => showDialog(
                   context: context,
@@ -119,7 +119,7 @@ class _DesktopRequestTable extends StatelessWidget {
         DataCell(
           AnimatedCopyWidget(
             textToCopy: alert['code']?.toString() ?? '',
-            snackBarMessage: 'Ticket copiado',
+            snackBarMessage: AppLocale.ticketCopiedShort.getString(context),
             leadingText: Text(alert['code']?.toString() ?? ''),
           ),
         ),
@@ -297,7 +297,7 @@ class _RecentRequestCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             AnimatedCopyWidget(
                               textToCopy: request['code'].toString(),
-                              snackBarMessage: 'Ticket copiado al portapapeles',
+                              snackBarMessage: AppLocale.ticketCopiedToClipboard.getString(context),
                               iconSize: 16,
                             ),
                           ],

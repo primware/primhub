@@ -2,7 +2,6 @@ import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:flutter_quill/flutter_quill.dart' hide Style;
 import 'package:primhub/ui/pages/Support/Requests/html_editor_utils.dart';
@@ -20,6 +19,7 @@ import 'package:primhub/api/global_cache.dart';
 import 'package:primhub/ImagesManagment/fetch_attachments.dart';
 import 'package:primhub/ui/pages/Projects/Documents/documents_logic.dart';
 import 'package:primhub/ui/Shared_Custom/help_icon.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class RequestUpdatesPage extends StatefulWidget {
   final int requestId;
@@ -258,8 +258,8 @@ class _UpdateCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     final created = DateTime.tryParse(update['Created'] ?? '');
-    final formattedDate = created != null ? '${created.day}/${created.month}/${created.year} a las ${created.hour.toString().padLeft(2, '0')}:${created.minute.toString().padLeft(2, '0')}' : 'Fecha desconocida';
-    final result = update['Result'] ?? 'Sin resultado.';
+    final formattedDate = created != null ? '${created.day}/${created.month}/${created.year} ${AppLocale.atTime.getString(context)} ${created.hour.toString().padLeft(2, '0')}:${created.minute.toString().padLeft(2, '0')}' : AppLocale.unknownDate.getString(context);
+    final result = update['Result'] ?? AppLocale.noResult.getString(context);
     final confidential = update['ConfidentialTypeEntry']?['identifier'] ?? 'N/A';
     final confId = update['ConfidentialTypeEntry']?['id']?.toString() ?? update['ConfidentialTypeEntry']?.toString() ?? '';
 
@@ -268,7 +268,7 @@ class _UpdateCard extends StatelessWidget {
     if (createdBy is Map) {
       createdByName = (createdBy['identifier'] ?? createdBy['Name'] ?? '').toString();
     } else {
-      createdByName = createdBy?.toString() ?? 'Desconocido';
+      createdByName = createdBy?.toString() ?? AppLocale.unknown.getString(context);
     }
 
     final List<int> imageIds = [];
@@ -504,7 +504,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
 
         Navigator.of(context).pop(true);
       } else {
-        ToastMessage.show(context: context, message: result['message'] ?? 'Error desconocido', type: ToastType.failure);
+        ToastMessage.show(context: context, message: result['message'] ?? AppLocale.unknownError.getString(context), type: ToastType.failure);
       }
     }
   }
@@ -608,7 +608,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
       if (mounted) {
         if (success1 && success2) {
           bool isInternal = AccessControl.isAdmin;
-          String msg = isInternal ? 'Correo enviado al cliente' : 'Correo enviado al equipo';
+          String msg = isInternal ? AppLocale.emailSentToClient.getString(context) : AppLocale.emailSentToTeam.getString(context);
           ToastMessage.show(context: context, message: msg, type: ToastType.success);
         } else {
           ToastMessage.show(context: context, message: AppLocale.notificationEmailFailed.getString(context), type: ToastType.failure);
@@ -729,8 +729,8 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: _isSaving ? null : () => Navigator.pop(context, false), child: const Text('Cancelar')),
-        CustomButton(text: 'Guardar', onPressed: _handleSave, isLoading: _isSaving),
+        TextButton(onPressed: _isSaving ? null : () => Navigator.pop(context, false), child: Text(AppLocale.cancel.getString(context))),
+        CustomButton(text: AppLocale.save.getString(context), onPressed: _handleSave, isLoading: _isSaving),
       ],
     );
   }
@@ -984,7 +984,7 @@ class _RequestSummaryHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                 Text(
-                  'RESUMEN DE LA SOLICITUD',
+                  AppLocale.requestSummary.getString(context),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
@@ -1080,7 +1080,7 @@ class _RequestSummaryHeader extends StatelessWidget {
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(dialogContext).pop(),
-                        child: const Text('Cerrar'),
+                        child: Text(AppLocale.close.getString(context)),
                       ),
                     ],
                   ),

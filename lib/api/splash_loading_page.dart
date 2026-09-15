@@ -6,8 +6,8 @@ import 'package:primhub/api/global_cache.dart';
 import 'package:primhub/api/token.dart';
 import 'package:primhub/api/api_utils.dart';
 import 'package:primhub/api/session_manager.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class SplashLoadingPage extends StatefulWidget {
   const SplashLoadingPage({super.key});

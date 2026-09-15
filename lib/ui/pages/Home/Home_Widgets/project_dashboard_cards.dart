@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:primhub/ui/Shared_Custom/custom_button.dart';
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class ProjectSelector extends StatelessWidget {
   final List<int> selectedProjectIds;
@@ -26,7 +26,7 @@ class ProjectSelector extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return CustomModal(
-          title: 'Proyectos',
+          title: AppLocale.projects.getString(context),
           width: 500,
           content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
@@ -47,9 +47,9 @@ class ProjectSelector extends StatelessWidget {
                         }
 
                         return CheckboxListTile(
-                          title: const Text(
-                            'Todos los proyectos',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          title: Text(
+                            AppLocale.allProjects.getString(context),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           tristate: true,
                           value: isAllSelected,
@@ -105,11 +105,11 @@ class ProjectSelector extends StatelessWidget {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancelar'),
+              child: Text(AppLocale.cancel.getString(context)),
               onPressed: () => Navigator.of(context).pop(),
             ),
             CustomButton(
-              text: 'Filtrar',
+              text: AppLocale.filter.getString(context),
               onPressed: () {
                 onSelectionChanged(tempSelectedProjectIds);
                 Navigator.of(context).pop();
@@ -131,13 +131,13 @@ class ProjectSelector extends StatelessWidget {
     } else if (selectedProjectIds.length == 1) {
       final project = projects.firstWhere(
         (p) => p['id'] == selectedProjectIds.first,
-        orElse: () => {'Name': 'Proyecto no encontrado'},
+        orElse: () => {'Name': AppLocale.projectNotFound.getString(context)},
       );
-      displayText = project['Name'] ?? 'Proyecto sin nombre';
+      displayText = project['Name'] ?? AppLocale.unnamedProject.getString(context);
     } else if (selectedProjectIds.length == projects.length) {
-      displayText = 'Todos los proyectos seleccionados';
+      displayText = AppLocale.allProjectsSelected.getString(context);
     } else {
-      displayText = '${selectedProjectIds.length} proyectos seleccionados';
+      displayText = AppLocale.projectsSelectedCount.getString(context).replaceAll('{count}', selectedProjectIds.length.toString());
     }
 
     final color = Theme.of(context).colorScheme.primary;
@@ -192,11 +192,11 @@ class ProjectFullCard extends StatelessWidget {
     final String projectName = project['Name'] ?? 'Sin Nombre';
     final bool isComplete =
         project['IsComplete'] == true || project['IsComplete'] == 'Y';
-    final String status = isComplete ? 'Cerrado' : 'En Curso';
+    final String status = isComplete ? 'Cerrado' : AppLocale.current.getString(context);
 
-    String dateRange = 'Fechas no definidas';
+    String dateRange = AppLocale.noDatesAvailable.getString(context);
     String durationText = '0 días';
-    String durationSubtitle = 'Sin definir';
+    String durationSubtitle = AppLocale.toBeDefined.getString(context);
 
     if (project['DateContract'] != null) {
       final start = DateTime.tryParse(project['DateContract'])?.toLocal();
@@ -403,16 +403,16 @@ class ProjectFullCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  children: const [
-                    Icon(
+                  children: [
+                    const Icon(
                       Icons.description_outlined,
                       color: docIconColor,
                       size: 18,
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
-                      'Documentos del Proyecto',
-                      style: TextStyle(
+                      AppLocale.projectFiles.getString(context),
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF92400E),
                         fontSize: 13,
@@ -426,7 +426,7 @@ class ProjectFullCard extends StatelessWidget {
                     _buildStat(
                       context,
                       stats['et']?.toString() ?? '0',
-                      'Entregables',
+                      AppLocale.deliverables.getString(context),
                       () => context.push(
                         '/deliverables',
                         extra: {'projectId': projId, 'view': 'Entregables'},
@@ -435,7 +435,7 @@ class ProjectFullCard extends StatelessWidget {
                     _buildStat(
                       context,
                       stats['sg']?.toString() ?? '0',
-                      'Seguimiento',
+                      AppLocale.tracking.getString(context),
                       () => context.push(
                         '/deliverables',
                         extra: {'projectId': projId, 'view': 'Seguimiento'},
@@ -444,7 +444,7 @@ class ProjectFullCard extends StatelessWidget {
                     _buildStat(
                       context,
                       stats['gn']?.toString() ?? '0',
-                      'General',
+                      AppLocale.general.getString(context),
                       () => context.push(
                         '/deliverables',
                         extra: {'projectId': projId, 'view': 'General'},
@@ -468,11 +468,11 @@ class ProjectFullCard extends StatelessWidget {
                       size: 16,
                       color: Colors.white,
                     ),
-                    label: const FittedBox(
+                    label: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        'Calendario/Gantt',
-                        style: TextStyle(color: Colors.white, fontSize: 11),
+                        AppLocale.calendarGantt.getString(context),
+                        style: const TextStyle(color: Colors.white, fontSize: 11),
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -494,11 +494,11 @@ class ProjectFullCard extends StatelessWidget {
                       size: 16,
                       color: Colors.white,
                     ),
-                    label: const FittedBox(
+                    label: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        'Gráficos',
-                        style: TextStyle(color: Colors.white, fontSize: 11),
+                        AppLocale.charts.getString(context),
+                        style: const TextStyle(color: Colors.white, fontSize: 11),
                       ),
                     ),
                     style: ElevatedButton.styleFrom(

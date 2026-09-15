@@ -1,7 +1,6 @@
 import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
@@ -25,6 +24,7 @@ import 'package:primhub/ui/pages/Support/Requests/bulk_edit_request_dialog.dart'
 import 'dart:math';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:primhub/ui/Shared_Custom/animated_copy_widget.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class RequestsDataTable extends StatefulWidget {
   final List<Map<String, dynamic>> requests;
@@ -118,21 +118,21 @@ class _RequestsDataTableState extends State<RequestsDataTable> {
                     label: Checkbox(value: (widget.requests.isNotEmpty && _selectedIds.length == widget.requests.length) ? true : (_selectedIds.isNotEmpty ? null : false), tristate: true, onChanged: (val) => _handleSelectAll(val == true)),
                   ),
                 const DataColumn(label: Text('#')),
-                const DataColumn(label: Text('Acciones')),
-                const DataColumn(label: Text('Solicitud')),
-                const DataColumn(label: Text('Resumen')),
-                if (widget.showProjectContext) const DataColumn(label: Text('Fase')),
-                if (widget.showProjectContext) const DataColumn(label: Text('Tarea')),
-                const DataColumn(label: Text('Tipo')),
-                const DataColumn(label: Text('Asunto')),
+                DataColumn(label: Text(AppLocale.actions.getString(context))),
+                DataColumn(label: Text(AppLocale.request.getString(context))),
+                DataColumn(label: Text(AppLocale.summary.getString(context))),
+                if (widget.showProjectContext) DataColumn(label: Text(AppLocale.phase.getString(context))),
+                if (widget.showProjectContext) DataColumn(label: Text(AppLocale.task.getString(context))),
+                DataColumn(label: Text(AppLocale.requestType.getString(context))),
+                DataColumn(label: Text(AppLocale.subject.getString(context))),
                 DataColumn(label: Text(AppLocale.category.getString(context))),
-                if (AccessControl.isAdmin) const DataColumn(label: Text('Tercero')),
-                if (AccessControl.isAdmin) const DataColumn(label: Text('Usuario')),
-                if (AccessControl.isAdmin) const DataColumn(label: Text('Representante Comercial')),
-                const DataColumn(label: Text('Grupo')),
-                const DataColumn(label: Text('Estado')),
-                const DataColumn(label: Text('Prioridad')),
-                const DataColumn(label: Text('Fecha Fin Plan')),
+                if (AccessControl.isAdmin) DataColumn(label: Text(AppLocale.clientPartner.getString(context).replaceAll(' *', ''))),
+                if (AccessControl.isAdmin) DataColumn(label: Text(AppLocale.user.getString(context))),
+                if (AccessControl.isAdmin) DataColumn(label: Text(AppLocale.salesRepresentative.getString(context))),
+                DataColumn(label: Text(AppLocale.group.getString(context))),
+                DataColumn(label: Text(AppLocale.status.getString(context))),
+                DataColumn(label: Text(AppLocale.priority.getString(context))),
+                DataColumn(label: Text(AppLocale.plannedEndDate.getString(context))),
               ],
               rows: widget.requests.asMap().entries.map((entry) {
                 final int index = entry.key;
@@ -187,7 +187,7 @@ class _RequestsDataTableState extends State<RequestsDataTable> {
                         children: [
                           AnimatedCopyWidget(
                             textToCopy: req['id'].toString(),
-                            snackBarMessage: 'Código copiado al portapapeles',
+                            snackBarMessage: AppLocale.codeCopied.getString(context),
                             leadingText: Text(req['id'].toString()),
                             iconSize: 16,
                           ),

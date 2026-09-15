@@ -397,7 +397,6 @@ class AppLocale {
   static const String marketplace = 'marketplace';
   static const String marketplacePitch = 'marketplacePitch';
   static const String knowledgeBase = 'knowledgeBase';
-
   static const String committedQty = 'committedQty';
   static const String projectLineLevel = 'projectLineLevel';
   static const String projectLog = 'projectLog';
@@ -414,6 +413,81 @@ class AppLocale {
   static const String plannedStartDate = 'plannedStartDate';
   static const String investedHours = 'investedHours';
   static const String descriptionSummary = 'descriptionSummary';
+  static const String current = 'current';
+  static const String toBeDefined = 'toBeDefined';
+  static const String noDatesAvailable = 'noDatesAvailable';
+  static const String projectFiles = 'projectFiles';
+  static const String charts = 'charts';
+  static const String disp = 'disp';
+  static const String cons = 'cons';
+  static const String est = 'est';
+  static const String goToBottom = 'goToBottom';
+  static const String projectStructure = 'projectStructure';
+  static const String newPhase = 'newPhase';
+  static const String noRelatedRequests = 'noRelatedRequests';
+  static const String allProjectsSelected = 'allProjectsSelected';
+  static const String projectsSelectedCount = 'projectsSelectedCount';
+  static const String newTask = 'newTask';
+  static const String newTaskRequest = 'newTaskRequest';
+  static const String requestSubject = 'requestSubject';
+  static const String userFilterUpdated = 'userFilterUpdated';
+  static const String nameRequired = 'nameRequired';
+  static const String sequenceRequired = 'sequenceRequired';
+  static const String invoiceRuleRequired = 'invoiceRuleRequired';
+  static const String plannedPriceRequired = 'plannedPriceRequired';
+  static const String committedAmountRequired = 'committedAmountRequired';
+  static const String editProject = 'editProject';
+  static const String editPhase = 'editPhase';
+  static const String editTask = 'editTask';
+  static const String ticketCopiedShort = 'ticketCopiedShort';
+  static const String ticketCopiedToClipboard = 'ticketCopiedToClipboard';
+  static const String viewAttachments = 'viewAttachments';
+  static const String filterRequests = 'filterRequests';
+  static const String loadingPartners = 'loadingPartners';
+  static const String applyFilters = 'applyFilters';
+  static const String projectRequestsLabel = 'projectRequestsLabel';
+  static const String searchByIdOrSummary = 'searchByIdOrSummary';
+  static const String noLinkedRequestsFound = 'noLinkedRequestsFound';
+  static const String goToToday = 'goToToday';
+  static const String allFilter = 'allFilter';
+  static const String activityTask = 'activityTask';
+  static const String requestStatusInfo = 'requestStatusInfo';
+  static const String unknownError = 'unknownError';
+  static const String emailSentToClient = 'emailSentToClient';
+  static const String emailSentToTeam = 'emailSentToTeam';
+  static const String unknownDate = 'unknownDate';
+  static const String noResult = 'noResult';
+  static const String atTime = 'atTime';
+  static const String unknown = 'unknown';
+  static const String requestSummary = 'requestSummary';
+  static const String projectNotFound = 'projectNotFound';
+  static const String unnamedProject = 'unnamedProject';
+  static const String noPermissionsToDelete = 'noPermissionsToDelete';
+  static const String errorDeletingRequest = 'errorDeletingRequest';
+  static const String yearAll = 'yearAll';
+  static const String yearCurrent = 'yearCurrent';
+  static const String yearCount = 'yearCount';
+  static const String chipFilterMixed = 'chipFilterMixed';
+  static const String chipFilterWithChipFirst = 'chipFilterWithChipFirst';
+  static const String chipFilterWithoutChipFirst = 'chipFilterWithoutChipFirst';
+  static const String chipFilterOnlyWithChip = 'chipFilterOnlyWithChip';
+  static const String chipFilterOnlyWithoutChip = 'chipFilterOnlyWithoutChip';
+  static const String chipFilterOnlyWithChipShort = 'chipFilterOnlyWithChipShort';
+  static const String chipFilterOnlyWithoutChipShort = 'chipFilterOnlyWithoutChipShort';
+  static const String edit = 'edit';
+  static const String howItWorks = 'howItWorks';
+  static const String calendarInfoBody = 'calendarInfoBody';
+  static const String ganttInfoBody = 'ganttInfoBody';
+  static const String gotIt = 'gotIt';
+  static const String reactivateProject = 'reactivateProject';
+  static const String totalRequestsTooltip = 'totalRequestsTooltip';
+  static const String criticalRequestsTooltip = 'criticalRequestsTooltip';
+  static const String representativeLabel = 'representativeLabel';
+  static const String clientLabel = 'clientLabel';
+  static const String requestsLabel = 'requestsLabel';
+  static const String request = 'request';
+  static const String summary = 'summary';
+  static const String plannedEndDate = 'plannedEndDate';
   static const Map<String, dynamic> es = {
     language: 'Idioma',
     spanish: 'Español',
@@ -829,6 +903,81 @@ class AppLocale {
     plannedStartDate: 'Fecha de inicio planeada',
     investedHours: 'Horas invertidas',
     descriptionSummary: 'Descripción / Resumen',
+    current: 'En Curso',
+    toBeDefined: 'Sin definir',
+    noDatesAvailable: 'Fechas no definidas',
+    projectFiles: 'Documentos del Proyecto',
+    charts: 'Gráficos',
+    disp: 'disp.',
+    cons: 'cons.',
+    est: 'est.',
+    goToBottom: 'Ir al final',
+    projectStructure: 'Estructura del Proyecto',
+    newPhase: 'Nueva Fase',
+    noRelatedRequests: 'No hay solicitudes relacionadas',
+    allProjectsSelected: 'Todos los proyectos seleccionados',
+    projectsSelectedCount: '{count} proyectos seleccionados',
+    newTask: 'Nueva Tarea',
+    newTaskRequest: 'Nueva Solicitud De Tarea',
+    requestSubject: 'Asunto / Título de la solicitud *',
+    userFilterUpdated: 'El filtro de usuario se ha actualizado para coincidir con el tercero.',
+    nameRequired: 'Nombre *',
+    sequenceRequired: 'Secuencia *',
+    invoiceRuleRequired: 'Reglas de Factura *',
+    plannedPriceRequired: 'Total Planeado *',
+    committedAmountRequired: 'Monto Comprometido *',
+    editProject: 'Editar Proyecto',
+    editPhase: 'Editar Fase',
+    editTask: 'Editar Tarea',
+    ticketCopiedShort: 'Ticket copiado',
+    ticketCopiedToClipboard: 'Ticket copiado al portapapeles',
+    viewAttachments: 'Ver Adjuntos',
+    filterRequests: 'Filtrar Solicitudes',
+    loadingPartners: 'Cargando terceros...',
+    applyFilters: 'Aplicar Filtros',
+    projectRequestsLabel: 'Solicitudes del Proyecto ',
+    searchByIdOrSummary: 'Buscar por ID o resumen...',
+    noLinkedRequestsFound: 'No se encontraron solicitudes vinculadas.',
+    goToToday: 'Ir a Hoy',
+    allFilter: 'Todo',
+    activityTask: 'Actividad / Tarea',
+    requestStatusInfo: 'Muestra el estado histórico de tus solicitudes activas vinculadas a fichas de horas. Puedes hacer clic en los estados de la leyenda para ocultarlos o mostrarlos.',
+    unknownError: 'Error desconocido',
+    emailSentToClient: 'Correo enviado al cliente',
+    emailSentToTeam: 'Correo enviado al equipo',
+    unknownDate: 'Fecha desconocida',
+    noResult: 'Sin resultado.',
+    atTime: 'a las',
+    unknown: 'Desconocido',
+    requestSummary: 'RESUMEN DE LA SOLICITUD',
+    projectNotFound: 'Proyecto no encontrado',
+    unnamedProject: 'Proyecto sin nombre',
+    noPermissionsToDelete: 'No tienes permisos para eliminar solicitudes.',
+    errorDeletingRequest: 'Error al eliminar',
+    yearAll: 'Año: Todos',
+    yearCurrent: 'Año: Actual',
+    yearCount: 'Años: {count}',
+    chipFilterMixed: 'Modo Mixto (Por defecto)',
+    chipFilterWithChipFirst: 'Con ficha primero',
+    chipFilterWithoutChipFirst: 'Sin ficha primero',
+    chipFilterOnlyWithChip: 'Solo con ficha de producto',
+    chipFilterOnlyWithoutChip: 'Solo sin ficha de producto',
+    chipFilterOnlyWithChipShort: 'Solo con ficha',
+    chipFilterOnlyWithoutChipShort: 'Solo sin ficha',
+    edit: 'Editar',
+    howItWorks: 'Funcionamiento:',
+    calendarInfoBody: 'El Calendario utiliza exactamente las mismas solicitudes filtradas en la tabla principal.\n\n• Muestra las solicitudes organizadas por su fecha estimada.\n• Si vienes del Treemap, respeta el Representante y Tercero seleccionados.\n• Usa los colores para identificar la prioridad de cada solicitud.',
+    ganttInfoBody: 'El Diagrama de Gantt utiliza exactamente las mismas solicitudes filtradas en la tabla principal.\n\n• Muestra una línea de tiempo basada en la fecha de creación y fecha estimada.\n• Si vienes del Treemap, respeta el Representante y Tercero seleccionados.\n• Permite visualizar gráficamente la carga de trabajo a lo largo del tiempo.',
+    gotIt: 'Entendido',
+    reactivateProject: 'Reactivar Proyecto',
+    totalRequestsTooltip: 'Muestra el total histórico de tus solicitudes activas vinculadas a fichas de horas.',
+    criticalRequestsTooltip: 'Muestra el total de solicitudes activas de prioridad Urgente o Alta vinculadas a fichas de horas.',
+    representativeLabel: 'Representante',
+    clientLabel: 'Cliente',
+    requestsLabel: 'Solicitudes',
+    request: 'Solicitud',
+    summary: 'Resumen',
+    plannedEndDate: 'Fecha Fin Plan',
   };
 
   static const Map<String, dynamic> en = {
@@ -1244,6 +1393,81 @@ class AppLocale {
     plannedStartDate: 'Planned start date',
     investedHours: 'Invested hours',
     descriptionSummary: 'Description / Summary',
+    current: 'Current',
+    toBeDefined: 'To Be Defined',
+    noDatesAvailable: 'No Dates available',
+    projectFiles: 'Project Files',
+    charts: 'Charts',
+    disp: 'disp.',
+    cons: 'cons.',
+    est: 'est.',
+    goToBottom: 'Go to bottom',
+    projectStructure: 'Project Structure',
+    newPhase: 'New Phase',
+    noRelatedRequests: 'No related requests',
+    allProjectsSelected: 'All projects selected',
+    projectsSelectedCount: '{count} projects selected',
+    newTask: 'New Task',
+    newTaskRequest: 'New Task Request',
+    requestSubject: 'Request Subject *',
+    userFilterUpdated: 'User filter has been updated to match the partner.',
+    nameRequired: 'Name *',
+    sequenceRequired: 'Sequence *',
+    invoiceRuleRequired: 'Invoice Rule *',
+    plannedPriceRequired: 'Planned Price *',
+    committedAmountRequired: 'Committed amount *',
+    editProject: 'Update Project',
+    editPhase: 'Update Phase',
+    editTask: 'Update Task',
+    ticketCopiedShort: 'Ticket copied',
+    ticketCopiedToClipboard: 'Ticket copied to clipboard',
+    viewAttachments: 'View attachments',
+    filterRequests: 'Filter requests',
+    loadingPartners: 'Loading partners...',
+    applyFilters: 'Apply filters',
+    projectRequestsLabel: 'Project requests - ',
+    searchByIdOrSummary: 'Search by ID or summary...',
+    noLinkedRequestsFound: 'No linked requests found.',
+    goToToday: 'Go to Today',
+    allFilter: 'All',
+    activityTask: 'Activity / Task',
+    requestStatusInfo: 'Shows the historical status of your active requests linked to timesheets. You can click on the statuses in the legend to hide or show them.',
+    unknownError: 'Unknown error',
+    emailSentToClient: 'Email sent to client',
+    emailSentToTeam: 'Email sent to team',
+    unknownDate: 'Unknown date',
+    noResult: 'No result.',
+    atTime: 'at',
+    unknown: 'Unknown',
+    requestSummary: 'REQUEST SUMMARY',
+    projectNotFound: 'Project not found',
+    unnamedProject: 'Unnamed project',
+    noPermissionsToDelete: 'You do not have permission to delete requests.',
+    errorDeletingRequest: 'Error deleting',
+    yearAll: 'Year: All',
+    yearCurrent: 'Year: Current',
+    yearCount: 'Years: {count}',
+    chipFilterMixed: 'Mixed Mode (Default)',
+    chipFilterWithChipFirst: 'With product sheet first',
+    chipFilterWithoutChipFirst: 'Without product sheet first',
+    chipFilterOnlyWithChip: 'Only with product sheet',
+    chipFilterOnlyWithoutChip: 'Only without product sheet',
+    chipFilterOnlyWithChipShort: 'Only with sheet',
+    chipFilterOnlyWithoutChipShort: 'Only without sheet',
+    edit: 'Edit',
+    howItWorks: 'How it works:',
+    calendarInfoBody: 'The Calendar uses exactly the same requests filtered in the main table.\n\n• Shows requests organized by their estimated date.\n• If you come from the Treemap, it respects the selected Representative and BPartner.\n• Uses colors to identify the priority of each request.',
+    ganttInfoBody: 'The Gantt Chart uses exactly the same requests filtered in the main table.\n\n• Shows a timeline based on the creation date and estimated date.\n• If you come from the Treemap, it respects the selected Representative and BPartner.\n• Allows graphical visualization of the workload over time.',
+    gotIt: 'Got it',
+    reactivateProject: 'Reactivate Project',
+    totalRequestsTooltip: 'Shows the historical total of your active requests linked to time sheets.',
+    criticalRequestsTooltip: 'Shows the total of active Urgent or High priority requests linked to time sheets.',
+    representativeLabel: 'Representative',
+    clientLabel: 'Client',
+    requestsLabel: 'Requests',
+    request: 'Request',
+    summary: 'Summary',
+    plannedEndDate: 'Planned End Date',
   };
 }
 

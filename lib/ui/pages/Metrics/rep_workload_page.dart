@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:primhub/api/global_cache.dart';
@@ -12,6 +11,7 @@ import 'package:primhub/ui/pages/Support/Requests/request_functions.dart' as req
 import 'package:primhub/ui/Shared_Custom/treemap_filter_bar.dart';
 import 'package:primhub/ui/Shared_Custom/custom_skeleton.dart';
 import 'package:treemap/treemap.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class RepWorkloadPage extends StatefulWidget {
   const RepWorkloadPage({super.key});
@@ -628,7 +628,7 @@ class _RepWorkloadPageState extends State<RepWorkloadPage> {
                                               );
                                             },
                                             child: Tooltip(
-                                              message: 'Representante: $rep\nCliente: $clientName\nSolicitudes: $count',
+                                              message: '${AppLocale.representativeLabel.getString(context)}: $rep\n${AppLocale.clientLabel.getString(context)}: $clientName\n${AppLocale.requestsLabel.getString(context)}: $count',
                                               child: LayoutBuilder(
                                                 builder: (context, constraints) {
                                                   // Si el recuadro es microscópico, no intentamos dibujar texto
@@ -725,7 +725,7 @@ class _RepWorkloadPageState extends State<RepWorkloadPage> {
                                                         }
                                                         _openTreemapNodeModal(
                                                           context: context,
-                                                          title: 'Solicitudes: $rep',
+                                                          title: '${AppLocale.requestsLabel.getString(context)}: $rep',
                                                           rawRequests: requests,
                                                           extras: {
                                                             'rep_id': ?groupRepId,

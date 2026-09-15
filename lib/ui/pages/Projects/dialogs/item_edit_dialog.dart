@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
+
 import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/Shared_Custom/custom_button.dart';
 import 'package:primhub/ui/Shared_Custom/custom_inputs.dart';
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
 import 'package:primhub/ui/pages/Projects/Documents/documents_logic.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class ItemEditDialog extends StatefulWidget {
   final String type;
@@ -95,12 +96,16 @@ class _ItemEditDialogState extends State<ItemEditDialog> {
     final isProject = widget.type == 'project';
 
     return CustomModal(
-      title: 'Editar ${isProject ? 'Proyecto' : widget.type == 'phase' ? 'Fase' : 'Tarea'}',
+      title: isProject
+          ? AppLocale.editProject.getString(context)
+          : widget.type == 'phase'
+              ? AppLocale.editPhase.getString(context)
+              : AppLocale.editTask.getString(context),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CustomTextField(controller: nameController, label: 'Nombre *'),
+            CustomTextField(controller: nameController, label: AppLocale.nameRequired.getString(context)),
             const SizedBox(height: 16),
             CustomTextField(controller: descController, label: AppLocale.description.getString(context), maxLines: 2),
             if (!isProject) ...[
@@ -110,7 +115,7 @@ class _ItemEditDialogState extends State<ItemEditDialog> {
                   Expanded(
                     child: CustomTextField(
                       controller: seqNoController,
-                      label: 'Secuencia *',
+                      label: AppLocale.sequenceRequired.getString(context),
                       keyboardType: TextInputType.number,
                     ),
                   ),
@@ -120,7 +125,7 @@ class _ItemEditDialogState extends State<ItemEditDialog> {
                         ? const Center(child: CircularProgressIndicator())
                         : CustomDropdown<String>(
                             value: invoiceRule,
-                            label: 'Reglas de Factura *',
+                            label: AppLocale.invoiceRuleRequired.getString(context),
                             items: _invoiceRules.map((r) => DropdownMenuItem(value: r['Value'], child: Text(r['Name']!))).toList(),
                             onChanged: (val) {
                               if (val != null) setState(() => invoiceRule = val);
@@ -135,7 +140,7 @@ class _ItemEditDialogState extends State<ItemEditDialog> {
                   Expanded(
                     child: CustomTextField(
                       controller: plannedAmtController,
-                      label: 'Total Planeado *',
+                      label: AppLocale.plannedPriceRequired.getString(context),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     ),
                   ),
@@ -154,9 +159,14 @@ class _ItemEditDialogState extends State<ItemEditDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
         CustomButton(
-          text: 'Guardar',
+          text: AppLocale.cancel.getString(context),
+          backgroundColor: Colors.white,
+          textColor: Theme.of(context).colorScheme.primary,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        CustomButton(
+          text: AppLocale.save.getString(context),
           isLoading: _isLoadingRules,
           onPressed: _isLoadingRules ? null : () {
             if (nameController.text.isNotEmpty) {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:primhub/api/global_cache.dart';
@@ -12,6 +11,7 @@ import 'package:primhub/ui/Shared_Custom/treemap_filter_bar.dart';
 import 'package:primhub/ui/Shared_Custom/request_mobile_card.dart';
 import 'package:primhub/ui/pages/Support/Requests/request_functions.dart' as request_functions;
 import 'package:treemap/treemap.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class ClientWorkloadPage extends StatefulWidget {
   const ClientWorkloadPage({super.key});
@@ -467,7 +467,7 @@ class _ClientWorkloadPageState extends State<ClientWorkloadPage> {
                   ),
                   actions: [
                     CustomButton(
-                      text: 'Entendido',
+                      text: AppLocale.gotIt.getString(context),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -578,7 +578,7 @@ class _ClientWorkloadPageState extends State<ClientWorkloadPage> {
                                               );
                                             },
                                             child: Tooltip(
-                                              message: 'Cliente: $bp\nRepresentante: $repNameInner\nSolicitudes: $count',
+                                              message: '${AppLocale.clientLabel.getString(context)}: $bp\n${AppLocale.representativeLabel.getString(context)}: $repNameInner\n${AppLocale.requestsLabel.getString(context)}: $count',
                                               child: LayoutBuilder(
                                                 builder: (context, constraints) {
                                                   // Si el recuadro es microscópico, no intentamos dibujar texto
@@ -678,7 +678,7 @@ class _ClientWorkloadPageState extends State<ClientWorkloadPage> {
                                                             }
                                                             _openTreemapNodeModal(
                                                               context: context,
-                                                              title: 'Solicitudes: $bp',
+                                                              title: '${AppLocale.requestsLabel.getString(context)}: $bp',
                                                               rawRequests: requests,
                                                               extras: {
                                                                 'bpId': groupBpId,

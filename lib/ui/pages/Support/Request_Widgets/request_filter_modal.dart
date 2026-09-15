@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/api/access_control.dart';
 import 'package:primhub/ui/Shared_Custom/custom_button.dart';
@@ -9,6 +8,7 @@ import 'package:primhub/ui/pages/Support/Requests/request_functions.dart'; // Pa
 import 'package:primhub/api/global_cache.dart';
 import 'package:primhub/ui/pages/Projects/Documents/documents_logic.dart';
 import 'package:primhub/api/token.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 /// Data class to hold filter state for requests.
 class RequestFilterModel {
@@ -261,7 +261,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
       titleWidget: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Filtrar Solicitudes', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          Text(AppLocale.filterRequests.getString(context), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.info_outline, color: Colors.blue, size: 22),
@@ -288,7 +288,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                     ],
                   ),
                   actions: [
-                    CustomButton(text: 'Entendido', onPressed: () => Navigator.pop(context)),
+                    CustomButton(text: AppLocale.gotIt.getString(context), onPressed: () => Navigator.pop(context)),
                   ],
                 ),
               );
@@ -305,7 +305,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
             if (AccessControl.isAdmin) ...[
               _buildMultiSearchableField(
                 label: AppLocale.partnerLabel.getString(context),
-                hintText: _bPartners.isEmpty ? 'Cargando terceros...' : 'Todos los Terceros',
+                hintText: _bPartners.isEmpty ? AppLocale.loadingPartners.getString(context) : AppLocale.allPartners.getString(context),
                 values: _bPartners
                     .where((bp) => _tempFilter.bpIds.contains((bp['id'] as num?)?.toInt()))
                     .map((bp) => (bp['Name'] ?? '').toString())
@@ -313,7 +313,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                 isLoading: _isLoadingMetadata && _bPartners.isEmpty,
                 isDisabled: false,
                 onTap: () => _openMultiSelectSearchModal(
-                  title: 'Tercero',
+                  title: AppLocale.partnerLabel.getString(context),
                   items: _bPartners,
                   currentValues: _tempFilter.bpIds.map((id) => id.toString()).toList(),
                   getTitle: (item) => (item['Name'] ?? '').toString(),
@@ -339,7 +339,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                       isLoading: false,
                       isDisabled: false,
                       onTap: () => _openMultiSelectSearchModal(
-                        title: 'Representante Comercial',
+                        title: AppLocale.salesRepresentative.getString(context),
                         items: GlobalCache.salesReps,
                         currentValues: _tempFilter.salesRepIds.map((id) => id.toString()).toList(),
                         getTitle: (item) => (item['Name'] ?? '').toString(),
@@ -353,8 +353,8 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildMultiSearchableField(
-                      label: 'Usuario',
-                      hintText: _users.isEmpty ? 'Cargando...' : 'Todos',
+                      label: AppLocale.user.getString(context),
+                      hintText: _users.isEmpty ? AppLocale.loading.getString(context) : AppLocale.allGenderNeutral.getString(context),
                       values: modalUsers
                           .where((u) => _tempFilter.userIds.contains(((u['AD_User_ID'] ?? u['id']) as num?)?.toInt()))
                           .map((u) => (u['Name'] ?? '').toString())
@@ -362,7 +362,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                       isLoading: _isLoadingMetadata && _users.isEmpty,
                       isDisabled: false,
                       onTap: () => _openMultiSelectSearchModal(
-                        title: 'Usuario',
+                        title: AppLocale.user.getString(context),
                         items: modalUsers,
                         currentValues: _tempFilter.userIds.map((id) => id.toString()).toList(),
                         getTitle: (item) => (item['Name'] ?? '').toString(),
@@ -382,8 +382,8 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                 if (AccessControl.isAdmin) ...[
                   Expanded(
                     child: _buildMultiSearchableField(
-                      label: 'Tipo de solicitud',
-                      hintText: 'Todos',
+                      label: AppLocale.requestType.getString(context),
+                      hintText: AppLocale.allGenderNeutral.getString(context),
                       values: GlobalCache.requestTypes.entries
                           .where((e) => _tempFilter.requestTypeIds.contains(e.value))
                           .map((e) => e.key)
@@ -391,7 +391,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                       isLoading: _isLoadingMetadata,
                       isDisabled: false,
                       onTap: () => _openMultiSelectSearchModal(
-                        title: 'Tipo de solicitud',
+                        title: AppLocale.requestType.getString(context),
                         items: GlobalCache.requestTypes.entries.toList(),
                         currentValues: _tempFilter.requestTypeIds.map((id) => id.toString()).toList(),
                         getTitle: (item) => (item as MapEntry<String, int>).key,
@@ -406,8 +406,8 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                 ],
                 Expanded(
                   child: _buildMultiSearchableField(
-                    label: 'Categoría',
-                    hintText: 'Todos',
+                    label: AppLocale.category.getString(context),
+                    hintText: AppLocale.allGenderNeutral.getString(context),
                     values: GlobalCache.rawCategories
                         .where((c) => c['showinprimhub'] == true)
                         .where((c) => _tempFilter.categoryIds.contains((c['id'] as num?)?.toInt()))
@@ -416,7 +416,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                     isLoading: _isLoadingMetadata,
                     isDisabled: false,
                     onTap: () => _openMultiSelectSearchModal(
-                      title: 'Categoría',
+                      title: AppLocale.category.getString(context),
                       items: GlobalCache.rawCategories.where((c) => c['showinprimhub'] == true).toList(),
                       currentValues: _tempFilter.categoryIds.map((id) => id.toString()).toList(),
                       getTitle: (item) => (item['Name'] ?? '').toString(),
@@ -434,8 +434,8 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
               children: [
                 Expanded(
                   child: _buildMultiSearchableField(
-                    label: 'Estado',
-                    hintText: 'Todos',
+                    label: AppLocale.status.getString(context),
+                    hintText: AppLocale.allGenderNeutral.getString(context),
                     values: widget.statusIdMap.entries
                         .where((e) => _tempFilter.statusIds.contains(e.value))
                         .map((e) => cleanStatusName(e.key))
@@ -443,7 +443,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                     isLoading: _isLoadingMetadata && widget.statusIdMap.isEmpty,
                     isDisabled: false,
                     onTap: () => _openMultiSelectSearchModal(
-                      title: 'Estado',
+                      title: AppLocale.status.getString(context),
                       items: _getFilteredStatusesForModal(),
                       currentValues: _tempFilter.statusIds.map((id) => id.toString()).toList(),
                       getTitle: (item) => cleanStatusName((item as MapEntry<String, int>).key),
@@ -464,13 +464,13 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
             ),
             const SizedBox(height: 16),
             _buildMultiSearchableField(
-              label: 'Prioridad',
-              hintText: 'Todos',
+              label: AppLocale.priority.getString(context),
+              hintText: AppLocale.allGenderNeutral.getString(context),
               values: _tempFilter.levels,
               isLoading: false,
               isDisabled: false,
               onTap: () => _openMultiSelectSearchModal(
-                title: 'Prioridad',
+                title: AppLocale.priority.getString(context),
                 items: ['Urgente', 'Alta', 'Media', 'Baja', 'Muy baja'],
                 currentValues: _tempFilter.levels,
                 getTitle: (item) => item.toString(),
@@ -480,8 +480,8 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
             ),
             const SizedBox(height: 16),
             _buildMultiSearchableField(
-              label: 'Ficha de Producto',
-              hintText: (!AccessControl.isAdmin) ? 'Todas las Fichas' : (_tempFilter.bpIds.isEmpty ? 'Seleccione primero un Tercero' : 'Todas las Fichas'),
+              label: AppLocale.productChip.getString(context),
+              hintText: (!AccessControl.isAdmin) ? AppLocale.allSheets.getString(context) : (_tempFilter.bpIds.isEmpty ? AppLocale.selectBPartnerFirst.getString(context) : AppLocale.allSheets.getString(context)),
               values: GlobalCache.productChips
                   .where((c) => _tempFilter.productChipIds.contains((c['id'] as num?)?.toInt()))
                   .map((c) => (c['Description'] ?? 'Ficha ${c['id']}').toString())
@@ -513,7 +513,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                 }).toList();
 
                 _openMultiSelectSearchModal(
-                  title: 'Ficha de Producto',
+                  title: AppLocale.productChip.getString(context),
                   items: filteredChips,
                   currentValues: _tempFilter.productChipIds.map((id) => id.toString()).toList(),
                   getTitle: (item) => (item['Description'] ?? 'Ficha ${item['id']}').toString(),
@@ -544,7 +544,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context, null), child: Text(AppLocale.cancel.getString(context))),
-        CustomButton(text: 'Aplicar Filtros', onPressed: () {
+        CustomButton(text: AppLocale.applyFilters.getString(context), onPressed: () {
           Navigator.pop(context, _tempFilter);
         }),
       ],

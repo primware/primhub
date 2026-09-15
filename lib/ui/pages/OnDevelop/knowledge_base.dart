@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/Shared_Custom/cardcustom.dart';
 import 'package:primhub/ui/Shared_Custom/custom_inputs.dart';
 import '../../widgets/custom_drawer.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class KnowledgeBasePage extends StatelessWidget {
   const KnowledgeBasePage({super.key});

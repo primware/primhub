@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:primhub/localization/app_locale.dart';
 
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:go_router/go_router.dart';
 import 'package:primhub/api/global_cache.dart';
 import 'package:primhub/ui/Shared_Custom/animated_copy_widget.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class GanttContent extends StatefulWidget {
   final List<dynamic> requests;
@@ -464,11 +466,11 @@ class _GanttContentState extends State<GanttContent> {
                       spacing: 16,
                       runSpacing: 8,
                       children: [
-                        _buildLegendItem(Colors.deepPurple, 'Urgente'),
-                        _buildLegendItem(Colors.red.shade700, 'Alta'),
-                        _buildLegendItem(Colors.orange.shade800, 'Media'),
-                        _buildLegendItem(Colors.blue.shade700, 'Baja'),
-                        _buildLegendItem(Colors.teal.shade600, 'Muy baja'),
+                        _buildLegendItem(Colors.deepPurple, AppLocale.urgent.getString(context)),
+                        _buildLegendItem(Colors.red.shade700, AppLocale.high.getString(context)),
+                        _buildLegendItem(Colors.orange.shade800, AppLocale.medium.getString(context)),
+                        _buildLegendItem(Colors.blue.shade700, AppLocale.low.getString(context)),
+                        _buildLegendItem(Colors.teal.shade600, AppLocale.veryLow.getString(context)),
                       ],
                     ),
                   ),
@@ -478,7 +480,7 @@ class _GanttContentState extends State<GanttContent> {
                     children: [
                       OutlinedButton.icon(
                         icon: const Icon(Icons.today, size: 16),
-                        label: const Text('Ir a Hoy'),
+                        label: Text(AppLocale.goToToday.getString(context)),
                         style: OutlinedButton.styleFrom(
                           visualDensity: VisualDensity.compact,
                           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -496,8 +498,8 @@ class _GanttContentState extends State<GanttContent> {
                             _applyTimeFilter();
                           }
                         },
-                        itemBuilder: (context) => const [
-                          PopupMenuItem(value: 'all', child: Text('Todo')),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(value: 'all', child: Text(AppLocale.allFilter.getString(context))),
                           PopupMenuItem(
                             value: 'this_week',
                             child: Text('Semanal'),
@@ -531,7 +533,7 @@ class _GanttContentState extends State<GanttContent> {
                               const SizedBox(width: 6),
                               Text(
                                 _timeFilter == 'all'
-                                    ? 'Todo'
+                                    ? AppLocale.allFilter.getString(context)
                                     : _timeFilter == 'this_week'
                                     ? 'Semanal'
                                     : _timeFilter == 'next_15_days'
@@ -641,7 +643,7 @@ class _GanttContentState extends State<GanttContent> {
                                             AnimatedCopyWidget(
                                               textToCopy:
                                                   '${req['DocumentNo'] ?? ''}',
-                                              snackBarMessage: 'Ticket copiado',
+                                              snackBarMessage: AppLocale.ticketCopiedShort.getString(context),
                                               leadingText: Text(
                                                 '${req['DocumentNo'] ?? ''}',
                                                 style: TextStyle(

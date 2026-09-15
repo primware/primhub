@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:flutter_quill/flutter_quill.dart' hide Style;
 import 'package:primhub/ui/pages/Support/Requests/html_editor_utils.dart';
@@ -22,6 +21,7 @@ import 'package:primhub/api/api_utils.dart';
 import 'package:primhub/api/global_cache.dart';
 import 'package:primhub/ImagesManagment/post_attachments.dart';
 import 'package:primhub/ui/widgets/duration_formatter.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class CreateRequestDialog extends StatefulWidget {
   final String? linkedRecordUU;
@@ -645,7 +645,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
             (_) => ToastMessage.show(
               context: context,
               message:
-                  'El filtro de usuario se ha actualizado para coincidir con el tercero.',
+                  AppLocale.userFilterUpdated.getString(context),
               type: ToastType.help,
             ),
           );
@@ -1417,7 +1417,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
     final bool isFullAccess = AccessControl.isAdmin;
     return CustomModal(
       title: widget.linkedRecordUU != null
-          ? 'Nueva Solicitud De Tarea'
+          ? AppLocale.newTaskRequest.getString(context)
           : AppLocale.newSupportRequest.getString(context),
       width: 700,
       content: SingleChildScrollView(
@@ -1481,7 +1481,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                       label: AppLocale.user.getString(context),
                       hintText: _selectedBpId == null
                           ? AppLocale.selectBPartnerFirst.getString(context)
-                          : 'Seleccione Usuario',
+                          : AppLocale.selectUser.getString(context),
                       value: _selectedUserId,
                       isLoading: _isLoadingUsers,
                       isDisabled:
@@ -1551,7 +1551,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
               const SizedBox(height: 16),
               CustomTextField(
                 controller: _subjectController,
-                label: 'Asunto / Título de la solicitud *',
+                label: AppLocale.requestSubject.getString(context),
               ),
               const SizedBox(height: 16),
               Row(

@@ -19,8 +19,8 @@ import 'dart:js' as js;
 import 'package:primhub/navigation/deferred_registry.dart';
 import 'package:primhub/ui/pages/Login/login_selection_args.dart';
 import 'package:primhub/build_version.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

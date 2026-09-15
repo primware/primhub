@@ -10,8 +10,8 @@ import 'package:primhub/ui/Shared_Custom/custom_button.dart';
 import 'package:primhub/ui/Shared_Custom/custom_inputs.dart';
 import 'package:primhub/ui/pages/Login/login_selection_args.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class LoginSelectionPage extends StatefulWidget {
   const LoginSelectionPage({this.args, super.key});

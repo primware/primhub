@@ -13,6 +13,8 @@ import 'package:primhub/api/global_cache.dart';
 import 'package:primhub/ui/pages/Support/Requests/bulk_summary_view.dart';
 import 'package:primhub/api/contract_api.dart'; // Para Product Chips
 import 'package:primhub/api/access_control.dart';
+import 'package:primhub/localization/app_locale.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class BulkEditRequestDialog extends StatefulWidget {
   final Set<int> selectedIds;
@@ -554,7 +556,7 @@ class _BulkEditRequestDialogState extends State<BulkEditRequestDialog> {
                     ],
                   ),
                   actions: [
-                    CustomButton(text: 'Entendido', onPressed: () => Navigator.pop(context)),
+                    CustomButton(text: AppLocale.gotIt.getString(context), onPressed: () => Navigator.pop(context)),
                   ],
                 ),
               );

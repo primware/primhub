@@ -1,6 +1,5 @@
 import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/api/token.dart';
 import 'package:primhub/api/access_control.dart';
@@ -17,6 +16,7 @@ import 'package:primhub/ui/Shared_Custom/custom_button.dart';
 import 'package:primhub/ui/Shared_Custom/custom_container.dart';
 import 'package:primhub/ui/widgets/project_bottom_nav.dart';
 import 'package:primhub/ui/widgets/project_sidebar.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 class BPartnerDocumentsPage extends StatefulWidget {
   final String viewType; // 'General' or 'Seguimiento'
 

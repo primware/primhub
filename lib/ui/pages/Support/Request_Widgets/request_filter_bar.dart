@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/Shared_Custom/custom_inputs.dart';
 import 'package:primhub/api/access_control.dart';
 import 'package:primhub/ui/Shared_Custom/custom_button.dart';
+import 'package:flutter_localization/flutter_localization.dart';
  // Para priorityMap
 
 enum ChipFilterMode {
@@ -140,25 +140,25 @@ class RequestFilterBar extends StatelessWidget {
             offset: const Offset(0, 40),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: ChipFilterMode.mixed,
-                child: Text('Modo Mixto (Por defecto)'),
+                child: Text(AppLocale.chipFilterMixed.getString(context)),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: ChipFilterMode.withChipFirst,
-                child: Text('Con ficha primero'),
+                child: Text(AppLocale.chipFilterWithChipFirst.getString(context)),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: ChipFilterMode.withoutChipFirst,
-                child: Text('Sin ficha primero'),
+                child: Text(AppLocale.chipFilterWithoutChipFirst.getString(context)),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: ChipFilterMode.onlyWithChip,
-                child: Text('Solo con ficha de producto'),
+                child: Text(AppLocale.chipFilterOnlyWithChip.getString(context)),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: ChipFilterMode.onlyWithoutChip,
-                child: Text('Solo sin ficha de producto'),
+                child: Text(AppLocale.chipFilterOnlyWithoutChip.getString(context)),
               ),
             ],
             child: Chip(
@@ -197,12 +197,12 @@ class RequestFilterBar extends StatelessWidget {
           ActionChip(
             avatar: const Icon(Icons.calendar_today, size: 16),
             label: Text(() {
-              if (selectedYears.isEmpty) return 'Año: Todos';
+              if (selectedYears.isEmpty) return AppLocale.yearAll.getString(context);
               if (selectedYears.length == 1) {
-                if (selectedYears.first == DateTime.now().year) return 'Año: Actual';
-                return 'Año: ${selectedYears.first}';
+                if (selectedYears.first == DateTime.now().year) return AppLocale.yearCurrent.getString(context);
+                return AppLocale.yearLabel.getStringWithVariables(context, {'year': selectedYears.first.toString()});
               }
-              return 'Años: ${selectedYears.length}';
+              return AppLocale.yearCount.getStringWithVariables(context, {'count': selectedYears.length.toString()});
             }()),
             onPressed: onShowYearFilter,
           ),
@@ -299,7 +299,7 @@ class RequestFilterBar extends StatelessWidget {
                       Expanded(
                         child: CustomTextField(
                           controller: searchController,
-                          hintText: 'Buscar...',
+                          hintText: AppLocale.searchRequests.getString(context),
                           prefixIcon: const Icon(Icons.search),
                         ),
                       ),
@@ -319,7 +319,7 @@ class RequestFilterBar extends StatelessWidget {
                           textColor: theme.colorScheme.onTertiary,
                         ),
                       buildResponsiveButton(
-                        tooltip: showHistory ? 'Ver Activas' : 'Ver Bitácora',
+                        tooltip: showHistory ? AppLocale.viewActive.getString(context) : AppLocale.viewHistory.getString(context),
                         onPressed: isLoading ? null : onToggleHistory,
                         icon: showHistory ? Icons.list : Icons.history,
                         backgroundColor: theme.colorScheme.secondary,
@@ -327,7 +327,7 @@ class RequestFilterBar extends StatelessWidget {
                       ),
                       if (onExport != null)
                         buildResponsiveButton(
-                          tooltip: 'Exportar',
+                          tooltip: AppLocale.exportTable.getString(context),
                           onPressed: isLoading ? null : onExport,
                           icon: Icons.download,
                         ),
@@ -394,13 +394,13 @@ class RequestFilterBar extends StatelessWidget {
       case ChipFilterMode.mixed:
         return AppLocale.sheetStatus.getString(context);
       case ChipFilterMode.withChipFirst:
-        return 'Con ficha primero';
+        return AppLocale.chipFilterWithChipFirst.getString(context);
       case ChipFilterMode.withoutChipFirst:
-        return 'Sin ficha primero';
+        return AppLocale.chipFilterWithoutChipFirst.getString(context);
       case ChipFilterMode.onlyWithChip:
-        return 'Solo con ficha';
+        return AppLocale.chipFilterOnlyWithChipShort.getString(context);
       case ChipFilterMode.onlyWithoutChip:
-        return 'Solo sin ficha';
+        return AppLocale.chipFilterOnlyWithoutChipShort.getString(context);
     }
   }
 }

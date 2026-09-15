@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
 import 'package:primhub/ui/Shared_Custom/custom_container.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class ProjectInfoDialog extends StatelessWidget {
   final Map<String, dynamic> project;

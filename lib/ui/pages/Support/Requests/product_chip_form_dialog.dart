@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:flutter/services.dart';
 import 'package:primhub/api/global_cache.dart';
@@ -8,6 +7,7 @@ import 'package:primhub/ui/Shared_Custom/custom_inputs.dart';
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
 import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
 import 'package:primhub/ui/pages/Support/Requests/product_chip_functions.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class ProductChipFormDialog extends StatefulWidget {
   const ProductChipFormDialog({super.key});

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:primhub/api/token.dart';
@@ -11,6 +10,7 @@ import 'package:primhub/api/api_http.dart' as http;
 import 'package:primhub/api/api_utils.dart';
 import 'package:primhub/endpoint/endpoint.dart';
 import 'package:primhub/navigation/navigation_service.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class SessionManager {
   // Singleton pattern

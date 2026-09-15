@@ -3,8 +3,8 @@ import 'package:primhub/api/admin_view_mode.dart';
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
 import 'package:primhub/ui/Shared_Custom/custom_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_localization/flutter_localization.dart';
 import 'package:primhub/localization/app_locale.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 class AdminModeViews extends StatefulWidget {
   const AdminModeViews({super.key});

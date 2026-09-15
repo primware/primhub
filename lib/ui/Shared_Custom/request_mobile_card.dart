@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/api/access_control.dart';
 import 'package:primhub/ui/Shared_Custom/animated_copy_widget.dart';
 import 'package:primhub/ui/widgets/duration_formatter.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 /// Tarjeta individual para la vista móvil de solicitudes.
 class RequestMobileCard extends StatelessWidget {
@@ -104,7 +106,7 @@ class RequestMobileCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             AnimatedCopyWidget(
                               textToCopy: request['id'].toString(),
-                              snackBarMessage: 'Ticket copiado al portapapeles',
+                              snackBarMessage: AppLocale.ticketCopiedToClipboard.getString(context),
                               iconSize: 16,
                             ),
                           ],
