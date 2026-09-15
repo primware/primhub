@@ -9,6 +9,8 @@ import 'package:primhub/ImagesManagment/post_attachments.dart';
 import 'package:primhub/ui/pages/Projects/Documents/documents_logic.dart';
 import 'package:primhub/endpoint/endpoint.dart';
 import 'package:primhub/api/global_cache.dart';
+
+
 import 'package:primhub/api/access_control.dart';
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
 import 'package:primhub/ui/Shared_Custom/custom_button.dart';
@@ -1273,7 +1275,7 @@ Future<bool> sendRequestStatusEmail({
   required int requestId,
   required int bPartnerId,
   required int adUserId,
-  required int mailTextId,
+  required MailTemplateType templateType,
   String? updateText,
   String? oldStatusName,
   int? updateId,
@@ -1304,18 +1306,25 @@ Future<bool> sendRequestStatusEmail({
     String targetTableName = 'R_Request';
     String targetRecordId = requestId.toString();
     
-    int finalMailTextId = mailTextId;
-    if (Token.client == 1000008) { // AO Energy
-      if (mailTextId == 1000015) {
-        finalMailTextId = 1000018;
-      } else if (mailTextId == 1000016) {
-        finalMailTextId = 1000019;
-      } else if (mailTextId == 1000017) {
-        finalMailTextId = 1000020;
-      }
+    int? finalMailTextId;
+    switch (templateType) {
+      case MailTemplateType.newRequest:
+        finalMailTextId = GlobalCache.newRequestMailId;
+        break;
+      case MailTemplateType.updateRequest:
+        finalMailTextId = GlobalCache.updateRequestMailId;
+        break;
+      case MailTemplateType.statusUpdate:
+        finalMailTextId = GlobalCache.statusUpdateRequestMailId;
+        break;
     }
     
-    if ((finalMailTextId == 1000017 || finalMailTextId == 1000020) && updateId != null) {
+    if (finalMailTextId == null) {
+      CurrentLogMessage.add('sendRequestStatusEmail abortado: No se encontro el ID numerico para la plantilla de correo de tipo $templateType.', level: 'WARNING', tag: 'sendRequestStatusEmail');
+      return false;
+    }
+    
+    if ((templateType == MailTemplateType.statusUpdate || templateType == MailTemplateType.updateRequest) && updateId != null) {
       targetTableName = 'R_RequestUpdate';
       targetRecordId = updateId.toString();
     }
@@ -1324,8 +1333,8 @@ Future<bool> sendRequestStatusEmail({
     Set<int> targetUsers = {};
     if (adUserId > 0) targetUsers.add(adUserId);
 
-    // Agregar Representante Comercial si existe en la solicitud (Excepto en Cambio de Estado = 1000016)
-    if (mailTextId != 1000016 && req != null && req['SalesRep_ID'] != null) {
+    // Agregar Representante Comercial si existe en la solicitud (Excepto en Cambio de Estado = updateRequest)
+    if (templateType != MailTemplateType.updateRequest && req != null && req['SalesRep_ID'] != null) {
       final salesRepData = req['SalesRep_ID'];
       int salesRepId = salesRepData is Map 
           ? (salesRepData['id'] as num).toInt() 
@@ -1369,4 +1378,10 @@ Future<bool> sendRequestStatusEmail({
     CurrentLogMessage.add('Excepcion en sendRequestStatusEmail: $e', level: 'ERROR', tag: 'sendRequestStatusEmail');
     return false;
   }
+}
+
+enum MailTemplateType {
+  newRequest,
+  updateRequest,
+  statusUpdate
 }

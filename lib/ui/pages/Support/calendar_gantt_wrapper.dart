@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/api/access_control.dart';
 import 'package:primhub/ui/Shared_Custom/custom_button.dart';
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
@@ -55,7 +57,7 @@ class _CalendarGanttWrapperState extends State<CalendarGanttWrapper> with Single
                         icon: const Icon(Icons.info_outline, size: 16),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        tooltip: 'Info Calendario',
+                        tooltip: AppLocale.calendarInfo.getString(context),
                         onPressed: () => _showInfoModal(context, 'Calendario'),
                       ),
                     ],
@@ -75,7 +77,7 @@ class _CalendarGanttWrapperState extends State<CalendarGanttWrapper> with Single
                         icon: const Icon(Icons.info_outline, size: 16),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        tooltip: 'Info Diagrama de Gantt',
+                        tooltip: AppLocale.ganttInfo.getString(context),
                         onPressed: () => _showInfoModal(context, 'Diagrama de Gantt'),
                       ),
                     ],

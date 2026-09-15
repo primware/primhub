@@ -256,10 +256,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: !AccessControl.isAdmin ? IconButton(icon: const Icon(Icons.arrow_back), tooltip: 'Volver al Inicio', onPressed: () => context.go('/')) : null,
+        leading: !AccessControl.isAdmin ? IconButton(icon: const Icon(Icons.arrow_back), tooltip: AppLocale.backToHome.getString(context), onPressed: () => context.go('/')) : null,
         title: Text(AppLocale.userProfile.getString(context)),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), tooltip: 'Refrescar', onPressed: () => GlobalCache.forceFullSyncWithProgress(context, onSyncAction: _loadUserInfo)),
+          IconButton(icon: const Icon(Icons.refresh), tooltip: AppLocale.refreshData.getString(context), onPressed: () => GlobalCache.forceFullSyncWithProgress(context, onSyncAction: _loadUserInfo)),
           if (!AccessControl.isAdmin)
             IconButton(
               icon: const Icon(Icons.logout, color: Colors.red),

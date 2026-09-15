@@ -1273,7 +1273,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
     }
 
     // 4. Asignar al payload si se encontró un rep válido.
-    if (repIdToAssign != null) data['SalesRep_ID'] = repIdToAssign;
+    if (repIdToAssign != null) data['SalesRep_ID'] = {'id': repIdToAssign};
 
     if (isFullAccess) {
       if (_selectedGroup != null && _groupMap.containsKey(_selectedGroup)) {
@@ -1388,7 +1388,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                 requestId: newId,
                 adUserId: adUserId,
                 bPartnerId: customerBpId,
-                mailTextId: 1000015,
+                templateType: MailTemplateType.newRequest,
               );
             }
           } catch (_) {
@@ -1418,7 +1418,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
     return CustomModal(
       title: widget.linkedRecordUU != null
           ? 'Nueva Solicitud De Tarea'
-          : 'Nueva Solicitud de Soporte',
+          : AppLocale.newSupportRequest.getString(context),
       width: 700,
       content: SingleChildScrollView(
         child: Form(
@@ -1434,8 +1434,8 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                 children: [
                   Expanded(
                     child: _buildSearchableField<int>(
-                      label: 'Tercero',
-                      hintText: 'Seleccione Tercero',
+                      label: AppLocale.partnerLabel.getString(context),
+                      hintText: AppLocale.selectBPartner.getString(context),
                       value: _selectedBpId,
                       isLoading: _isLoadingBPartners,
                       isDisabled: !isFullAccess,
@@ -1450,10 +1450,10 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                                 ''
                           : '',
                       errorMessage: _selectedBpId == null
-                          ? 'Debe seleccionar un tercero.'
+                          ? AppLocale.mustSelectBPartner.getString(context)
                           : null,
                       onTap: () => _openSearchModal<int>(
-                        title: 'Tercero',
+                        title: AppLocale.partnerLabel.getString(context),
                         items: _bPartnersList
                             .where((bp) => bp['id'] != null)
                             .toList(),
@@ -1478,9 +1478,9 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildSearchableField<int>(
-                      label: 'Usuario',
+                      label: AppLocale.user.getString(context),
                       hintText: _selectedBpId == null
-                          ? 'Seleccione un tercero primero'
+                          ? AppLocale.selectBPartnerFirst.getString(context)
                           : 'Seleccione Usuario',
                       value: _selectedUserId,
                       isLoading: _isLoadingUsers,
@@ -1503,7 +1503,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                                 ''
                           : (User.name ?? ''),
                       onTap: () => _openSearchModal<int>(
-                        title: 'Usuario',
+                        title: AppLocale.user.getString(context),
                         items: _users
                             .where((u) => (u['AD_User_ID'] ?? u['id']) != null)
                             .toList(),
@@ -1525,14 +1525,14 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                 children: [
                   Expanded(
                     child: _buildSearchableField<String>(
-                      label: 'Tipo de Solicitud',
+                      label: AppLocale.requestType.getString(context),
                       hintText: 'Seleccione Tipo',
                       value: _selectedType,
                       isLoading: _isLoadingTypes,
                       isDisabled: AccessControl.isRealSupport,
                       displayText: _selectedType ?? '',
                       onTap: () => _openSearchModal<String>(
-                        title: 'Tipo de Solicitud',
+                        title: AppLocale.requestType.getString(context),
                         items: _requestTypeMap.keys.toList(),
                         currentValue: _selectedType,
                         getTitle: (item) => item.toString(),
@@ -1608,7 +1608,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                   Expanded(
                     flex: 10,
                     child: _buildSearchableField<String>(
-                      label: 'Prioridad',
+                      label: AppLocale.priority.getString(context),
                       hintText: 'Seleccione Prioridad',
                       value: _selectedPriority,
                       isLoading: false,
@@ -1617,7 +1617,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                               widget.linkedRecordUU!.isNotEmpty),
                       displayText: _selectedPriority,
                       onTap: () => _openSearchModal<String>(
-                        title: 'Prioridad',
+                        title: AppLocale.priority.getString(context),
                         items: _priorityMap.keys.toList(),
                         currentValue: _selectedPriority,
                         getTitle: (item) => item.toString(),
@@ -1639,9 +1639,9 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                   children: [
                     Expanded(
                       child: _buildSearchableField<int>(
-                        label: 'Ficha de Producto',
+                        label: AppLocale.productChip.getString(context),
                         hintText: _selectedBpId == null
-                            ? 'Seleccione un tercero primero'
+                            ? AppLocale.selectBPartnerFirst.getString(context)
                             : 'Seleccione Ficha',
                         value: _selectedProductChipId,
                         isLoading: _isLoadingProducts,
@@ -1657,7 +1657,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                                   'Ficha $_selectedProductChipId'
                             : '',
                         onTap: () => _openSearchModal<int>(
-                          title: 'Ficha de Producto',
+                          title: AppLocale.productChip.getString(context),
                           items: _productChips,
                           currentValue: _selectedProductChipId,
                           getTitle: (item) =>
@@ -1680,14 +1680,14 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                   children: [
                     Expanded(
                       child: _buildSearchableField<String>(
-                        label: 'Grupo',
+                        label: AppLocale.group.getString(context),
                         hintText: 'Seleccione Grupo',
                         value: _selectedGroup,
                         isLoading: _loadingGroupsState,
                         isDisabled: false,
                         displayText: _selectedGroup ?? '',
                         onTap: () => _openSearchModal<String>(
-                          title: 'Grupo',
+                          title: AppLocale.group.getString(context),
                           items: _groupMap.keys.toList(),
                           currentValue: _selectedGroup,
                           getTitle: (item) => item.toString(),
@@ -1700,7 +1700,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildSearchableField<int>(
-                        label: 'Representante Comercial',
+                        label: AppLocale.salesRepresentative.getString(context),
                         hintText: 'Seleccione Representante',
                         value: _selectedSalesRepId,
                         isLoading: _isLoadingSalesReps,
@@ -1720,7 +1720,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                                   ''
                             : '',
                         onTap: () => _openSearchModal<int>(
-                          title: 'Representante Comercial',
+                          title: AppLocale.salesRepresentative.getString(context),
                           items: _salesReps,
                           currentValue: _selectedSalesRepId,
                           getTitle: (item) => item['Name'] ?? 'Sin Nombre',
@@ -1738,7 +1738,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                   children: [
                     Expanded(
                       child: _buildSearchableField<String>(
-                        label: 'Estado',
+                        label: AppLocale.status.getString(context),
                         hintText: 'Seleccione Estado',
                         value: _selectedStatus,
                         isLoading: _isLoadingStatuses,
@@ -1747,7 +1747,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                         onTap: () {
                           final filteredStatuses = _getFilteredStatuses();
                           _openSearchModal<String>(
-                            title: 'Estado',
+                            title: AppLocale.status.getString(context),
                             items: filteredStatuses.keys.toList(),
                             currentValue: _selectedStatus,
                           getTitle: (item) => cleanStatusName(item.toString()),
@@ -1773,7 +1773,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                           child: AbsorbPointer(
                             child: CustomTextField(
                               controller: _dateStartController,
-                              label: 'Fecha de Inicio Planeada',
+                              label: AppLocale.plannedStartDate.getString(context),
                               hintText: 'YYYY-MM-DD',
                               prefixIcon: const Icon(Icons.calendar_today),
                             ),
@@ -1788,7 +1788,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                           child: AbsorbPointer(
                             child: CustomTextField(
                               controller: _dateCompleteController,
-                              label: 'Fecha de Cierre',
+                              label: AppLocale.closeDate.getString(context),
                               hintText: 'YYYY-MM-DD',
                               prefixIcon: const Icon(Icons.calendar_today),
                             ),
@@ -1803,7 +1803,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                       Expanded(
                         child: CustomTextField(
                           controller: _qtyUsedController,
-                          label: 'Horas Invertidas',
+                          label: AppLocale.investedHours.getString(context),
                           hintText: '0.0',
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
@@ -1820,7 +1820,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                         Expanded(
                           child: CustomTextField(
                             controller: _estimatedDevHoursController,
-                            label: 'Horas est. (Desarrollo)',
+                            label: AppLocale.estimatedHoursDev.getString(context),
                             hintText: '0.0',
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
@@ -1928,7 +1928,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
               // RESUMEN Y ADJUNTOS (Campos comunes)
               Text(
                 !_isProjectRequest
-                    ? 'Descripción (Qué intentaba hacer) *'
+                    ? AppLocale.descriptionWhatTried.getString(context)
                     : 'Descripción (Opcional)',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
@@ -1963,7 +1963,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
           onPressed: _isSubmitting
               ? null
               : () => Navigator.of(context).pop(false),
-          child: const Text('Cancelar'),
+          child: Text(AppLocale.cancel.getString(context)),
         ),
         AnimatedBuilder(
           animation: Listenable.merge([
@@ -1977,7 +1977,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
           ]),
           builder: (context, child) {
             return CustomButton(
-              text: 'Enviar Solicitud',
+              text: AppLocale.sendRequest.getString(context),
               onPressed: (_isFormValid && !_isSubmitting) ? _submitForm : null,
               isLoading: _isSubmitting,
             );

@@ -143,7 +143,7 @@ class _ItemEditDialogState extends State<ItemEditDialog> {
                   Expanded(
                     child: CustomTextField(
                       controller: committedAmtController,
-                      label: 'Total Comprometido *',
+                      label: '${AppLocale.committedAmount.getString(context)} *',
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     ),
                   ),

@@ -157,7 +157,7 @@ class _BPartnerDocumentsPageState extends State<BPartnerDocumentsPage> {
                        fm?.createFolderDialog();
                     }
                 } else if (_selectedBPartnerIds.isEmpty) {
-                  ToastMessage.show(context: context, message: 'Debe seleccionar un tercero', type: ToastType.help);
+                  ToastMessage.show(context: context, message: AppLocale.mustSelectBPartner.getString(context), type: ToastType.help);
                 } else {
                   ToastMessage.show(context: context, message: 'Seleccione un solo tercero para crear carpeta', type: ToastType.help);
                 }
@@ -170,7 +170,7 @@ class _BPartnerDocumentsPageState extends State<BPartnerDocumentsPage> {
                 if (_selectedBPartnerIds.length == 1) {
                   _fileManagerKeys[_selectedBPartnerIds.first]?.currentState?.pickAndUploadFile();
                 } else if (_selectedBPartnerIds.isEmpty) {
-                  ToastMessage.show(context: context, message: 'Debe seleccionar un tercero', type: ToastType.help);
+                  ToastMessage.show(context: context, message: AppLocale.mustSelectBPartner.getString(context), type: ToastType.help);
                 } else {
                   ToastMessage.show(context: context, message: 'Seleccione un solo tercero para subir archivo', type: ToastType.help);
                 }

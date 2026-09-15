@@ -571,12 +571,12 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
           DropdownButtonFormField<String>(
             value: _projectLineLevel,
             decoration: InputDecoration(
-              labelText: 'Nivel de Línea',
+              labelText: AppLocale.projectLineLevel.getString(context),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               prefixIcon: const Icon(Icons.account_tree_outlined),
             ),
-            items: const [
-              DropdownMenuItem(value: 'P', child: Text('Proyecto')),
+            items: [
+              DropdownMenuItem(value: 'P', child: Text(AppLocale.projectDropdown.getString(context))),
               DropdownMenuItem(value: 'A', child: Text('Fase')),
               DropdownMenuItem(value: 'T', child: Text('Tarea')),
             ],
@@ -641,21 +641,21 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
               constraints.maxWidth,
             ),
             _buildFinancialItem(
-              'Total Comprometido',
+              AppLocale.committedAmount.getString(context),
               _committedAmtController,
               Icons.handshake_outlined,
               isWide,
               constraints.maxWidth,
             ),
             _buildFinancialItem(
-              'Cantidad Cometida',
+              AppLocale.committedQty.getString(context),
               _committedQtyController,
               Icons.assignment_turned_in_outlined,
               isWide,
               constraints.maxWidth,
             ),
             _buildFinancialItem(
-              'Margen Planeado',
+              AppLocale.plannedMargin.getString(context),
               _plannedMarginAmtController,
               Icons.trending_up_rounded,
               isWide,

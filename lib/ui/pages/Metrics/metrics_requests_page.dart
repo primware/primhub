@@ -406,7 +406,7 @@ class _ProjectRequestsPageState extends State<ProjectRequestsPage> {
 
   Future<void> _deleteRequest(dynamic id) async {
     if (!AccessControl.canManageRequests) {
-      ToastMessage.show(context: context, message: 'No tienes permisos para eliminar solicitudes.', type: ToastType.help);
+      ToastMessage.show(context: context, message: AppLocale.noPermissionDeleteRequests.getString(context), type: ToastType.help);
       return;
     }
     final bool? confirm = await showDialog<bool>(
@@ -425,10 +425,10 @@ class _ProjectRequestsPageState extends State<ProjectRequestsPage> {
       final success = await deleteRequestApi(id);
       if (mounted) {
         if (success) {
-          ToastMessage.show(context: context, message: 'Solicitud eliminada correctamente', type: ToastType.help);
+          ToastMessage.show(context: context, message: AppLocale.requestDeletedSuccessfully.getString(context), type: ToastType.help);
           _initData(showLoading: false);
         } else {
-          ToastMessage.show(context: context, message: 'Error al eliminar', type: ToastType.failure);
+          ToastMessage.show(context: context, message: AppLocale.deleteError.getString(context), type: ToastType.failure);
         }
       }
     }
@@ -467,7 +467,7 @@ class _ProjectRequestsPageState extends State<ProjectRequestsPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Refrescar',
+            tooltip: AppLocale.refreshData.getString(context),
             onPressed: () {
               setState(() => _isLoading = true);
               GlobalCache.forceFullSyncWithProgress(context, onSyncAction: () async {

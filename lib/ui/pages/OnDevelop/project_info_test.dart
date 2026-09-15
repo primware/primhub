@@ -1,6 +1,8 @@
 import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+import 'package:primhub/localization/app_locale.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:primhub/api/api_http.dart' as http;
@@ -132,7 +134,7 @@ class _ProjectInfoTestPageState extends State<ProjectInfoTestPage> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Prueba Info Proyecto'),
-          actions: [IconButton(icon: const Icon(Icons.refresh), tooltip: 'Refrescar', onPressed: () {
+          actions: [IconButton(icon: const Icon(Icons.refresh), tooltip: AppLocale.refreshData.getString(context), onPressed: () {
             setState(() => _isLoading = true);
             GlobalCache.forceFullSyncWithProgress(context, onSyncAction: _initData);
           })],
@@ -357,7 +359,7 @@ class _ProjectInfoTestPageState extends State<ProjectInfoTestPage> {
                       borderRadius: BorderRadius.circular(4),
                       onTap: () {
                         Clipboard.setData(ClipboardData(text: req['id']?.toString() ?? ''));
-                        ToastMessage.show(context: context, message: 'Código copiado al portapapeles', type: ToastType.help);
+                        ToastMessage.show(context: context, message: AppLocale.codeCopiedToClipboard.getString(context), type: ToastType.help);
                       },
                       child: const Padding(
                         padding: EdgeInsets.all(4.0),
@@ -385,7 +387,7 @@ class _ProjectInfoTestPageState extends State<ProjectInfoTestPage> {
               DataCell(
                 IconButton(
                   icon: const Icon(Icons.reply),
-                  tooltip: 'Ver Actualizaciones',
+                  tooltip: AppLocale.viewUpdates.getString(context),
                   onPressed: () => GoRouter.of(context).push('/request-updates/${Uri.encodeComponent(req['realId'].toString())}', extra: {'docNo': req['id']}),
                 ),
               ),

@@ -542,7 +542,7 @@ class _RepWorkloadPageState extends State<RepWorkloadPage> {
           ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
-            tooltip: 'Refrescar',
+            tooltip: AppLocale.refreshData.getString(context),
             onPressed: () {
               setState(() => _isLoading = true);
               GlobalCache.forceFullSyncWithProgress(context, onSyncAction: () async {
@@ -563,7 +563,7 @@ class _RepWorkloadPageState extends State<RepWorkloadPage> {
                     child: const CustomSkeleton(),
                   )
                       : _sortedReps.isEmpty
-                          ? const Center(child: Text('No hay solicitudes con los filtros actuales.'))
+                          ? Center(child: Text(AppLocale.noRequestsWithCurrentFilters.getString(context)))
                           : Padding(
                               padding: const EdgeInsets.all(24.0).copyWith(top: 8.0),
                               child: LayoutBuilder(
@@ -749,7 +749,7 @@ class _RepWorkloadPageState extends State<RepWorkloadPage> {
                                   }
 
                                   if (repNodes.isEmpty) {
-                                    return const Center(child: Text('No hay datos para renderizar el treemap.'));
+                                    return Center(child: Text(AppLocale.noDataForTreemap.getString(context)));
                                   }
 
                                   return TreeMapLayout(

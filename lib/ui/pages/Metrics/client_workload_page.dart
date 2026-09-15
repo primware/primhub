@@ -498,7 +498,7 @@ class _ClientWorkloadPageState extends State<ClientWorkloadPage> {
                     child: const CustomSkeleton(),
                   )
                       : _sortedBps.isEmpty
-                          ? const Center(child: Text('No hay solicitudes con los filtros actuales.'))
+                          ? Center(child: Text(AppLocale.noRequestsWithCurrentFilters.getString(context)))
                           : Padding(
                               padding: const EdgeInsets.all(24.0).copyWith(top: 8.0),
                               child: LayoutBuilder(
@@ -704,7 +704,7 @@ class _ClientWorkloadPageState extends State<ClientWorkloadPage> {
                                   }
 
                                   if (bpNodes.isEmpty) {
-                                    return const Center(child: Text('No hay datos para renderizar el treemap.'));
+                                    return Center(child: Text(AppLocale.noDataForTreemap.getString(context)));
                                   }
 
                                   return TreeMapLayout(

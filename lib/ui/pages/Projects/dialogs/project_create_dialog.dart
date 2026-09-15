@@ -70,10 +70,10 @@ class _ProjectCreateDialogState extends State<ProjectCreateDialog> {
                 labelText: 'Tipo de Registro',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              items: const [
-                DropdownMenuItem(value: 'Project', child: Text('Proyecto')),
-                DropdownMenuItem(value: 'Phase', child: Text('Fase')),
-                DropdownMenuItem(value: 'Task', child: Text('Tarea')),
+              items: [
+                DropdownMenuItem(value: 'Project', child: Text(AppLocale.projectDropdown.getString(context))),
+                DropdownMenuItem(value: 'Phase', child: Text(AppLocale.phaseDropdown.getString(context))),
+                DropdownMenuItem(value: 'Task', child: Text(AppLocale.taskDropdown.getString(context))),
               ],
               onChanged: (val) {
                 if (val != null) {
@@ -127,10 +127,10 @@ class _ProjectCreateDialogState extends State<ProjectCreateDialog> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   prefixIcon: const Icon(Icons.account_tree_outlined),
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'P', child: Text('Proyecto')),
-                  DropdownMenuItem(value: 'A', child: Text('Fase')),
-                  DropdownMenuItem(value: 'T', child: Text('Tarea')),
+                items: [
+                  DropdownMenuItem(value: 'P', child: Text(AppLocale.projectDropdown.getString(context))),
+                  DropdownMenuItem(value: 'A', child: Text(AppLocale.phaseDropdown.getString(context))),
+                  DropdownMenuItem(value: 'T', child: Text(AppLocale.taskDropdown.getString(context))),
                 ],
                 onChanged: (val) {
                   if (val != null) setState(() => selectedProjectLineLevel = val);
@@ -227,7 +227,7 @@ class _ProjectCreateDialogState extends State<ProjectCreateDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocale.cancel.getString(context))),
         CustomButton(
           text: 'Crear',
           onPressed: () {

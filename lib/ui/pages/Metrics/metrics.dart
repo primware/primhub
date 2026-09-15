@@ -408,7 +408,7 @@ class _MetricsPageState extends State<MetricsPage> {
       }
     } catch (e) {
       if (mounted) {
-        ToastMessage.show(context: context, message: 'Error cargando lista de proyectos: $e', type: ToastType.help);
+        ToastMessage.show(context: context, message: AppLocale.errorLoadingProjectList.getStringWithVariables(context, {'error': e.toString()}), type: ToastType.help);
         setState(() {
           _isLoading = false;
           _isProjectsLoading = false;
@@ -457,7 +457,7 @@ class _MetricsPageState extends State<MetricsPage> {
             _moduleEvaluacionValues = [];
             _modulePercentageValues = [];
           });
-          ToastMessage.show(context: context, message: 'No hay datos suficientes para generar las métricas de este proyecto.', type: ToastType.warning);
+          ToastMessage.show(context: context, message: AppLocale.insufficientMetricsData.getString(context), type: ToastType.warning);
         }
         return;
       }
@@ -488,7 +488,7 @@ class _MetricsPageState extends State<MetricsPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ToastMessage.show(context: context, message: 'Error al calcular métricas: $e', type: ToastType.failure);
+        ToastMessage.show(context: context, message: AppLocale.errorCalculatingMetrics.getStringWithVariables(context, {'error': e.toString()}), type: ToastType.failure);
       }
     }
   }
@@ -729,7 +729,7 @@ class _MetricsPageState extends State<MetricsPage> {
                   children: [
                     TextField(
                       decoration: InputDecoration(
-                        hintText: 'Buscar tercero...',
+                        hintText: AppLocale.searchPartnerDots.getString(context),
                         prefixIcon: const Icon(Icons.search),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -943,7 +943,7 @@ class _MetricsPageState extends State<MetricsPage> {
 
   Widget _buildProjectFilterPopupMenu() {
     return PopupMenuButton<bool>(
-      tooltip: 'Filtrar proyectos',
+      tooltip: AppLocale.filterProjectsHelp.getString(context),
       onSelected: (bool viewingMine) {
         _selectedProjectId = null;
         _projects = [];

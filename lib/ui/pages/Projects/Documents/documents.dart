@@ -301,8 +301,8 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
             const SizedBox(width: 8),
             Text(
               _adminViewModeManager.isViewingMine
-                  ? 'Mis Proyectos'
-                  : 'Todos los Proyectos',
+                  ? AppLocale.myProjects.getString(context)
+                  : AppLocale.allProjects.getString(context),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const Icon(Icons.arrow_drop_down),
@@ -360,8 +360,8 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
         }
 
         return [
-          buildItem(true, 'Mis Proyectos', Icons.person),
-          buildItem(false, 'Todos los Proyectos', Icons.group),
+          buildItem(true, AppLocale.myProjects.getString(context), Icons.person),
+          buildItem(false, AppLocale.allProjects.getString(context), Icons.group),
         ];
       },
     );
@@ -442,7 +442,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                     : Icons.group,
               ),
               title: Text(
-                _adminViewModeManager.isViewingMine ? 'Mis Proyectos' : 'Todos',
+                _adminViewModeManager.isViewingMine ? AppLocale.myProjects.getString(context) : AppLocale.allProjects.getString(context),
               ),
             ),
           ),
@@ -512,7 +512,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _viewingInactive ? 'Bitácora de Proyectos' : 'Mis Proyectos',
+          _viewingInactive ? AppLocale.projectLog.getString(context) : AppLocale.myProjects.getString(context),
           style: const TextStyle(fontSize: 22),
         ),
         leadingWidth: _showingFiles
@@ -596,7 +596,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
           padding: const EdgeInsets.all(16.0),
           child: CustomTextField(
             controller: _searchController,
-            hintText: 'Buscar proyecto...',
+            hintText: AppLocale.searchProject.getString(context),
             prefixIcon: const Icon(Icons.search),
           ),
         ),
@@ -610,7 +610,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
           ),
         Expanded(
           child: filteredProjects.isEmpty
-              ? const Center(child: Text('No se encontraron proyectos.'))
+              ? Center(child: Text(AppLocale.noProjectsFound.getString(context)))
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: filteredProjects.length,

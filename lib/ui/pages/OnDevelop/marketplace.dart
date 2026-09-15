@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/Shared_Custom/custom_container.dart';
 import 'package:primhub/ui/Shared_Custom/custom_inputs.dart';
 import '../../Shared_Custom/custom_button.dart';
@@ -10,7 +12,7 @@ class MarketplacePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Marketplace')),
+      appBar: AppBar(title: Text(AppLocale.marketplace.getString(context))),
       drawer: const CustomDrawer(currentRoute: '/marketplace'),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -23,13 +25,13 @@ class MarketplacePage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('¿Necesitas un desarrollo a medida, un nuevo plugin o más horas de soporte? Describe tu requerimiento y te contactaremos.', style: TextStyle(fontSize: 16)),
+                    Text(AppLocale.marketplacePitch.getString(context), style: const TextStyle(fontSize: 16)),
                     const SizedBox(height: 20),
-                    const Text('Asunto', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(AppLocale.subject.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 5),
                     const CustomTextField(hintText: 'Ej. Nuevo módulo de reportes'),
                     const SizedBox(height: 15),
-                    const Text('Descripción', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(AppLocale.description.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 5),
                     const CustomTextField(maxLines: 5, hintText: 'Detalla aquí tu requerimiento...'),
                     const SizedBox(height: 20),

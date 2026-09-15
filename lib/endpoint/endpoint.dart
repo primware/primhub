@@ -38,6 +38,8 @@ class Endpoint {
   static String get project => "$baseUrl/api/v1/models/C_Project";
   static String get primDocuments => "$baseUrl/api/v1/models/PRIM_Documents";
   static String get currency => "$baseUrl/api/v1/models/C_Currency";
+  static String get adSysConfig => "$baseUrl/api/v1/models/AD_SysConfig";
+  static String get rMailText => "$baseUrl/api/v1/models/R_MailText";
   static String get authTokens => "$baseUrl/api/v1/auth/tokens";
   static String get authRoles => "$baseUrl/api/v1/auth/roles";
   static String get authOrgs => "$baseUrl/api/v1/auth/organizations";

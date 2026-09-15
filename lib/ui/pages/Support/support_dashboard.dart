@@ -482,7 +482,7 @@ class _SupportDashboardPageState extends State<SupportDashboardPage> {
   void _showExportModal() {
     final recordsToExport = _getFilteredRecords();
     if (recordsToExport.isEmpty) {
-      ToastMessage.show(context: context, message: 'No hay registros para exportar', type: ToastType.help);
+      ToastMessage.show(context: context, message: AppLocale.noRecordsToExport.getString(context), type: ToastType.help);
       return;
     }
 
@@ -1098,7 +1098,7 @@ class _SupportDashboardFilterBar extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 3,
-                  child: CustomTextField(controller: searchController, hintText: 'Buscar...', prefixIcon: const Icon(Icons.search)),
+                  child: CustomTextField(controller: searchController, hintText: AppLocale.searchDots.getString(context), prefixIcon: const Icon(Icons.search)),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -1191,7 +1191,7 @@ void _showRequestDetails(BuildContext context, Map<String, dynamic> record) {
             const SizedBox(height: 16),
             CustomTextField(
               controller: TextEditingController(text: record['dateStartPlan'] ?? ''),
-              label: 'Fecha de Cierre',
+              label: AppLocale.closingDateLabel.getString(context),
               readOnly: true,
               prefixIcon: const Icon(Icons.calendar_today),
             ),
@@ -1376,7 +1376,7 @@ class _BPartnerAttachmentsDialogState extends State<BPartnerAttachmentsDialog> {
 
   Future<void> _uploadAttachment() async {
     if (!AccessControl.isAdmin) {
-      ToastMessage.show(context: context, message: 'No tienes permisos para subir archivos.', type: ToastType.help);
+      ToastMessage.show(context: context, message: AppLocale.noPermissionUploadFiles.getString(context), type: ToastType.help);
       return;
     }
 
@@ -1386,7 +1386,7 @@ class _BPartnerAttachmentsDialogState extends State<BPartnerAttachmentsDialog> {
 
     final file = result.files.first;
     if (file.bytes == null) {
-      ToastMessage.show(context: context, message: 'No se pudieron leer los datos del archivo.', type: ToastType.failure);
+      ToastMessage.show(context: context, message: AppLocale.fileReadError.getString(context), type: ToastType.failure);
       return;
     }
 
@@ -1407,10 +1407,10 @@ class _BPartnerAttachmentsDialogState extends State<BPartnerAttachmentsDialog> {
     if (mounted) {
       setState(() => _isUploading = false);
       if (success) {
-        ToastMessage.show(context: context, message: 'Archivo subido correctamente', type: ToastType.success);
+        ToastMessage.show(context: context, message: AppLocale.fileUploadSuccess.getString(context), type: ToastType.success);
         _loadAttachments();
       } else {
-        ToastMessage.show(context: context, message: 'Error al subir archivo', type: ToastType.failure);
+        ToastMessage.show(context: context, message: AppLocale.fileUploadError.getString(context), type: ToastType.failure);
       }
     }
   }
@@ -1453,7 +1453,7 @@ class _BPartnerAttachmentsDialogState extends State<BPartnerAttachmentsDialog> {
                       att['name'] ?? '',
                       () async {
                         if (!AccessControl.isAdmin) {
-                          ToastMessage.show(context: context, message: 'No tienes permisos para borrar adjuntos.', type: ToastType.help);
+                          ToastMessage.show(context: context, message: AppLocale.noPermissionDeleteAttachments.getString(context), type: ToastType.help);
                           return;
                         }
 
@@ -1481,13 +1481,13 @@ class _BPartnerAttachmentsDialogState extends State<BPartnerAttachmentsDialog> {
                                 _attachments.removeWhere((item) => item['name'] == att['name']);
                                 _isLoading = false;
                               });
-                              ToastMessage.show(context: context, message: 'Adjunto eliminado', type: ToastType.help);
+                              ToastMessage.show(context: context, message: AppLocale.attachmentDeleted.getString(context), type: ToastType.help);
                               // _loadAttachments(); // Removed to avoid stale cache issues
                             }
                           } else {
                             if (mounted) {
                               setState(() => _isLoading = false);
-                              ToastMessage.show(context: context, message: 'Error al eliminar adjunto', type: ToastType.failure);
+                              ToastMessage.show(context: context, message: AppLocale.attachmentDeleteError.getString(context), type: ToastType.failure);
                             }
                           }
                         } catch (e) {
@@ -1500,7 +1500,7 @@ class _BPartnerAttachmentsDialogState extends State<BPartnerAttachmentsDialog> {
                   },
                   trailing: IconButton(
                     icon: const Icon(Icons.download, color: Color(0xFF4F47E5)),
-                    tooltip: 'Descargar',
+                    tooltip: AppLocale.download.getString(context),
                     onPressed: () =>
                         downloadAttachment(context: context, recordID: widget.bPartnerId, tableName: fullTableUrl, fileName: att['name']),
                   ),

@@ -230,10 +230,10 @@ class _MobileRequestList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (requests.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 32.0),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32.0),
         child: Center(
-          child: Text('No hay solicitudes recientes.', style: TextStyle(color: Colors.grey)),
+          child: Text(AppLocale.noRecentRequests.getString(context), style: const TextStyle(color: Colors.grey)),
         ),
       );
     }
@@ -323,17 +323,17 @@ class _RecentRequestCard extends StatelessWidget {
                       }
                     },
                     itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                      const PopupMenuItem<String>(
+                      PopupMenuItem<String>(
                         value: 'go',
-                        child: ListTile(leading: Icon(Icons.arrow_forward), title: Text('Ir a Mis Solicitudes')),
+                        child: ListTile(leading: const Icon(Icons.arrow_forward), title: Text(AppLocale.goToMyRequests.getString(context))),
                       ),
                       PopupMenuItem<String>(
                         value: 'updates',
                         child: ListTile(leading: Icon(AccessControl.canAddUpdates ? Icons.reply : Icons.forum), title: Text(AccessControl.canAddUpdates ? 'Responder' : 'Ver Actualizaciones')),
                       ),
-                      const PopupMenuItem<String>(
+                      PopupMenuItem<String>(
                         value: 'attachments',
-                        child: ListTile(leading: Icon(Icons.attach_file), title: Text('Adjuntos')),
+                        child: ListTile(leading: const Icon(Icons.attach_file), title: Text(AppLocale.attachments.getString(context))),
                       ),
                     ],
                   ),

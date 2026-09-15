@@ -39,6 +39,11 @@ class GlobalCache {
   static Map<int, List<Map<String, dynamic>>> projectRequestsCache = {};
   static Map<int, bool> projectLoadingStatus = {};
 
+  // Mail templates
+  static int? newRequestMailId;
+  static int? updateRequestMailId;
+  static int? statusUpdateRequestMailId;
+
   static bool isDataLoaded = false;
   static bool isFullyLoaded = false;
 
@@ -65,6 +70,7 @@ class GlobalCache {
       fetchGroups(), // 3
       ProjectsLogic().fetchUsers(), // 4
       ProjectsLogic().fetchSalesReps(), // 5
+      _fetchMailTemplateIds(), // 6
     ];
 
     // Índices para referenciar después
@@ -751,5 +757,75 @@ class GlobalCache {
       // Ignored: Fail silently
     }
     return null;
+
+  }
+  static Future<void> _fetchMailTemplateIds() async {
+    try {
+      // 1. Fetch AD_SysConfig UUIDs
+      final sysUrl = "${Endpoint.adSysConfig}?\$filter=Name eq 'Prim_new_request_mail_UU' or Name eq 'Prim_update_request_mail_UU' or Name eq 'Prim_status_update_request_mail_UU'";
+      final sysRes = await http.get(Uri.parse(sysUrl), headers: {'Content-Type': 'application/json', 'Authorization': Token.token});
+      if (sysRes.statusCode != 200) {
+        CurrentLogMessage.add('Error fetching AD_SysConfig for Mail Templates: ${sysRes.statusCode} - ${sysRes.body}', level: 'ERROR', tag: 'GlobalCache');
+        return;
+      }
+      
+      final sysDecoded = json.decode(utf8.decode(sysRes.bodyBytes));
+      final sysRecords = sysDecoded['records'] as List?;
+      if (sysRecords == null || sysRecords.isEmpty) {
+        return;
+      }
+      
+      String? newReqUU;
+      String? updateReqUU;
+      String? statusUpdateUU;
+      
+      for (var r in sysRecords) {
+        if (r['Name'] == 'Prim_new_request_mail_UU') newReqUU = r['Value'];
+        if (r['Name'] == 'Prim_update_request_mail_UU') updateReqUU = r['Value'];
+        if (r['Name'] == 'Prim_status_update_request_mail_UU') statusUpdateUU = r['Value'];
+      }
+      
+      // 2. Fetch R_MailText IDs
+      final uuList = [newReqUU, updateReqUU, statusUpdateUU].where((u) => u != null && u.isNotEmpty).toList();
+      if (uuList.isEmpty) return;
+      
+      final filterConditions = uuList.map((u) => "R_MailText_UU eq '$u'").join(' or ');
+      final mailUrl = "${Endpoint.rMailText}?\$filter=$filterConditions";
+      
+      final mailRes = await http.get(Uri.parse(mailUrl), headers: {'Content-Type': 'application/json', 'Authorization': Token.token});
+      if (mailRes.statusCode != 200) {
+        CurrentLogMessage.add('Error fetching R_MailText: ${mailRes.statusCode} - ${mailRes.body}', level: 'ERROR', tag: 'GlobalCache');
+        return;
+      }
+      
+      final mailDecoded = json.decode(utf8.decode(mailRes.bodyBytes));
+      final mailRecords = mailDecoded['records'] as List?;
+      if (mailRecords == null || mailRecords.isEmpty) {
+        return;
+      }
+      
+      for (var r in mailRecords) {
+        // En caso de que la respuesta retorne la llave en minúsculas por configuración del JSON serializador
+        String? uu;
+        r.forEach((key, value) {
+          final k = key.toLowerCase();
+          if (k == 'r_mailtext_uu' || k == 'uuid' || k == 'uid') {
+            uu = value?.toString();
+          }
+        });
+        
+        final id = r['id'] as int?;
+        if (id == null) continue;
+        
+        // Comparación quitando posibles espacios o mayúsculas
+        if (uu?.trim().toLowerCase() == newReqUU?.toString().trim().toLowerCase()) newRequestMailId = id;
+        if (uu?.trim().toLowerCase() == updateReqUU?.toString().trim().toLowerCase()) updateRequestMailId = id;
+        if (uu?.trim().toLowerCase() == statusUpdateUU?.toString().trim().toLowerCase()) statusUpdateRequestMailId = id;
+      }
+      
+      CurrentLogMessage.add('Loaded Mail Templates: New($newRequestMailId), Update($updateRequestMailId), Status($statusUpdateRequestMailId)', level: 'INFO', tag: 'GlobalCache');
+    } catch (e) {
+      CurrentLogMessage.add('Exception in _fetchMailTemplateIds: $e', level: 'ERROR', tag: 'GlobalCache');
+    }
   }
 }

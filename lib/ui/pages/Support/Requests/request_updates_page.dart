@@ -194,7 +194,7 @@ class _RequestUpdatesPageState extends State<RequestUpdatesPage> {
       floatingActionButton: AccessControl.canAddUpdates
           ? FloatingActionButton.extended(
               onPressed: _addUpdate,
-              label: Text('Responder', style: textTheme.labelLarge?.copyWith(color: colorScheme.onPrimary, fontWeight: FontWeight.bold)),
+              label: Text(AppLocale.reply.getString(context), style: textTheme.labelLarge?.copyWith(color: colorScheme.onPrimary, fontWeight: FontWeight.bold)),
               icon: Icon(Icons.reply, color: colorScheme.onPrimary),
             )
           : null,
@@ -315,7 +315,7 @@ class _UpdateCard extends StatelessWidget {
                   children: [
                     if (confId == 'I' && result.toLowerCase().contains('from:'))
                       Tooltip(
-                        message: 'Esta respuesta no es visible para el usuario',
+                        message: AppLocale.thisReplyNotVisibleToUser.getString(context),
                         child: Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange),
                       ),
                     _buildBadge(context, confidential, colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
@@ -447,7 +447,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
 
     if (result != null && result.files.isNotEmpty) {
       if (result.files.first.bytes == null) {
-        ToastMessage.show(context: context, message: 'Error al leer el archivo.', type: ToastType.warning);
+        ToastMessage.show(context: context, message: AppLocale.errorReadingFile.getString(context), type: ToastType.warning);
         return;
       }
       setState(() {
@@ -532,7 +532,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
             ),
           ),
           const SizedBox(width: 8),
-          if (file == null) IconButton(icon: const Icon(Icons.attach_file), onPressed: () => _pickFile(index), tooltip: 'Adjuntar Archivo', color: theme.colorScheme.primary) else IconButton(icon: const Icon(Icons.delete), onPressed: () => _removeFile(index), tooltip: 'Eliminar Archivo', color: theme.colorScheme.error),
+          if (file == null) IconButton(icon: const Icon(Icons.attach_file), onPressed: () => _pickFile(index), tooltip: AppLocale.attachFile.getString(context), color: theme.colorScheme.primary) else IconButton(icon: const Icon(Icons.delete), onPressed: () => _removeFile(index), tooltip: AppLocale.deleteFile.getString(context), color: theme.colorScheme.error),
         ],
       ),
     );
@@ -571,7 +571,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
             requestId: requestId,
             adUserId: adUserId,
             bPartnerId: bPartnerId ?? 0,
-            mailTextId: 1000016,
+            templateType: MailTemplateType.updateRequest,
             updateText: resultHtml,
             oldStatusName: oldStatusName,
             updateId: updateId,
@@ -582,7 +582,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
           requestId: requestId,
           adUserId: adUserId,
           bPartnerId: bPartnerId ?? 0,
-          mailTextId: 1000017,
+          templateType: MailTemplateType.statusUpdate,
           updateText: resultHtml,
           oldStatusName: oldStatusName,
           updateId: updateId,
@@ -596,7 +596,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
           requestId: requestId,
           adUserId: salesRepId,
           bPartnerId: bPartnerId ?? 0,
-          mailTextId: 1000017,
+          templateType: MailTemplateType.statusUpdate,
           updateText: resultHtml,
           oldStatusName: oldStatusName,
           updateId: updateId,
@@ -679,7 +679,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
             ),
             QuillExpandableField(
               controller: _resultController,
-              label: 'Resultado o comentario',
+              label: AppLocale.resultOrComment.getString(context),
               isRequired: true,
               height: 120,
             ),
@@ -704,7 +704,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: CustomDropdown<int>(
-                      label: 'Estado',
+                      label: AppLocale.status.getString(context),
                       value: _newStatusId,
                       items: _getFilteredStatuses().entries.map((e) => DropdownMenuItem<int>(
                         value: e.value,
@@ -825,7 +825,7 @@ class _AttachmentItem extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        ToastMessage.show(context: context, message: 'Abriendo $fileName...', type: ToastType.help);
+        ToastMessage.show(context: context, message: AppLocale.openingFile.getStringWithVariables(context, {'fileName': fileName}), type: ToastType.help);
       },
       child: _buildBox(
         Column(

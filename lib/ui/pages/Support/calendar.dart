@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:primhub/ui/pages/Support/Requests/request_functions.dart';
@@ -116,7 +118,7 @@ class _CalendarContentState extends State<CalendarContent> {
                         children: [
                           Icon(Icons.event_busy, size: 48, color: colorScheme.outline),
                           const SizedBox(height: 16),
-                          Text('Sin actividades para hoy', style: TextStyle(color: colorScheme.outline)),
+                          Text(AppLocale.noActivitiesToday.getString(context), style: TextStyle(color: colorScheme.outline)),
                         ],
                       ),
                     )
@@ -157,7 +159,7 @@ class _CalendarContentState extends State<CalendarContent> {
                   ],
                 ],
               ),
-              actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar'))],
+              actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocale.close.getString(context)))],
             );
           },
         );
@@ -227,7 +229,7 @@ class _CalendarContentState extends State<CalendarContent> {
           const SizedBox(height: 12),
           Text(plainSummary, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text('Estado: $statusName', style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w500)),
+          Text('${AppLocale.status.getString(context)}: $statusName', style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w500)),
           const Divider(height: 24),
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 150),
@@ -302,7 +304,7 @@ class _CalendarContentState extends State<CalendarContent> {
                   setState(() => _focusedMonth = DateTime.now());
                   widget.onDateChanged?.call(_focusedMonth);
                 },
-                child: const Text('Hoy'),
+                child: Text(AppLocale.today.getString(context)),
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right),

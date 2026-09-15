@@ -713,10 +713,13 @@ class _HomePageState extends State<HomePage> {
                                                   ),
                                                 );
                                                 if (result == true) {
-                                                  // Si se creó exitosamente, refrescamos los datos
+                                                  // Si se creó exitosamente, refrescamos y enviamos a My Projects
                                                   await _controller.initData(
                                                     forceRefresh: true,
                                                   );
+                                                  if (context.mounted) {
+                                                    context.go('/deliverables');
+                                                  }
                                                 }
                                               },
                                             ),

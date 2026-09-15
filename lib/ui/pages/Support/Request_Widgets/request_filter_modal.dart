@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/api/access_control.dart';
 import 'package:primhub/ui/Shared_Custom/custom_button.dart';
 import 'package:primhub/ui/Shared_Custom/custom_modal.dart';
@@ -302,7 +304,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
           children: [
             if (AccessControl.isAdmin) ...[
               _buildMultiSearchableField(
-                label: 'Tercero',
+                label: AppLocale.partnerLabel.getString(context),
                 hintText: _bPartners.isEmpty ? 'Cargando terceros...' : 'Todos los Terceros',
                 values: _bPartners
                     .where((bp) => _tempFilter.bpIds.contains((bp['id'] as num?)?.toInt()))
@@ -328,8 +330,8 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                 children: [
                   Expanded(
                     child: _buildMultiSearchableField(
-                      label: 'Rep. Comercial',
-                      hintText: 'Todos',
+                      label: AppLocale.commercialRep.getString(context),
+                      hintText: AppLocale.allGenderNeutral.getString(context),
                       values: GlobalCache.salesReps
                           .where((rep) => _tempFilter.salesRepIds.contains(((rep['AD_User_ID'] ?? rep['id']) as num?)?.toInt()))
                           .map((rep) => (rep['Name'] ?? '').toString())
@@ -541,7 +543,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, null), child: const Text('Cancelar')),
+        TextButton(onPressed: () => Navigator.pop(context, null), child: Text(AppLocale.cancel.getString(context))),
         CustomButton(text: 'Aplicar Filtros', onPressed: () {
           Navigator.pop(context, _tempFilter);
         }),
@@ -677,7 +679,7 @@ class _MultiSelectSearchDialogState extends State<MultiSelectSearchDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(onPressed: () => Navigator.of(context).pop(null), child: const Text('Cancelar')),
+                TextButton(onPressed: () => Navigator.of(context).pop(null), child: Text(AppLocale.cancel.getString(context))),
                 const SizedBox(width: 8),
                 CustomButton(text: 'Aplicar', onPressed: () => Navigator.of(context).pop(_tempSelectedValues.toList())),
               ],

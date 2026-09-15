@@ -113,7 +113,7 @@ class _PhaseCreateDialogState extends State<PhaseCreateDialog> {
                 Expanded(
                   child: CustomTextField(
                     controller: committedAmtController,
-                    label: 'Total Comprometido *',
+                    label: '${AppLocale.committedAmount.getString(context)} *',
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   ),
                 ),
@@ -123,7 +123,7 @@ class _PhaseCreateDialogState extends State<PhaseCreateDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocale.cancel.getString(context))),
         CustomButton(
           text: 'Crear',
           isLoading: _isLoadingRules,

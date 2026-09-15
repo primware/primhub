@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+import 'package:primhub/localization/app_locale.dart';
 import 'package:primhub/ui/Shared_Custom/cardcustom.dart';
 import 'package:primhub/ui/Shared_Custom/custom_inputs.dart';
 import '../../widgets/custom_drawer.dart';
@@ -9,7 +11,7 @@ class KnowledgeBasePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Base De Conocimiento')),
+      appBar: AppBar(title: Text(AppLocale.knowledgeBase.getString(context))),
       drawer: const CustomDrawer(currentRoute: '/knowledge-base'),
       body: SafeArea(
         child: SingleChildScrollView(

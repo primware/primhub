@@ -216,11 +216,8 @@ class AppLocale {
   static const String selectGroup = 'selectGroup';
   static const String selectRepresentative = 'selectRepresentative';
   static const String selectStatus = 'selectStatus';
-  static const String plannedStartDate = 'plannedStartDate';
   static const String closingDate = 'closingDate';
-  static const String investedHours = 'investedHours';
   static const String estimatedDevelopmentHours = 'estimatedDevelopmentHours';
-  static const String descriptionSummary = 'descriptionSummary';
   static const String delete = 'delete';
   static const String reply = 'reply';
   static const String sortingHelp = 'sortingHelp';
@@ -347,7 +344,76 @@ class AppLocale {
   static const String expandToRequestsHelp = 'expandToRequestsHelp';
   static const String goToSpecificRequest = 'goToSpecificRequest';
   static const String goToSpecificRequestHelp = 'goToSpecificRequestHelp';
+  static const String noRecordsToExport = 'noRecordsToExport';
+  static const String noPermissionUploadFiles = 'noPermissionUploadFiles';
+  static const String fileUploadSuccess = 'fileUploadSuccess';
+  static const String fileUploadError = 'fileUploadError';
+  static const String fileReadError = 'fileReadError';
+  static const String noPermissionDeleteAttachments = 'noPermissionDeleteAttachments';
+  static const String attachmentDeleted = 'attachmentDeleted';
+  static const String attachmentDeleteError = 'attachmentDeleteError';
+  static const String errorLoadingProjectList = 'errorLoadingProjectList';
+  static const String insufficientMetricsData = 'insufficientMetricsData';
+  static const String errorCalculatingMetrics = 'errorCalculatingMetrics';
+  static const String noPermissionDeleteRequests = 'noPermissionDeleteRequests';
+  static const String requestDeletedSuccessfully = 'requestDeletedSuccessfully';
+  static const String deleteError = 'deleteError';
+  static const String codeCopiedToClipboard = 'codeCopiedToClipboard';
+  static const String errorReadingFile = 'errorReadingFile';
+  static const String openingFile = 'openingFile';
+  static const String thisReplyNotVisibleToUser = 'thisReplyNotVisibleToUser';
+  static const String download = 'download';
+  static const String refreshData = 'refreshData';
+  static const String calendarInfo = 'calendarInfo';
+  static const String ganttInfo = 'ganttInfo';
+  static const String viewRequestDetails = 'viewRequestDetails';
+  static const String backToHome = 'backToHome';
+  static const String viewUpdates = 'viewUpdates';
+  static const String expandEditor = 'expandEditor';
+  static const String attachFile = 'attachFile';
+  static const String deleteFile = 'deleteFile';
+  static const String filterProjectsHelp = 'filterProjectsHelp';
+  static const String searchDots = 'searchDots';
+  static const String searchPartnerDots = 'searchPartnerDots';
+  static const String closingDateLabel = 'closingDateLabel';
+  static const String resultOrComment = 'resultOrComment';
+  static const String commercialRep = 'commercialRep';
+  static const String allGenderNeutral = 'allGenderNeutral';
+  static const String partnerLabel = 'partnerLabel';
+  static const String projectDropdown = 'projectDropdown';
+  static const String phaseDropdown = 'phaseDropdown';
+  static const String taskDropdown = 'taskDropdown';
+  static const String noRecentRequests = 'noRecentRequests';
+  static const String goToMyRequests = 'goToMyRequests';
+  static const String noRequestsForThisType = 'noRequestsForThisType';
+  static const String noRequestsWithCurrentFilters = 'noRequestsWithCurrentFilters';
+  static const String noDataForTreemap = 'noDataForTreemap';
+  static const String noActivitiesToday = 'noActivitiesToday';
+  static const String today = 'today';
+  static const String withAssociatedSheet = 'withAssociatedSheet';
+  static const String withoutAssociatedSheet = 'withoutAssociatedSheet';
+  static const String noProjectsFound = 'noProjectsFound';
+  static const String noResultsFound = 'noResultsFound';
+  static const String marketplace = 'marketplace';
+  static const String marketplacePitch = 'marketplacePitch';
+  static const String knowledgeBase = 'knowledgeBase';
 
+  static const String committedQty = 'committedQty';
+  static const String projectLineLevel = 'projectLineLevel';
+  static const String projectLog = 'projectLog';
+  static const String newSupportRequest = 'newSupportRequest';
+  static const String selectBPartner = 'selectBPartner';
+  static const String mustSelectBPartner = 'mustSelectBPartner';
+  static const String subjectOrTitle = 'subjectOrTitle';
+  static const String productChip = 'productChip';
+  static const String selectBPartnerFirst = 'selectBPartnerFirst';
+  static const String closeDate = 'closeDate';
+  static const String estimatedHoursDev = 'estimatedHoursDev';
+  static const String descriptionWhatTried = 'descriptionWhatTried';
+  static const String sendRequest = 'sendRequest';
+  static const String plannedStartDate = 'plannedStartDate';
+  static const String investedHours = 'investedHours';
+  static const String descriptionSummary = 'descriptionSummary';
   static const Map<String, dynamic> es = {
     language: 'Idioma',
     spanish: 'Español',
@@ -565,11 +631,8 @@ class AppLocale {
     selectGroup: 'Seleccione grupo',
     selectRepresentative: 'Seleccione representante',
     selectStatus: 'Seleccione estado',
-    plannedStartDate: 'Fecha de inicio planeada',
     closingDate: 'Fecha de cierre',
-    investedHours: 'Horas invertidas',
     estimatedDevelopmentHours: 'Horas estimadas (desarrollo)',
-    descriptionSummary: 'Descripción / Resumen',
     delete: 'Eliminar',
     reply: 'Responder',
     sortingHelp: 'Haz clic en el título de una columna con flechas para ordenar los datos.',
@@ -697,6 +760,75 @@ class AppLocale {
         'Desde la lista rápida, usa el botón inferior para abrir Mis solicitudes y filtrar por ese tercero o representante.',
     goToSpecificRequest: 'Ir a solicitud específica',
     goToSpecificRequestHelp: 'Haz clic en una tarjeta de la lista rápida para buscar esa solicitud directamente en Mis solicitudes.',
+    noRecordsToExport: 'No hay registros para exportar',
+    noPermissionUploadFiles: 'No tienes permisos para subir archivos.',
+    fileUploadSuccess: 'Archivo subido correctamente',
+    fileUploadError: 'Error al subir archivo',
+    fileReadError: 'No se pudieron leer los datos del archivo.',
+    noPermissionDeleteAttachments: 'No tienes permisos para borrar adjuntos.',
+    attachmentDeleted: 'Adjunto eliminado',
+    attachmentDeleteError: 'Error al eliminar adjunto',
+    errorLoadingProjectList: 'Error cargando lista de proyectos: {error}',
+    insufficientMetricsData: 'No hay datos suficientes para generar las métricas de este proyecto.',
+    errorCalculatingMetrics: 'Error al calcular métricas: {error}',
+    noPermissionDeleteRequests: 'No tienes permisos para eliminar solicitudes.',
+    requestDeletedSuccessfully: 'Solicitud eliminada correctamente',
+    deleteError: 'Error al eliminar',
+    codeCopiedToClipboard: 'Código copiado al portapapeles',
+    errorReadingFile: 'Error al leer el archivo.',
+    openingFile: 'Abriendo {fileName}...',
+    thisReplyNotVisibleToUser: 'Esta respuesta no es visible para el usuario',
+    download: 'Descargar',
+    refreshData: 'Refrescar',
+    calendarInfo: 'Info Calendario',
+    ganttInfo: 'Info Diagrama de Gantt',
+    viewRequestDetails: 'Ver detalles de solicitud',
+    backToHome: 'Volver al Inicio',
+    viewUpdates: 'Ver Actualizaciones',
+    expandEditor: 'Expandir editor',
+    attachFile: 'Adjuntar Archivo',
+    deleteFile: 'Eliminar Archivo',
+    filterProjectsHelp: 'Filtrar proyectos',
+    searchDots: 'Buscar...',
+    searchPartnerDots: 'Buscar tercero...',
+    closingDateLabel: 'Fecha de Cierre',
+    resultOrComment: 'Resultado o comentario',
+    commercialRep: 'Rep. Comercial',
+    allGenderNeutral: 'Todos',
+    partnerLabel: 'Tercero',
+    projectDropdown: 'Proyecto',
+    phaseDropdown: 'Fase',
+    taskDropdown: 'Tarea',
+    noRecentRequests: 'No hay solicitudes recientes.',
+    goToMyRequests: 'Ir a Mis Solicitudes',
+    noRequestsForThisType: 'No se encontraron solicitudes para este tipo.',
+    noRequestsWithCurrentFilters: 'No hay solicitudes con los filtros actuales.',
+    noDataForTreemap: 'No hay datos para renderizar el treemap.',
+    noActivitiesToday: 'Sin actividades para hoy',
+    today: 'Hoy',
+    withAssociatedSheet: 'Con Ficha Asociada',
+    withoutAssociatedSheet: 'Sin Ficha Asociada',
+    noProjectsFound: 'No se encontraron proyectos.',
+    noResultsFound: 'No se encontraron resultados',
+    marketplace: 'Marketplace',
+    marketplacePitch: '¿Necesitas un desarrollo a medida, un nuevo plugin o más horas de soporte? Describe tu requerimiento y te contactaremos.',
+    knowledgeBase: 'Base De Conocimiento',
+    committedQty: 'Cantidad comprometida',
+    projectLineLevel: 'Nivel de Línea',
+    projectLog: 'Bitácora de Proyectos',
+    newSupportRequest: 'Nueva Solicitud de Soporte',
+    selectBPartner: 'Seleccione Tercero',
+    mustSelectBPartner: 'Debe seleccionar un tercero.',
+    subjectOrTitle: 'Asunto / Título de la solicitud *',
+    productChip: 'Ficha de Producto',
+    selectBPartnerFirst: 'Seleccione un tercero primero',
+    closeDate: 'Fecha de Cierre',
+    estimatedHoursDev: 'Horas est. (Desarrollo)',
+    descriptionWhatTried: 'Descripción (Qué intentaba hacer) *',
+    sendRequest: 'Enviar Solicitud',
+    plannedStartDate: 'Fecha de inicio planeada',
+    investedHours: 'Horas invertidas',
+    descriptionSummary: 'Descripción / Resumen',
   };
 
   static const Map<String, dynamic> en = {
@@ -914,11 +1046,8 @@ class AppLocale {
     selectGroup: 'Select group',
     selectRepresentative: 'Select representative',
     selectStatus: 'Select status',
-    plannedStartDate: 'Planned start date',
     closingDate: 'Closing date',
-    investedHours: 'Invested hours',
     estimatedDevelopmentHours: 'Estimated hours (development)',
-    descriptionSummary: 'Description / Summary',
     delete: 'Delete',
     reply: 'Reply',
     sortingHelp: 'Click a column title with arrows to sort the data.',
@@ -1046,6 +1175,75 @@ class AppLocale {
         'From the quick list, use the bottom button to open My requests filtered by that business partner or representative.',
     goToSpecificRequest: 'Go to a specific request',
     goToSpecificRequestHelp: 'Click a card in the quick list to find that request directly in My requests.',
+    noRecordsToExport: 'No records to export',
+    noPermissionUploadFiles: 'You do not have permission to upload files.',
+    fileUploadSuccess: 'File uploaded successfully',
+    fileUploadError: 'Error uploading file',
+    fileReadError: 'Could not read file data.',
+    noPermissionDeleteAttachments: 'You do not have permission to delete attachments.',
+    attachmentDeleted: 'Attachment deleted',
+    attachmentDeleteError: 'Error deleting attachment',
+    errorLoadingProjectList: 'Error loading project list: {error}',
+    insufficientMetricsData: 'Not enough data to generate metrics for this project.',
+    errorCalculatingMetrics: 'Error calculating metrics: {error}',
+    noPermissionDeleteRequests: 'You do not have permission to delete requests.',
+    requestDeletedSuccessfully: 'Request deleted successfully',
+    deleteError: 'Error deleting',
+    codeCopiedToClipboard: 'Code copied to clipboard',
+    errorReadingFile: 'Error reading file.',
+    openingFile: 'Opening {fileName}...',
+    thisReplyNotVisibleToUser: 'This reply is not visible to the user',
+    download: 'Download',
+    refreshData: 'Refresh',
+    calendarInfo: 'Calendar Info',
+    ganttInfo: 'Gantt Chart Info',
+    viewRequestDetails: 'View request details',
+    backToHome: 'Back to Home',
+    viewUpdates: 'View Updates',
+    expandEditor: 'Expand editor',
+    attachFile: 'Attach File',
+    deleteFile: 'Delete File',
+    filterProjectsHelp: 'Filter projects',
+    searchDots: 'Search...',
+    searchPartnerDots: 'Search partner...',
+    closingDateLabel: 'Closing Date',
+    resultOrComment: 'Result or comment',
+    commercialRep: 'Sales Rep',
+    allGenderNeutral: 'All',
+    partnerLabel: 'Partner',
+    projectDropdown: 'Project',
+    phaseDropdown: 'Phase',
+    taskDropdown: 'Task',
+    noRecentRequests: 'No recent requests.',
+    goToMyRequests: 'Go to My Requests',
+    noRequestsForThisType: 'No requests found for this type.',
+    noRequestsWithCurrentFilters: 'No requests with current filters.',
+    noDataForTreemap: 'No data to render the treemap.',
+    noActivitiesToday: 'No activities for today',
+    today: 'Today',
+    withAssociatedSheet: 'With Associated Sheet',
+    withoutAssociatedSheet: 'Without Associated Sheet',
+    noProjectsFound: 'No projects found.',
+    noResultsFound: 'No results found',
+    marketplace: 'Marketplace',
+    marketplacePitch: 'Need custom development, a new plugin, or more support hours? Describe your request and we will contact you.',
+    knowledgeBase: 'Knowledge Base',
+    committedQty: 'Committed quantity',
+    projectLineLevel: 'Line level',
+    projectLog: 'Project log',
+    newSupportRequest: 'New Support Request',
+    selectBPartner: 'Select Business Partner',
+    mustSelectBPartner: 'You must select a Business Partner.',
+    subjectOrTitle: 'Subject / Title of the request *',
+    productChip: 'Product chip',
+    selectBPartnerFirst: 'Select a Business Partner first',
+    closeDate: 'Close Date',
+    estimatedHoursDev: 'Est. hours (Development)',
+    descriptionWhatTried: 'Description (What were you trying to do) *',
+    sendRequest: 'Send Request',
+    plannedStartDate: 'Planned start date',
+    investedHours: 'Invested hours',
+    descriptionSummary: 'Description / Summary',
   };
 }
 
