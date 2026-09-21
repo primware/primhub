@@ -4,6 +4,7 @@ import 'package:primhub/api/access_control.dart';
 import 'package:primhub/api/api_utils.dart';
 import 'package:primhub/api/token.dart';
 import 'package:primhub/endpoint/endpoint.dart';
+import 'package:primhub/api/global_cache.dart';
 
 class ContractApi {
   // Ahora usamos la Ficha de Producto del Tercero
@@ -93,21 +94,10 @@ class ContractApi {
     }
 
     if (finalBpIds.isEmpty && AccessControl.isExtSupport && User.userID != null) {
-      try {
-        final reqUrl = "${Endpoint.request}?\$select=C_BPartner_ID&\$filter=SalesRep_ID eq ${User.userID}";
-        final reqRes = await _fetchPaginated(reqUrl);
-        final Set<int> uniqueBpIds = {};
-        for (var r in reqRes) {
-          final bpField = r['C_BPartner_ID'];
-          if (bpField is Map && bpField['id'] != null) {
-            uniqueBpIds.add((bpField['id'] as num).toInt());
-          }
-        }
-        finalBpIds.addAll(uniqueBpIds);
-        if (finalBpIds.isEmpty) {
-          finalBpIds.add(-1); 
-        }
-      } catch (_) {}
+      finalBpIds.addAll(GlobalCache.extSupportBpIds);
+      if (finalBpIds.isEmpty) {
+        finalBpIds.add(-1); 
+      }
     }
 
     // Filtramos por activo o incluimos todos explícitamente si includeInactive es true
@@ -171,23 +161,12 @@ class ContractApi {
     String filter = "(IsActive eq 'Y' or IsActive eq true)";
 
     if (AccessControl.isExtSupport && User.userID != null) {
-      try {
-        final reqUrl = "${Endpoint.request}?\$select=C_BPartner_ID&\$filter=SalesRep_ID eq ${User.userID}";
-        final reqRes = await _fetchPaginated(reqUrl);
-        final Set<int> uniqueBpIds = {};
-        for (var r in reqRes) {
-          final bpField = r['C_BPartner_ID'];
-          if (bpField is Map && bpField['id'] != null) {
-            uniqueBpIds.add((bpField['id'] as num).toInt());
-          }
-        }
-        if (uniqueBpIds.isNotEmpty) {
-          String bpFilter = uniqueBpIds.map((id) => "C_BPartner_ID eq $id").join(' or ');
-          filter = "$filter and ($bpFilter)";
-        } else {
-           filter = "$filter and (C_BPartner_ID eq -1)"; 
-        }
-      } catch (_) {}
+      if (GlobalCache.extSupportBpIds.isNotEmpty) {
+        String bpFilter = GlobalCache.extSupportBpIds.map((id) => "C_BPartner_ID eq $id").join(' or ');
+        filter = "$filter and ($bpFilter)";
+      } else {
+        filter = "$filter and (C_BPartner_ID eq -1)"; 
+      }
     }
 
     final String baseUrl =

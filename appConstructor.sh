@@ -12,7 +12,7 @@ flutter clean
 
 echo "🏗️  Compilando con versión: $VERSION..."
 echo "const String appBuildVersion = '$VERSION';" > lib/build_version.dart
-flutter build web --release --pwa-strategy=none --dart-define=APP_VERSION=$VERSION --no-tree-shake-icons
+flutter build web --release --pwa-strategy=none --dart-define=APP_VERSION=$VERSION
 if [ ! -f "$INDEX_FILE" ]; then
   echo "Error: No se encontró $INDEX_FILE"
   exit 1

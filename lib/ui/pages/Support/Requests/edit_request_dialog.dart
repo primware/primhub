@@ -979,6 +979,13 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
             .toString(),
       );
 
+      double? originalEstimated = (widget.request['PrimHub_Estimated_development_hours'] as num?)?.toDouble() ?? 0.0;
+      double? inputEstimated = double.tryParse(_estimatedDevHoursController.text);
+      double? estimatedDevHoursToSend;
+      if (inputEstimated != null && inputEstimated != originalEstimated) {
+        estimatedDevHoursToSend = inputEstimated;
+      }
+
       final result = await updateRemoteRequest(
         id: widget.request['realId'],
         priority: _currentPriority,
@@ -991,7 +998,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
         dateStartPlan: dateStartPlanToSend,
         dateCompletePlan: dateCompletePlanToSend,
         qtySpent: qtySpentToSend,
-        estimatedDevHours: double.tryParse(_estimatedDevHoursController.text),
+        estimatedDevHours: estimatedDevHoursToSend,
         startDate: startDateToSend,
         closeDate: closeDateToSend,
         emailSubject: subjectText != originalSubject ? subjectText : null,
@@ -1125,7 +1132,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
             requestId: requestId,
             adUserId: adUserId,
             bPartnerId: bPartnerId ?? 0,
-            templateType: MailTemplateType.updateRequest,
+            templateType: MailTemplateType.statusUpdate,
             updateText: resultHtml,
             oldStatusName: oldStatusName,
             updateId: updateId,
@@ -1136,7 +1143,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
             requestId: requestId,
             adUserId: adUserId,
             bPartnerId: bPartnerId ?? 0,
-            templateType: MailTemplateType.statusUpdate,
+            templateType: MailTemplateType.updateRequest,
             updateText: resultHtml,
             oldStatusName: oldStatusName,
             updateId: updateId,
@@ -1150,7 +1157,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
           requestId: requestId,
           adUserId: salesRepId,
           bPartnerId: bPartnerId ?? 0,
-          templateType: MailTemplateType.statusUpdate,
+          templateType: MailTemplateType.updateRequest,
           updateText: resultHtml,
           oldStatusName: oldStatusName,
           updateId: updateId,
@@ -1180,7 +1187,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     if (_currentStatus.isNotEmpty && !statusItems.contains(_currentStatus)) {
       statusItems.add(_currentStatus);
     }
-    final bool isFullAccess = AccessControl.isAdmin;
+    final bool isFullAccess = AccessControl.isAdmin || AccessControl.isExtSupport;
     final bool isProject =
         (widget.request['recordUU'] != null &&
             widget.request['recordUU'].toString().trim().isNotEmpty) ||
@@ -1260,7 +1267,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                           hintText: 'Seleccione Tercero',
                           value: _selectedBpId,
                           isLoading: _isLoadingBPartners,
-                          isDisabled: _isReadOnly,
+                          isDisabled: _isReadOnly || !AccessControl.isAdmin,
                           displayText:
                               _selectedBpId != null &&
                                   _bPartnersList.any(
@@ -1557,7 +1564,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                           hintText: AppLocale.selectRepresentative.getString(context),
                           value: _selectedSalesRepId,
                           isLoading: _isLoadingSalesReps,
-                          isDisabled: _isReadOnly || _isLoadingSalesReps,
+                          isDisabled: _isReadOnly || _isLoadingSalesReps || !AccessControl.isAdmin,
                           displayText:
                               _selectedSalesRepId != null &&
                                   _salesReps.any(
@@ -1667,7 +1674,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  if (AccessControl.isAdmin) ...[
+                  if (isFullAccess) ...[
                     CustomTextField(
                       controller: _estimatedDevHoursController,
                       label: AppLocale.estimatedDevelopmentHours.getString(context),

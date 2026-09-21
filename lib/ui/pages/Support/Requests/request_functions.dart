@@ -882,6 +882,7 @@ Future<Map<String, dynamic>> processRequests(List<dynamic> requests, Map<String,
       'productChipId': extractProductChipId(req),
       'productChipName': extractProductChipName(req),
       'isClosed': isFinalCloseStatus,
+      'PrimHub_Estimated_development_hours': req['PrimHub_Estimated_development_hours'],
       'original': req,
     });
   }
@@ -979,7 +980,7 @@ Future<Map<String, dynamic>> updateRemoteRequest({
     if (startTime != null && startTime.isNotEmpty) data['StartTime'] = ensureIsoTime(dateStartPlan, startTime);
     if (endTime != null && endTime.isNotEmpty) data['EndTime'] = endTime; // El caller ya lo manda como DateTime completo
     if (qtySpent != null) data['QtySpent'] = qtySpent;
-    if (estimatedDevHours != null && estimatedDevHours > 0) data['PrimHub_Estimated_development_hours'] = estimatedDevHours;
+    if (estimatedDevHours != null) data['PrimHub_Estimated_development_hours'] = estimatedDevHours;
     
     if (startDate != null) data['StartDate'] = startDate;
     if (closeDate != null) data['CloseDate'] = closeDate;

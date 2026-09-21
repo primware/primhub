@@ -977,7 +977,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
   }
 
   Future<void> _submitForm() async {
-    final bool isFullAccess = AccessControl.isAdmin;
+    final bool isFullAccess = AccessControl.isAdmin || AccessControl.isExtSupport;
 
     if (!_formKey.currentState!.validate()) return;
 
@@ -1414,7 +1414,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isFullAccess = AccessControl.isAdmin;
+    final bool isFullAccess = AccessControl.isAdmin || AccessControl.isExtSupport;
     return CustomModal(
       title: widget.linkedRecordUU != null
           ? AppLocale.newTaskRequest.getString(context)
@@ -1438,7 +1438,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                       hintText: AppLocale.selectBPartner.getString(context),
                       value: _selectedBpId,
                       isLoading: _isLoadingBPartners,
-                      isDisabled: !isFullAccess,
+                      isDisabled: !AccessControl.isAdmin,
                       displayText:
                           _selectedBpId != null &&
                               _bPartnersList.any(
@@ -1704,7 +1704,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                         hintText: 'Seleccione Representante',
                         value: _selectedSalesRepId,
                         isLoading: _isLoadingSalesReps,
-                        isDisabled: false,
+                        isDisabled: !AccessControl.isAdmin,
                         displayText:
                             _selectedSalesRepId != null &&
                                 _salesReps.any(
@@ -1815,7 +1815,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                           ],
                         ),
                       ),
-                      if (AccessControl.isAdmin) ...[
+                      if (isFullAccess) ...[
                         const SizedBox(width: 16),
                         Expanded(
                           child: CustomTextField(

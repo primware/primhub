@@ -38,6 +38,8 @@ class GlobalCache {
   // Caché de solicitudes por proyecto para carga "mixta"
   static Map<int, List<Map<String, dynamic>>> projectRequestsCache = {};
   static Map<int, bool> projectLoadingStatus = {};
+  
+  static Set<int> extSupportBpIds = {};
 
   // Mail templates
   static int? newRequestMailId;
@@ -62,6 +64,21 @@ class GlobalCache {
     final bool isAdmin = AccessControl.isAdmin;
     final bool isSupport = AccessControl.isRealSupport;
     final bool isProject = AccessControl.isRealProject;
+
+    if (!isAdmin && AccessControl.isExtSupport && User.userID != null) {
+      try {
+        final reqRes = await fetchRequest(
+          filter: "SalesRep_ID eq ${User.userID}",
+          select: "C_BPartner_ID",
+        );
+        for (var r in reqRes) {
+          final bpField = r['C_BPartner_ID'];
+          if (bpField is Map && bpField['id'] != null) {
+            extSupportBpIds.add((bpField['id'] as num).toInt());
+          }
+        }
+      } catch (_) {}
+    }
 
     final List<Future<dynamic>> fetchFutures = [
       fetchStatusesWithMetadata(), // 0
@@ -269,7 +286,11 @@ class GlobalCache {
     String? initialFilter;
     if (!isAdmin) {
       if (AccessControl.isExtSupport && User.userID != null) {
-        initialFilter = "SalesRep_ID eq ${User.userID}";
+        if (extSupportBpIds.isNotEmpty) {
+          initialFilter = "(" + extSupportBpIds.map((id) => "C_BPartner_ID eq $id").join(' or ') + ")";
+        } else {
+          initialFilter = "C_BPartner_ID eq -1";
+        }
       } else if (User.cBPartnerID != null) {
         initialFilter = "C_BPartner_ID eq ${User.cBPartnerID}";
       }
@@ -343,7 +364,11 @@ class GlobalCache {
         String filter = "Created ge '$year-01-01T00:00:00Z' and Created le '$year-12-31T23:59:59Z'";
         if (!isAdmin) {
           if (AccessControl.isExtSupport && User.userID != null) {
-            filter += " and SalesRep_ID eq ${User.userID}";
+            if (extSupportBpIds.isNotEmpty) {
+              filter += " and (" + extSupportBpIds.map((id) => "C_BPartner_ID eq $id").join(' or ') + ")";
+            } else {
+              filter += " and C_BPartner_ID eq -1";
+            }
           } else if (User.cBPartnerID != null) {
             filter += " and C_BPartner_ID eq ${User.cBPartnerID}";
           }
@@ -427,6 +452,7 @@ class GlobalCache {
   // --- Utilidades de Gestión ---
 
   static void clear() {
+    extSupportBpIds.clear();
     projects.clear();
     requests.clear();
     _rawBPartners.clear();
@@ -484,7 +510,11 @@ class GlobalCache {
       String? reqFilter;
       if (!AccessControl.isAdmin) {
         if (AccessControl.isExtSupport && User.userID != null) {
-          reqFilter = "SalesRep_ID eq ${User.userID}";
+          if (extSupportBpIds.isNotEmpty) {
+            reqFilter = "(" + extSupportBpIds.map((id) => "C_BPartner_ID eq $id").join(' or ') + ")";
+          } else {
+            reqFilter = "C_BPartner_ID eq -1";
+          }
         } else if (User.cBPartnerID != null) {
           reqFilter = "C_BPartner_ID eq ${User.cBPartnerID}";
         }
