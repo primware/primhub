@@ -1325,7 +1325,7 @@ Future<bool> sendRequestStatusEmail({
       return false;
     }
     
-    if ((templateType == MailTemplateType.statusUpdate || templateType == MailTemplateType.updateRequest) && updateId != null) {
+    if (templateType == MailTemplateType.updateRequest && updateId != null) {
       targetTableName = 'R_RequestUpdate';
       targetRecordId = updateId.toString();
     }

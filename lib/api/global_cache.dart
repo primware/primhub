@@ -287,7 +287,7 @@ class GlobalCache {
     if (!isAdmin) {
       if (AccessControl.isExtSupport && User.userID != null) {
         if (extSupportBpIds.isNotEmpty) {
-          initialFilter = "(" + extSupportBpIds.map((id) => "C_BPartner_ID eq $id").join(' or ') + ")";
+          initialFilter = "(${extSupportBpIds.map((id) => "C_BPartner_ID eq $id").join(' or ')})";
         } else {
           initialFilter = "C_BPartner_ID eq -1";
         }
@@ -365,7 +365,7 @@ class GlobalCache {
         if (!isAdmin) {
           if (AccessControl.isExtSupport && User.userID != null) {
             if (extSupportBpIds.isNotEmpty) {
-              filter += " and (" + extSupportBpIds.map((id) => "C_BPartner_ID eq $id").join(' or ') + ")";
+              filter += " and (${extSupportBpIds.map((id) => "C_BPartner_ID eq $id").join(' or ')})";
             } else {
               filter += " and C_BPartner_ID eq -1";
             }
@@ -511,7 +511,7 @@ class GlobalCache {
       if (!AccessControl.isAdmin) {
         if (AccessControl.isExtSupport && User.userID != null) {
           if (extSupportBpIds.isNotEmpty) {
-            reqFilter = "(" + extSupportBpIds.map((id) => "C_BPartner_ID eq $id").join(' or ') + ")";
+            reqFilter = "(${extSupportBpIds.map((id) => "C_BPartner_ID eq $id").join(' or ')})";
           } else {
             reqFilter = "C_BPartner_ID eq -1";
           }
