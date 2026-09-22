@@ -236,7 +236,14 @@ class _RequestUpdatesPageState extends State<RequestUpdatesPage> {
                     padding: const EdgeInsets.all(16),
                     itemCount: updates.length,
                     separatorBuilder: (context, index) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) => _UpdateCard(update: updates[index]),
+                    itemBuilder: (context, index) => _UpdateCard(
+                      update: updates[index],
+                      onUpdateChanged: () {
+                        setState(() {
+                          _updatesFuture = fetchRequestUpdates(widget.requestId);
+                        });
+                      },
+                    ),
                   );
                 },
               ),
@@ -250,7 +257,8 @@ class _RequestUpdatesPageState extends State<RequestUpdatesPage> {
 
 class _UpdateCard extends StatelessWidget {
   final Map<String, dynamic> update;
-  const _UpdateCard({required this.update});
+  final VoidCallback? onUpdateChanged;
+  const _UpdateCard({required this.update, this.onUpdateChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -313,12 +321,36 @@ class _UpdateCard extends StatelessWidget {
                   spacing: 4.0,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    if (confId == 'I' && result.toLowerCase().contains('from:'))
+                    if (confId == 'I')
                       Tooltip(
                         message: AppLocale.thisReplyNotVisibleToUser.getString(context),
-                        child: Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange),
+                        child: Icon(Icons.visibility_off, size: 16, color: colorScheme.error),
                       ),
-                    _buildBadge(context, confidential, colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
+                    if (AccessControl.isAdmin)
+                      PopupMenuButton<String>(
+                        tooltip: 'Cambiar confidencialidad',
+                        onSelected: (String newValue) async {
+                          if (newValue == confId) return;
+                          final updateId = update['id'];
+                          if (updateId != null) {
+                            final success = await updateRequestUpdateConfidentiality(updateId, newValue);
+                            if (success) {
+                              ToastMessage.show(context: context, message: 'Confidencialidad actualizada', type: ToastType.success);
+                              onUpdateChanged?.call();
+                            } else {
+                              ToastMessage.show(context: context, message: 'Error al actualizar', type: ToastType.failure);
+                            }
+                          }
+                        },
+                        itemBuilder: (BuildContext context) => [
+                          DropdownMenuItem<String>(value: 'I', child: Text(AppLocale.internalNote.getString(context))),
+                          DropdownMenuItem<String>(value: 'C', child: Text(AppLocale.visibleToClient.getString(context))),
+                          DropdownMenuItem<String>(value: 'P', child: Text(AppLocale.publicLabel.getString(context))),
+                        ].map((e) => PopupMenuItem<String>(value: e.value, child: e.child)).toList(),
+                        child: _buildBadge(context, confidential, colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
+                      )
+                    else
+                      _buildBadge(context, confidential, colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
                   ],
                 ),
               ],
@@ -399,7 +431,7 @@ class _AddUpdateDialog extends StatefulWidget {
 
 class _AddUpdateDialogState extends State<_AddUpdateDialog> {
   final QuillController _resultController = QuillController.basic();
-  String _confidentialType = 'I'; // Internal
+  String _confidentialType = 'C'; // Visible to client
   final List<PlatformFile?> _evidences = [null, null, null, null];
   bool _isSaving = false;
   int? _newStatusId;
@@ -577,30 +609,52 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
             updateId: updateId,
           );
         }
-        
-        bool s1b = await sendRequestStatusEmail(
-          requestId: requestId,
-          adUserId: adUserId,
-          bPartnerId: bPartnerId ?? 0,
-          templateType: MailTemplateType.updateRequest,
-          updateText: resultHtml,
-          oldStatusName: oldStatusName,
-          updateId: updateId,
-        );
+        bool s1b = true;
+        if (_confidentialType != 'I') {
+          s1b = await sendRequestStatusEmail(
+            requestId: requestId,
+            adUserId: adUserId,
+            bPartnerId: bPartnerId ?? 0,
+            templateType: MailTemplateType.updateRequest,
+            updateText: resultHtml,
+            oldStatusName: oldStatusName,
+            updateId: updateId,
+          );
+        }
         success1 = success1 && s1b;
       }
 
-      if (hasSalesRep && salesRepId != adUserId && !statusChanged) {
+      bool isSalesRepCurrentUser = salesRepId != null && User.userID != null && salesRepId == User.userID;
+
+      if (hasSalesRep && salesRepId != adUserId) {
         emailsAttempted = true;
-        success2 = await sendRequestStatusEmail(
-          requestId: requestId,
-          adUserId: salesRepId,
-          bPartnerId: bPartnerId ?? 0,
-          templateType: MailTemplateType.updateRequest,
-          updateText: resultHtml,
-          oldStatusName: oldStatusName,
-          updateId: updateId,
-        );
+        
+        if (statusChanged && !isSalesRepCurrentUser) {
+          bool s2a = await sendRequestStatusEmail(
+            requestId: requestId,
+            adUserId: salesRepId,
+            bPartnerId: bPartnerId ?? 0,
+            templateType: MailTemplateType.statusUpdate,
+            updateText: resultHtml,
+            oldStatusName: oldStatusName,
+            updateId: updateId,
+          );
+          success2 = success2 && s2a;
+        }
+
+        bool s2b = true;
+        if (_confidentialType != 'I') {
+          s2b = await sendRequestStatusEmail(
+            requestId: requestId,
+            adUserId: salesRepId,
+            bPartnerId: bPartnerId ?? 0,
+            templateType: MailTemplateType.updateRequest,
+            updateText: resultHtml,
+            oldStatusName: oldStatusName,
+            updateId: updateId,
+          );
+        }
+        success2 = success2 && s2b;
       }
 
       if (!emailsAttempted) return;
@@ -686,6 +740,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
             if (AccessControl.isAdmin) ...[
               const SizedBox(height: 16),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: CustomDropdown<String>(
@@ -701,7 +756,13 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
                       },
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 16.0, left: 12.0, right: 12.0),
+                    child: Tooltip(
+                      message: 'Visibilidad de la actualización:\n• Interna: Solo visible para Administradores. NO dispara correos.\n• Cliente/Público: Visible para todos (Admin, Soporte, Cliente). Sí dispara correos.\n\nReglas automáticas adicionales:\n• Mensajes automáticos de "System" son invisibles para clientes y soporte.\n• Respuestas vacías o con texto "Sin resultado" se ocultan por limpieza.',
+                      child: Icon(Icons.info_outline, size: 24, color: Colors.grey),
+                    ),
+                  ),
                   Expanded(
                     child: CustomDropdown<int>(
                       label: AppLocale.status.getString(context),

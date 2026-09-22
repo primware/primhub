@@ -923,10 +923,6 @@ Future<List<Map<String, dynamic>>> fetchRequestUpdates(int requestId) async {
       final confId = update['ConfidentialTypeEntry']?['id']?.toString() ?? update['ConfidentialTypeEntry']?.toString() ?? '';
       final isInternal = confId == 'I';
 
-      if (AccessControl.isSupport) {
-        return !isSystem;
-      }
-      
       return !isSystem && !isInternal;
     }).toList();
   }
@@ -1086,6 +1082,38 @@ Future<Map<String, dynamic>> createRequestUpdate({
     return {'success': true, 'message': 'Actualización creada con éxito', 'id': newRecordId};
   } catch (e) {
     return {'success': false, 'message': e.toString()};
+  }
+}
+
+Future<bool> updateRequestUpdateConfidentiality(int updateId, String confidentialType) async {
+  try {
+    final url = Uri.parse('${Endpoint.baseUrl}/api/v1/models/R_RequestUpdate/$updateId');
+    final Map<String, dynamic> body = {
+      "ConfidentialTypeEntry": confidentialType
+    };
+
+    var response = await http.put(
+      url,
+      headers: {'Content-Type': 'application/json', 'Authorization': Token.token},
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 401) {
+      final refreshed = await handleTokenRefresh();
+      if (refreshed) {
+        response = await http.put(
+          url,
+          headers: {'Content-Type': 'application/json', 'Authorization': Token.token},
+          body: jsonEncode(body),
+        );
+      } else {
+        return false;
+      }
+    }
+
+    return response.statusCode == 200 || response.statusCode == 204;
+  } catch (e) {
+    return false;
   }
 }
 
