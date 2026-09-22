@@ -334,6 +334,26 @@ class _QuillExpandableFieldState extends State<QuillExpandableField> {
                   controller: widget.controller,
                 ),
               ),
+              AnimatedBuilder(
+                animation: widget.controller,
+                builder: (context, child) {
+                  final length = widget.controller.document.toPlainText().trim().length;
+                  return Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8.0, right: 4.0),
+                      child: Text(
+                        '$length / 6000',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: length > 6000 ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
           actions: [

@@ -436,6 +436,8 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
   bool _isSaving = false;
   int? _newStatusId;
 
+  int _currentLength = 0;
+
   @override
   void initState() {
     super.initState();
@@ -445,6 +447,26 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
     } else {
       _newStatusId = null;
     }
+    
+    _resultController.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    // Calculamos la longitud del texto plano para que sea razonable para el usuario final
+    // ya que el HTML generado incluye muchas etiquetas invisibles.
+    final plainText = _resultController.document.toPlainText().trim();
+    if (_currentLength != plainText.length) {
+      setState(() {
+        _currentLength = plainText.length;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _resultController.removeListener(_onTextChanged);
+    _resultController.dispose();
+    super.dispose();
   }
 
   Map<String, int> _getFilteredStatuses() {
@@ -736,6 +758,20 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
               label: AppLocale.resultOrComment.getString(context),
               isRequired: true,
               height: 120,
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4.0, right: 4.0),
+                child: Text(
+                  '$_currentLength / 6000',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: _currentLength > 6000 ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
             ),
             if (AccessControl.isAdmin) ...[
               const SizedBox(height: 16),

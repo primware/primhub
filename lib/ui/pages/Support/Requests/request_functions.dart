@@ -926,7 +926,7 @@ Future<List<Map<String, dynamic>>> fetchRequestUpdates(int requestId) async {
       
       // [TRANSICIÓN DE CONFIDENCIALIDAD]
       // Temporalmente ignoramos el tipo de confidencialidad (isInternal) para no ocultar de golpe
-      // más de 1000 registros históricos que fueron creados como "Internos" por defecto.
+      // muchos registros históricos que fueron creados como "Internos" por defecto.
       // El cliente podrá ver las actualizaciones sin importar su confidencialidad (Interno, Público, Tercero)
       // SIEMPRE Y CUANDO:
       // 1. No sean creadas por System
@@ -1039,7 +1039,7 @@ Future<Map<String, dynamic>> createRequestUpdate({
     final Map<String, dynamic> body = {
       "R_Request_ID": requestId,
       "Result": resultText,
-      "ConfidentialTypeEntry": {"id": confidentialType}
+      "ConfidentialTypeEntry": confidentialType
     };
 
     var response = await http.post(
@@ -1062,6 +1062,9 @@ Future<Map<String, dynamic>> createRequestUpdate({
     }
 
     if (response.statusCode != 200 && response.statusCode != 201) {
+      if (response.statusCode == 500) {
+        return {'success': false, 'message': 'El texto ingresado es demasiado largo o no es válido.'};
+      }
       return {'success': false, 'message': 'Error creando actualización: ${response.body}'};
     }
 
@@ -1095,6 +1098,9 @@ Future<Map<String, dynamic>> createRequestUpdate({
 
     return {'success': true, 'message': 'Actualización creada con éxito', 'id': newRecordId};
   } catch (e) {
+    if (e.toString().contains('Failed to fetch') || e.toString().contains('ClientException')) {
+      return {'success': false, 'message': 'El texto ingresado es demasiado largo o no es válido.'};
+    }
     return {'success': false, 'message': e.toString()};
   }
 }
@@ -1103,7 +1109,7 @@ Future<bool> updateRequestUpdateConfidentiality(int updateId, String confidentia
   try {
     final url = Uri.parse('${Endpoint.baseUrl}/api/v1/models/R_RequestUpdate/$updateId');
     final Map<String, dynamic> body = {
-      "ConfidentialTypeEntry": {"id": confidentialType}
+      "ConfidentialTypeEntry": confidentialType
     };
 
     var response = await http.put(
