@@ -920,10 +920,24 @@ Future<List<Map<String, dynamic>>> fetchRequestUpdates(int requestId) async {
       }
       final isSystem = createdByName.contains('System (deprecated)');
       
-      final confId = update['ConfidentialTypeEntry']?['id']?.toString() ?? update['ConfidentialTypeEntry']?.toString() ?? '';
-      final isInternal = confId == 'I';
-
-      return !isSystem && !isInternal;
+      final resultText = (update['Result'] ?? '').toString().toLowerCase();
+      final hasFrom = resultText.contains('from:');
+      final isEscalation = resultText.contains('escalad');
+      
+      // [TRANSICIÓN DE CONFIDENCIALIDAD]
+      // Temporalmente ignoramos el tipo de confidencialidad (isInternal) para no ocultar de golpe
+      // más de 1000 registros históricos que fueron creados como "Internos" por defecto.
+      // El cliente podrá ver las actualizaciones sin importar su confidencialidad (Interno, Público, Tercero)
+      // SIEMPRE Y CUANDO:
+      // 1. No sean creadas por System
+      // 2. No sean correos reenviados (contienen "from:")
+      // 3. No sean notas de escalada (contienen "escalad")
+      // En el futuro, cuando las solicitudes viejas se cierren, se podrá volver a usar:
+      // final confId = update['ConfidentialTypeEntry']?['id']?.toString() ?? update['ConfidentialTypeEntry']?.toString() ?? '';
+      // final isInternal = confId == 'I';
+      // return !isSystem && !isInternal;
+      
+      return !isSystem && !hasFrom && !isEscalation;
     }).toList();
   }
 
@@ -1025,7 +1039,7 @@ Future<Map<String, dynamic>> createRequestUpdate({
     final Map<String, dynamic> body = {
       "R_Request_ID": requestId,
       "Result": resultText,
-      "ConfidentialTypeEntry": confidentialType
+      "ConfidentialTypeEntry": {"id": confidentialType}
     };
 
     var response = await http.post(
@@ -1089,7 +1103,7 @@ Future<bool> updateRequestUpdateConfidentiality(int updateId, String confidentia
   try {
     final url = Uri.parse('${Endpoint.baseUrl}/api/v1/models/R_RequestUpdate/$updateId');
     final Map<String, dynamic> body = {
-      "ConfidentialTypeEntry": confidentialType
+      "ConfidentialTypeEntry": {"id": confidentialType}
     };
 
     var response = await http.put(
