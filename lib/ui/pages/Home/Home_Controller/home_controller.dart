@@ -168,16 +168,21 @@ class HomeController extends ChangeNotifier {
         List<dynamic> allProjects = GlobalCache.projects;
 
         if (AccessControl.isRealProject && partnerID != null) {
-          projects = allProjects.where((p) => p['C_BPartner_ID'] is Map ? p['C_BPartner_ID']['id'] == partnerID : p['C_BPartner_ID'] == partnerID).toList();
+          // El backend ya filtró los proyectos por C_BPartner_ID para los usuarios reales de proyecto.
+          projects = List.from(allProjects);
         } else {
           if (AdminViewModeManager().isViewingMine) {
             projects = allProjects.where((p) {
-              final bpId = p['C_BPartner_ID'] is Map ? p['C_BPartner_ID']['id'] : p['C_BPartner_ID'];
-              final repId = p['SalesRep_ID'] is Map ? p['SalesRep_ID']['id'] : p['SalesRep_ID'];
+              final rawBp = p['C_BPartner_ID'];
+              final rawRep = p['SalesRep_ID'];
+              
+              final bpId = rawBp is Map ? (rawBp['id'] as num?)?.toInt() : (rawBp as num?)?.toInt();
+              final repId = rawRep is Map ? (rawRep['id'] as num?)?.toInt() : (rawRep as num?)?.toInt();
+              
               return (partnerID != null && bpId == partnerID) || (User.userID != null && repId == User.userID);
             }).toList();
           } else {
-            projects = allProjects;
+            projects = List.from(allProjects);
           }
         }
 
@@ -185,7 +190,14 @@ class HomeController extends ChangeNotifier {
           projPName = projects[0]['C_BPartner_ID'] is Map ? projects[0]['C_BPartner_ID']['identifier'] : null;
 
           final validProjectIds = projects.map<int>((p) => p['id'] is int ? p['id'] as int : int.tryParse(p['id'].toString()) ?? 0).toSet();
-          selectedProjectIds = selectedProjectIds.where((id) => validProjectIds.contains(id)).toList();
+          if (selectedProjectIds.isEmpty) {
+            selectedProjectIds = validProjectIds.toList();
+          } else {
+            selectedProjectIds = selectedProjectIds.where((id) => validProjectIds.contains(id)).toList();
+            if (selectedProjectIds.isEmpty) {
+              selectedProjectIds = validProjectIds.toList();
+            }
+          }
         }
       } catch (e) {
         // Ignore error

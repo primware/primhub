@@ -241,7 +241,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     // Mapeo de nombres amigabless basado en el token
     final String username = _userInfo['sub'] ?? 'Desconocido';
-    final String email = _userInfo['email'] ?? 'admin@gardenworld.com';
+    final rawEmail = _userInfo['email'];
+    final String email = (rawEmail != null && rawEmail.toString().trim().isNotEmpty) ? rawEmail.toString() : 'Sin Correo Configurado';
     final String bPartner = _userInfo['bpartner_name'] ?? 'GardenWorld HQ';
 
     String roleName = 'Usuario';
