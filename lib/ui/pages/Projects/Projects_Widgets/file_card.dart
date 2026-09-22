@@ -175,7 +175,7 @@ class _FileCardState extends State<FileCard> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            visualName.split('.').first,
+                            visualName,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontWeight: (_isHovered || _isDragOver) ? FontWeight.bold : FontWeight.w600,

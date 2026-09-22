@@ -237,7 +237,9 @@ class ProjectFileManagerState extends State<ProjectFileManager> {
     if (result == null || result.files.isEmpty) return;
 
     final fileName = result.files.first.name;
-    final TextEditingController nameController = TextEditingController(text: fileName.split('.').first);
+    final int lastDotIdx = fileName.lastIndexOf('.');
+    final String baseName = (lastDotIdx != -1) ? fileName.substring(0, lastDotIdx) : fileName;
+    final TextEditingController nameController = TextEditingController(text: baseName);
 
     final bool? confirm = await showDialog<bool>(
       context: context,
@@ -412,7 +414,22 @@ class ProjectFileManagerState extends State<ProjectFileManager> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: CustomTextField(controller: _searchController, hintText: AppLocale.searchDocument.getString(context), prefixIcon: const Icon(Icons.search)),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      controller: _searchController, 
+                      hintText: AppLocale.searchDocument.getString(context), 
+                      prefixIcon: const Icon(Icons.search)
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Tooltip(
+                    message: 'Extensiones válidas:\nCSV, DOC, DOCX, JPEG, JPG, PDF, PNG, TXT, XLS, XLSX',
+                    child: Icon(Icons.info_outline, color: Colors.blue),
+                  ),
+                ],
+              ),
             ),
             if (widget.headerWidget != null)
               Padding(
@@ -691,7 +708,13 @@ class ProjectFileManagerState extends State<ProjectFileManager> {
                     ),
                     const SizedBox(height: 16),
                     _buildPropertyRow('Tipo', typeCode == 'ET' ? 'Entregable' : (typeCode == 'SG' ? 'Seguimiento' : 'General')),
-                    _buildPropertyRow('Extensión', DocumentsLogic.extractIdentifier(details['Extension'])),
+                    _buildPropertyRow('Extensión', () {
+                      String ext = DocumentsLogic.extractIdentifier(details['Extension'], defaultValue: '');
+                      if (ext.isEmpty && !isFolder && details['Name'] != null && details['Name'].toString().contains('.')) {
+                        ext = details['Name'].toString().split('.').last.toUpperCase();
+                      }
+                      return ext.isEmpty ? 'N/A' : ext;
+                    }()),
                     _buildPropertyRow('Creado', DocumentsLogic.formatDate(details['Created'])),
                     _buildPropertyRow('Creado Por', DocumentsLogic.extractIdentifier(details['CreatedBy'], defaultValue: 'Sistema')),
                   ],

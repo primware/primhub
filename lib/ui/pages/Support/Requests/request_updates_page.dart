@@ -618,9 +618,11 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
       bool success2 = true;
       bool emailsAttempted = false;
 
+      bool isAdUserCurrentUser = adUserId != null && User.userID != null && adUserId == User.userID;
+
       if (hasAdUser) {
         emailsAttempted = true;
-        if (statusChanged) {
+        if (statusChanged && !isAdUserCurrentUser) {
           success1 = await sendRequestStatusEmail(
             requestId: requestId,
             adUserId: adUserId,
@@ -764,11 +766,11 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 4.0, right: 4.0),
                 child: Text(
-                  '$_currentLength / 6000',
+                  '$_currentLength / 5000',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: _currentLength > 6000 ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: _currentLength > 5000 ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),

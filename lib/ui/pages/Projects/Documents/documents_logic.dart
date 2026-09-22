@@ -757,9 +757,9 @@ class DocumentsLogic {
       extension = 'TXT';
     }
 
-    const allowed = ['BTM', 'DOC', 'DOCX', 'DWG', 'DWF', 'DXF', 'EASM', 'EML', 'GIF', 'JPEG', 'JPG', 'MP4', 'MSG', 'PDF', 'PNG', 'PPT', 'PPTX', 'PST', 'RAR', 'RTF', 'SLDASM', 'SLDDRW', 'SLDPRT', 'TIF', 'TXT', 'XLS', 'XLSX', 'XML', 'ZIP', 'ZIPP'];
+    const allowed = ['CSV', 'DOC', 'DOCX', 'JPEG', 'JPG', 'PDF', 'PNG', 'TXT', 'XLS', 'XLSX'];
     if (!allowed.contains(extension)) {
-      return 'Formato del archivo inválido';
+      return 'Por favor suba un archivo con una extensión válida';
     }
 
     final typeCode = getTypeCode(viewType);
@@ -770,6 +770,7 @@ class DocumentsLogic {
       'Type': typeCode,
       'IsSummary': false,
       'Status': 'IR',
+      'VersionNo': '1.0',
     };
     if (projectId != null) payload['C_Project_ID'] = {'id': projectId};
     if (bPartnerId != null) payload['C_BPartner_ID'] = {'id': bPartnerId};
@@ -788,6 +789,11 @@ class DocumentsLogic {
         payload.remove('C_Project_ID');
         payload.remove('C_BPartner_ID');
         payload.remove('IsSummary'); // Remove IsSummary for related documents
+        
+        // Solo enviar la extensión a PRIM_Documents_Related
+        if (extension.isNotEmpty) {
+          payload['Extension'] = extension.toLowerCase();
+        }
         
         // Heredar el Type de la carpeta padre
         if (folder['Type'] != null) {

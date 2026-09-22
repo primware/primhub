@@ -1125,19 +1125,24 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
       bool success2 = true;
       bool emailsAttempted = false;
 
+      bool isAdUserCurrentUser = adUserId != null && User.userID != null && adUserId == User.userID;
+      bool isSalesRepCurrentUser = salesRepId != null && User.userID != null && salesRepId == User.userID;
+
       if (hasAdUser) {
         emailsAttempted = true;
         if (statusChanged) {
-          success1 = await sendRequestStatusEmail(
-            requestId: requestId,
-            adUserId: adUserId,
-            bPartnerId: bPartnerId ?? 0,
-            templateType: MailTemplateType.statusUpdate,
-            updateText: resultHtml,
-            oldStatusName: oldStatusName,
-            updateId: updateId,
-          );
-        } else {
+          if (!isAdUserCurrentUser) {
+            success1 = await sendRequestStatusEmail(
+              requestId: requestId,
+              adUserId: adUserId,
+              bPartnerId: bPartnerId ?? 0,
+              templateType: MailTemplateType.statusUpdate,
+              updateText: resultHtml,
+              oldStatusName: oldStatusName,
+              updateId: updateId,
+            );
+          }
+        } else if (resultHtml.isNotEmpty) {
           // If status didn't change but there's a comment, send update template 1000017
           success1 = await sendRequestStatusEmail(
             requestId: requestId,
@@ -1151,17 +1156,34 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
         }
       }
 
-      if (hasSalesRep && salesRepId != adUserId && resultHtml.isNotEmpty && !statusChanged) {
+      if (hasSalesRep && salesRepId != adUserId) {
         emailsAttempted = true;
-        success2 = await sendRequestStatusEmail(
-          requestId: requestId,
-          adUserId: salesRepId,
-          bPartnerId: bPartnerId ?? 0,
-          templateType: MailTemplateType.updateRequest,
-          updateText: resultHtml,
-          oldStatusName: oldStatusName,
-          updateId: updateId,
-        );
+        
+        if (statusChanged && !isSalesRepCurrentUser) {
+          bool s2a = await sendRequestStatusEmail(
+            requestId: requestId,
+            adUserId: salesRepId,
+            bPartnerId: bPartnerId ?? 0,
+            templateType: MailTemplateType.statusUpdate,
+            updateText: resultHtml,
+            oldStatusName: oldStatusName,
+            updateId: updateId,
+          );
+          success2 = success2 && s2a;
+        }
+
+        if (resultHtml.isNotEmpty) {
+          bool s2b = await sendRequestStatusEmail(
+            requestId: requestId,
+            adUserId: salesRepId,
+            bPartnerId: bPartnerId ?? 0,
+            templateType: MailTemplateType.updateRequest,
+            updateText: resultHtml,
+            oldStatusName: oldStatusName,
+            updateId: updateId,
+          );
+          success2 = success2 && s2b;
+        }
       }
 
       if (!emailsAttempted) return;
