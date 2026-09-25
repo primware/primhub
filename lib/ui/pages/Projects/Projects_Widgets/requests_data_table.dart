@@ -122,6 +122,7 @@ class _RequestsDataTableState extends State<RequestsDataTable> {
                 const DataColumn(label: Text('Estado')),
                 const DataColumn(label: Text('Prioridad')),
                 const DataColumn(label: Text('Fecha Fin Plan')),
+                if (AccessControl.isRealAdmin) DataColumn(label: Text(AppLocale.confidentiality.getString(context))),
               ],
               rows: widget.requests.asMap().entries.map((entry) {
                 final int index = entry.key;
@@ -228,6 +229,13 @@ class _RequestsDataTableState extends State<RequestsDataTable> {
                     DataCell(Text(cleanStatusName(DocumentsLogic.extractValue(req['R_Status_ID'])))),
                     DataCell(Text(DocumentsLogic.extractValue(req['Priority']))),
                     DataCell(Text(req['DateCompletePlan']?.toString().split('T')[0] ?? '')),
+                    if (AccessControl.isRealAdmin) DataCell(Text(
+                      (() {
+                        final rawConf = req['original']?['ConfidentialType'] ?? req['ConfidentialType'];
+                        final confVal = rawConf is Map ? rawConf['id']?.toString() ?? 'C' : rawConf?.toString() ?? 'C';
+                        return confVal == 'I' ? AppLocale.internalNote.getString(context) : (confVal == 'C' ? AppLocale.visibleToClient.getString(context) : AppLocale.publicLabel.getString(context));
+                      })()
+                    )),
                   ],
                 );
               }).toList(),

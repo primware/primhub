@@ -47,6 +47,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
   final _formKey = GlobalKey<FormState>();
   late String _currentPriority;
   late String _currentStatus;
+  late String _confidentialType;
   late int? _statusId;
   late bool _isReadOnly;
 
@@ -98,6 +99,9 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     _statusIdMap = widget.statusIdMap;
     _currentPriority = widget.request['level'] ?? 'Media';
     _currentStatus = widget.request['status'] ?? '';
+    final rawConf = widget.request['original']?['ConfidentialType'] ?? widget.request['ConfidentialType'];
+    final confValStr = rawConf is Map ? rawConf['id']?.toString() : rawConf?.toString();
+    _confidentialType = confValStr ?? widget.request['confidentialType'] ?? 'C';
     _statusId = widget.request['statusId'];
 
     if (_statusId != null && _statusIdMap.isNotEmpty) {
@@ -985,6 +989,8 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
       if (inputEstimated != null && inputEstimated != originalEstimated) {
         estimatedDevHoursToSend = inputEstimated;
       }
+      
+      String? confidentialTypeToSend = _confidentialType != widget.request['confidentialType'] ? _confidentialType : null;
 
       final result = await updateRemoteRequest(
         id: widget.request['realId'],
@@ -1009,6 +1015,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
         bPartnerId: _selectedBpId,
         userId: _selectedUserId,
         productChipId: _selectedProductChipId,
+        confidentialType: confidentialTypeToSend,
       );
 
       final newUpdateText = _newUpdateController.text.trim();
@@ -1127,8 +1134,9 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
 
       bool isAdUserCurrentUser = adUserId != null && User.userID != null && adUserId == User.userID;
       bool isSalesRepCurrentUser = salesRepId != null && User.userID != null && salesRepId == User.userID;
+      bool isInternal = _confidentialType == 'I';
 
-      if (hasAdUser) {
+      if (hasAdUser && !isInternal) {
         emailsAttempted = true;
         if (statusChanged) {
           if (!isAdUserCurrentUser) {
@@ -1143,23 +1151,25 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
             );
           }
         } else if (resultHtml.isNotEmpty) {
-          // If status didn't change but there's a comment, send update template 1000017
-          success1 = await sendRequestStatusEmail(
-            requestId: requestId,
-            adUserId: adUserId,
-            bPartnerId: bPartnerId ?? 0,
-            templateType: MailTemplateType.updateRequest,
-            updateText: resultHtml,
-            oldStatusName: oldStatusName,
-            updateId: updateId,
-          );
+          if (!isAdUserCurrentUser) {
+            // If status didn't change but there's a comment, send update template 1000017
+            success1 = await sendRequestStatusEmail(
+              requestId: requestId,
+              adUserId: adUserId,
+              bPartnerId: bPartnerId ?? 0,
+              templateType: MailTemplateType.updateRequest,
+              updateText: resultHtml,
+              oldStatusName: oldStatusName,
+              updateId: updateId,
+            );
+          }
         }
       }
 
       if (hasSalesRep && salesRepId != adUserId) {
         emailsAttempted = true;
         
-        if (statusChanged && !isSalesRepCurrentUser) {
+        if (statusChanged && !isInternal && !isSalesRepCurrentUser) {
           bool s2a = await sendRequestStatusEmail(
             requestId: requestId,
             adUserId: salesRepId,
@@ -1172,7 +1182,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
           success2 = success2 && s2a;
         }
 
-        if (resultHtml.isNotEmpty) {
+        if (resultHtml.isNotEmpty && !isSalesRepCurrentUser) {
           bool s2b = await sendRequestStatusEmail(
             requestId: requestId,
             adUserId: salesRepId,
@@ -1617,6 +1627,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                   ),
                   const SizedBox(height: 16),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: _buildSearchableField<String>(
@@ -1639,6 +1650,27 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                           ),
                         ),
                       ),
+                      if (AccessControl.isRealAdmin) ...[
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: CustomDropdown<String>(
+                            label: AppLocale.confidentiality.getString(context),
+                            value: _confidentialType,
+                            items: [
+                              DropdownMenuItem(value: 'I', child: Text(AppLocale.internalNote.getString(context))),
+                              DropdownMenuItem(value: 'C', child: Text(AppLocale.visibleToClient.getString(context))),
+                              DropdownMenuItem(value: 'P', child: Text(AppLocale.publicLabel.getString(context))),
+                            ],
+                            onChanged: _isReadOnly
+                                ? null
+                                : (val) {
+                                    if (val != null) {
+                                      setState(() => _confidentialType = val);
+                                    }
+                                  },
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 16),

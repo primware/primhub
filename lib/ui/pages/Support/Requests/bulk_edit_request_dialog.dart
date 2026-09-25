@@ -48,6 +48,7 @@ class _BulkEditRequestDialogState extends State<BulkEditRequestDialog> {
   int? _selectedBpId;
   int? _selectedUserId;
   int? _selectedProductChipId;
+  String? _selectedConfidentialType;
 
   bool _isProductChipBlocked = false;
   List<Map<String, dynamic>> _productChips = [];
@@ -209,6 +210,10 @@ class _BulkEditRequestDialogState extends State<BulkEditRequestDialog> {
           'Usuario $_selectedUserId';
       changes['Usuario Asignado'] = userName;
     }
+    if (_selectedConfidentialType != null) {
+      final label = _selectedConfidentialType == 'I' ? AppLocale.internalNote.getString(context) : (_selectedConfidentialType == 'C' ? AppLocale.visibleToClient.getString(context) : AppLocale.publicLabel.getString(context));
+      changes['Confidencialidad'] = label;
+    }
 
     // 2. Validar que haya al menos un cambio seleccionado
     if (changes.isEmpty) {
@@ -298,6 +303,7 @@ class _BulkEditRequestDialogState extends State<BulkEditRequestDialog> {
         groupId: _selectedGroup != null ? _groupMap[_selectedGroup] : null,
         bPartnerId: _selectedBpId,
         userId: _selectedUserId,
+        confidentialType: _selectedConfidentialType,
       );
 
       final success = result['success'] == true;
@@ -801,6 +807,31 @@ class _BulkEditRequestDialogState extends State<BulkEditRequestDialog> {
                 ),
               ],
             ),
+            if (AccessControl.isRealAdmin) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomDropdown<String?>(
+                      label: AppLocale.confidentiality.getString(context),
+                      value: _selectedConfidentialType,
+                      items: [
+                        const DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('-- No modificar --'),
+                        ),
+                        DropdownMenuItem(value: 'I', child: Text(AppLocale.internalNote.getString(context))),
+                        DropdownMenuItem(value: 'C', child: Text(AppLocale.visibleToClient.getString(context))),
+                        DropdownMenuItem(value: 'P', child: Text(AppLocale.publicLabel.getString(context))),
+                      ],
+                      onChanged: (val) => setState(() => _selectedConfidentialType = val),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Spacer(),
+                ],
+              ),
+            ],
           ],
         ),
       ),

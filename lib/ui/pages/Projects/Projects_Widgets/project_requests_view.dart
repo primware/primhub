@@ -230,6 +230,13 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
                              
       if (!belongsToProject) continue;
 
+      // FILTRO DE CONFIDENCIALIDAD
+      final rawConf = rawReq['ConfidentialType'];
+      final confidentialType = rawConf is Map ? rawConf['id']?.toString() ?? 'C' : rawConf?.toString() ?? 'C';
+      if (confidentialType == 'I' && !AccessControl.isRealAdmin) {
+        continue; // Ocultar notas internas a no administradores
+      }
+
       String taskName = 'General / Proyecto';
       String phaseName = '-';
 

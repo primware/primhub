@@ -275,6 +275,9 @@ class _TaskItemState extends State<TaskItem> {
                             ? req['AD_User_ID']['id']
                             : (req['AD_User_ID'] is int ? req['AD_User_ID'] : null),
                         'recordUU': req['Record_UU'], // Crucial para el diálogo de edición
+                        'ConfidentialType': req['ConfidentialType'],
+                        'confidentialType': req['confidentialType'],
+                        'original': req['original'] ?? req,
                       };
 
                       showDialog(

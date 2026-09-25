@@ -883,6 +883,7 @@ Future<Map<String, dynamic>> processRequests(List<dynamic> requests, Map<String,
       'productChipName': extractProductChipName(req),
       'isClosed': isFinalCloseStatus,
       'PrimHub_Estimated_development_hours': req['PrimHub_Estimated_development_hours'],
+      'confidentialType': req['ConfidentialType'] is Map ? req['ConfidentialType']['id']?.toString() : req['ConfidentialType']?.toString() ?? 'C',
       'original': req,
     });
   }
@@ -968,6 +969,7 @@ Future<Map<String, dynamic>> updateRemoteRequest({
   String? emailSubject,
   int? orderId,
   int? productChipId,
+  String? confidentialType,
 }) async {
   try {
     final url = Uri.parse('${Endpoint.request}/$id');
@@ -998,11 +1000,14 @@ Future<Map<String, dynamic>> updateRemoteRequest({
     if (requestTypeId != null) data['R_RequestType_ID'] = {'id': requestTypeId};
     if (categoryId != null) data['R_Category_ID'] = {'id': categoryId};
     if (groupId != null) data['R_Group_ID'] = {'id': groupId};
-    if (salesRepId != null) data['SalesRep_ID'] = salesRepId;
+    if (salesRepId != null) data['SalesRep_ID'] = {'id': salesRepId};
     if (bPartnerId != null) data['C_BPartner_ID'] = {'id': bPartnerId};
     if (userId != null) data['AD_User_ID'] = {'id': userId};
     if (orderId != null) data['C_Order_ID'] = {'id': orderId};
     if (productChipId != null) data['C_BPartner_Product_Chip_ID'] = {'id': productChipId};
+    if (confidentialType != null) {
+      data['ConfidentialType'] = confidentialType;
+    }
 
     var response = await http.put(url, headers: {'Content-Type': 'application/json', 'Authorization': Token.token}, body: jsonEncode(data));
 

@@ -759,6 +759,13 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
           .toList();
 
       final filteredRaw = rawAll.where((req) {
+        // 0. Filtro de confidencialidad
+        final rawConf = req['ConfidentialType'];
+        final confidentialType = rawConf is Map ? rawConf['id']?.toString() ?? 'C' : rawConf?.toString() ?? 'C';
+        if (confidentialType == 'I' && !AccessControl.isRealAdmin) {
+          return false;
+        }
+
         // A. Filtrado por Año (si aplica)
         if (_selectedYears.isNotEmpty) {
           final createdStr = req['Created']?.toString() ?? '';

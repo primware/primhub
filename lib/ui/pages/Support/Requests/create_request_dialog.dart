@@ -66,6 +66,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
   String _selectedPriority = 'Media';
   String? _selectedType;
   String _selectedStatus = 'Recibida';
+  String _confidentialType = AccessControl.isRealAdmin ? 'I' : 'C'; // C=Tercero, I=Interno, P=Publico
   String? _selectedCategory;
   String? _selectedGroup;
   int? _selectedProjectId;
@@ -184,14 +185,6 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
       if (_summaryQuillController.document.toPlainText().trim().isEmpty) {
         return false;
       }
-      // [Temporal] Campos no obligatorios
-      // if (_selectedEnvironment == null) return false;
-      // if (_errorServerUrlController.text.trim().isEmpty) return false;
-      // if (_errorUserController.text.trim().isEmpty) return false;
-      // if (_errorRoleController.text.trim().isEmpty) return false;
-      // if (_errorTimeController.text.trim().isEmpty) return false;
-      // if (_errorWindowController.text.trim().isEmpty) return false;
-      // if (_evidences[0] == null) return false;
     }
     return true;
   }
@@ -1217,6 +1210,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
       'Summary': summaryHtml,
       'Priority': _priorityMap[_selectedPriority] ?? '5',
       'R_RequestType_ID': {'id': _requestTypeMap[_selectedType!]},
+      'ConfidentialType': _confidentialType,
       'R_Status_ID': {
         'id': isFullAccess
             ? (_statusIdMap[_selectedStatus] ?? openStatusId)
@@ -1382,14 +1376,28 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
               adUserId = data['AD_User_ID'] is Map ? data['AD_User_ID']['id'] : data['AD_User_ID'];
             }
             int customerBpId = _selectedBpId ?? 0;
-
-            if (adUserId > 0 || customerBpId > 0) {
-              sendRequestStatusEmail(
-                requestId: newId,
-                adUserId: adUserId,
-                bPartnerId: customerBpId,
-                templateType: MailTemplateType.newRequest,
-              );
+            
+            // Lógica de confidencialidad para envío de correos
+            if (_confidentialType == 'I') {
+              // Si es interna, SOLO enviamos al representante comercial (si aplica y existe)
+              if (repIdToAssign != null && repIdToAssign > 0) {
+                sendRequestStatusEmail(
+                  requestId: newId,
+                  adUserId: repIdToAssign,
+                  bPartnerId: customerBpId,
+                  templateType: MailTemplateType.newRequest,
+                );
+              }
+            } else {
+              // Si NO es interna, enviamos al usuario original/cliente
+              if (adUserId > 0 || customerBpId > 0) {
+                sendRequestStatusEmail(
+                  requestId: newId,
+                  adUserId: adUserId,
+                  bPartnerId: customerBpId,
+                  templateType: MailTemplateType.newRequest,
+                );
+              }
             }
           } catch (_) {
       // Ignored: Fail silently
@@ -1735,6 +1743,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                 ),
                 const SizedBox(height: 16),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: _buildSearchableField<String>(
@@ -1758,6 +1767,23 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                         },
                       ),
                     ),
+                    if (AccessControl.isRealAdmin) ...[
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: CustomDropdown<String>(
+                          label: AppLocale.confidentiality.getString(context),
+                          value: _confidentialType,
+                          items: [
+                            DropdownMenuItem(value: 'I', child: Text(AppLocale.internalNote.getString(context))),
+                            DropdownMenuItem(value: 'C', child: Text(AppLocale.visibleToClient.getString(context))),
+                            DropdownMenuItem(value: 'P', child: Text(AppLocale.publicLabel.getString(context))),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) setState(() => _confidentialType = val);
+                          },
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 16),

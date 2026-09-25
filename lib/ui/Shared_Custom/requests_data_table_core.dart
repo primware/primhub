@@ -132,6 +132,11 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
       } else if (_sortKey == 'created') {
         valA = (a['original'] as Map?)?['Created']?.toString() ?? a['created']?.toString() ?? '';
         valB = (b['original'] as Map?)?['Created']?.toString() ?? b['created']?.toString() ?? '';
+      } else if (_sortKey == 'confidentialType') {
+        final rawConfA = (a['original'] as Map?)?['ConfidentialType'];
+        valA = rawConfA is Map ? rawConfA['id']?.toString() ?? 'C' : rawConfA?.toString() ?? 'C';
+        final rawConfB = (b['original'] as Map?)?['ConfidentialType'];
+        valB = rawConfB is Map ? rawConfB['id']?.toString() ?? 'C' : rawConfB?.toString() ?? 'C';
       }
 
       int cmp = 0;
@@ -352,6 +357,8 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
         ),
       if (AccessControl.isAdmin)
         ResponsiveDataColumn(label: AppLocale.created.getString(context), sortKey: 'created'),
+      if (AccessControl.isRealAdmin)
+        ResponsiveDataColumn(label: AppLocale.confidentiality.getString(context), sortKey: 'confidentialType'),
     ];
 
     List<DataCell> buildScrollableCells(Map<String, dynamic> alert) {
@@ -523,6 +530,13 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
         ),
         if (!widget.showProjectContext) DataCell(Text(chipDesc)),
         if (AccessControl.isAdmin) DataCell(Text(createdFormatted)),
+        if (AccessControl.isRealAdmin) DataCell(Text(
+          (() {
+            final rawConf = original['ConfidentialType'];
+            final confVal = rawConf is Map ? rawConf['id']?.toString() ?? 'C' : rawConf?.toString() ?? 'C';
+            return confVal == 'I' ? AppLocale.internalNote.getString(context) : (confVal == 'C' ? AppLocale.visibleToClient.getString(context) : AppLocale.publicLabel.getString(context));
+          })()
+        )),
       ];
     }
 
