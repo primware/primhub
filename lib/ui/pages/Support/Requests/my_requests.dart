@@ -70,6 +70,11 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
   RequestFilterModel _filters = const RequestFilterModel();
   final Map<int, String> _bpNameCache = {};
   List<Map<String, dynamic>> _sortedRequests = [];
+  
+  // Global Selection and Sorting state
+  Set<int> _selectedIds = {};
+  String? _sortKey;
+  bool _sortAscending = true;
 
   int? _bpId;
   List<Map<String, dynamic>> _bPartners = [];
@@ -118,17 +123,34 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
       _cachedTable = const SkeletonTable();
     } else {
       _cachedTable = RequestsDataTableCore(
-        key: ValueKey(
-          'requests_table_${_currentPage}_${_rowsPerPage}_${_sortedRequests.length}',
-        ),
+        key: const ValueKey('requests_table_core'),
         requests: _sortedRequests,
         onEdit: _editRequest,
-        onRefresh: () => _refreshRequest(fetchNetwork: true),
+        onRefresh: () {
+          setState(() => _selectedIds.clear());
+          _refreshRequest(fetchNetwork: true);
+        },
         statusIdMap: _statusIdMap,
         priorityMap: priorityMap,
         serverSidePagination: true,
         paginationControls: _buildPaginationControls(),
         useSimpleStatus: false,
+        externalSelectedIds: _selectedIds,
+        onSelectionChanged: (newSelection) {
+          setState(() {
+            _selectedIds = newSelection;
+          });
+        },
+        externalSortKey: _sortKey,
+        externalSortAscending: _sortAscending,
+        onSortChanged: (key, ascending) {
+          setState(() {
+            _sortKey = key;
+            _sortAscending = ascending;
+            _currentPage = 0;
+          });
+          _refreshRequest(fetchNetwork: false);
+        },
       );
     }
     return _cachedTable!;
@@ -970,7 +992,16 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
       // 4. Actualizar contador total
       _totalRecords = filteredRaw.length;
 
-      // 5. Paginación sobre la lista filtrada RAW
+      // 5. Procesar TODOS los datos filtrados para permitir ordenamiento global
+      final processedData = await processRequests(filteredRaw, _statusIdMap);
+      List<Map<String, dynamic>> allProcessed = List<Map<String, dynamic>>.from(processedData['requests']);
+
+      // 6. Aplicar ordenamiento global si hay uno seleccionado
+      if (_sortKey != null) {
+        RequestsDataTableCore.sortRequestsList(allProcessed, _sortKey, _sortAscending);
+      }
+
+      // 7. Paginación
       int start = _currentPage * _rowsPerPage;
       if (start >= _totalRecords) {
         _currentPage = 0;
@@ -979,33 +1010,13 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
       int end = start + _rowsPerPage;
       if (end > _totalRecords) end = _totalRecords;
 
-      final pageRawItems = filteredRaw.sublist(start, end);
-
-      // 6. PROCESAR SOLO LA PÁGINA ACTUAL (25 items vs 5000+)
-      // Esto es lo que devuelve el rendimiento instantáneo
-      final processedData = await processRequests(pageRawItems, _statusIdMap);
-      final List<Map<String, dynamic>> pageProcessed =
-          List<Map<String, dynamic>>.from(processedData['requests']);
+      final pageProcessed = allProcessed.sublist(start, end);
 
       if (mounted) {
         setState(() {
           _rawRequests = filteredRaw;
           _requests = pageProcessed;
-          // Cacheamos el ordenamiento aquí para evitar hacerlo en el build
-          _sortedRequests = _requests.toList()
-            ..sort((a, b) {
-              final hasChipA = (a['productChipId'] != null) ? 1 : 0;
-              final hasChipB = (b['productChipId'] != null) ? 1 : 0;
-              if (hasChipA != hasChipB) {
-                return hasChipB.compareTo(hasChipA);
-              }
-
-              final timeA = a['time'] ?? '';
-              final timeB = b['time'] ?? '';
-              return _isAscending
-                  ? timeA.compareTo(timeB)
-                  : timeB.compareTo(timeA);
-            });
+          _sortedRequests = _requests;
           _isLoading = false;
         });
         _updateStatsLocally();

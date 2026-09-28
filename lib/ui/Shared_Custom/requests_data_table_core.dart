@@ -33,6 +33,12 @@ class RequestsDataTableCore extends StatefulWidget {
   final Widget? paginationControls;
   final bool useSimpleStatus;
 
+  final Function(String? sortKey, bool sortAscending)? onSortChanged;
+  final Set<int>? externalSelectedIds;
+  final Function(Set<int>)? onSelectionChanged;
+  final String? externalSortKey;
+  final bool? externalSortAscending;
+
   const RequestsDataTableCore({
     super.key,
     required this.requests,
@@ -44,99 +50,80 @@ class RequestsDataTableCore extends StatefulWidget {
     this.serverSidePagination = false,
     this.paginationControls,
     this.useSimpleStatus = true,
+    this.onSortChanged,
+    this.externalSelectedIds,
+    this.onSelectionChanged,
+    this.externalSortKey,
+    this.externalSortAscending,
   });
 
-  @override
-  State<RequestsDataTableCore> createState() => _RequestsDataTableCoreState();
-}
-
-class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
-  final Set<int> _selectedIds = {};
-  int? _lastSelectedIndex;
-
-  String? _sortKey;
-  bool _sortAscending = true;
-  late List<Map<String, dynamic>> _sortedRequests;
-
-  @override
-  void initState() {
-    super.initState();
-    _sortedRequests = List.from(widget.requests);
-  }
-
-  @override
-  void didUpdateWidget(covariant RequestsDataTableCore oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.requests != widget.requests) {
-      _sortedRequests = List.from(widget.requests);
-      _applySort();
-    }
-  }
-
-  void _applySort() {
-    if (_sortKey == null) return;
-    _sortedRequests.sort((a, b) {
+  static void sortRequestsList(List<Map<String, dynamic>> list, String? sortKey, bool sortAscending) {
+    if (sortKey == null) return;
+    list.sort((a, b) {
       dynamic valA;
       dynamic valB;
 
-      if (_sortKey == 'id') {
+      if (sortKey == 'id') {
         valA = int.tryParse(a['id']?.toString() ?? '0') ?? 0;
         valB = int.tryParse(b['id']?.toString() ?? '0') ?? 0;
-      } else if (_sortKey == 'status') {
-        valA = request_functions.cleanStatusName(a['status']?.toString() ?? '');
-        valB = request_functions.cleanStatusName(b['status']?.toString() ?? '');
-      } else if (_sortKey == 'situation') {
-        valA = a['situation']?.toString() ?? '';
-        valB = b['situation']?.toString() ?? '';
-      } else if (_sortKey == 'category') {
-        final catA = (a['original'] as Map?)?['R_Category_ID'];
-        valA = catA is Map ? (catA['Name'] ?? catA['identifier'] ?? '') : '';
-        final catB = (b['original'] as Map?)?['R_Category_ID'];
-        valB = catB is Map ? (catB['Name'] ?? catB['identifier'] ?? '') : '';
-      } else if (_sortKey == 'subject') {
-        valA =
-            a['emailSubject']?.toString() ??
-            (a['original'] as Map?)?['Summary']?.toString() ??
-            '';
-        valB =
-            b['emailSubject']?.toString() ??
-            (b['original'] as Map?)?['Summary']?.toString() ??
-            '';
-      } else if (_sortKey == 'priority') {
-        valA = a['level']?.toString() ?? '';
-        valB = b['level']?.toString() ?? '';
-      } else if (_sortKey == 'bp') {
-        valA = a['bpName']?.toString() ?? '';
-        valB = b['bpName']?.toString() ?? '';
-      } else if (_sortKey == 'user') {
-        valA = a['userName']?.toString() ?? '';
-        valB = b['userName']?.toString() ?? '';
-      } else if (_sortKey == 'salesRep') {
-        valA = a['salesRepName']?.toString() ?? '';
-        valB = b['salesRepName']?.toString() ?? '';
-      } else if (_sortKey == 'description') {
-        valA = a['descriptionClean']?.toString() ?? '';
-        valB = b['descriptionClean']?.toString() ?? '';
-      } else if (_sortKey == 'qtySpent') {
+      } else if (sortKey == 'status') {
+        valA = request_functions.cleanStatusName(a['status']?.toString() ?? '').toLowerCase();
+        valB = request_functions.cleanStatusName(b['status']?.toString() ?? '').toLowerCase();
+      } else if (sortKey == 'situation') {
+        valA = a['situation']?.toString().toLowerCase() ?? '';
+        valB = b['situation']?.toString().toLowerCase() ?? '';
+      } else if (sortKey == 'category') {
+        valA = a['category']?.toString().toLowerCase() ?? '';
+        valB = b['category']?.toString().toLowerCase() ?? '';
+      } else if (sortKey == 'subject') {
+        String sA = a['emailSubject']?.toString() ?? '';
+        if (sA.isEmpty) sA = a['descriptionClean']?.toString() ?? '';
+        valA = sA.toLowerCase();
+
+        String sB = b['emailSubject']?.toString() ?? '';
+        if (sB.isEmpty) sB = b['descriptionClean']?.toString() ?? '';
+        valB = sB.toLowerCase();
+      } else if (sortKey == 'priority') {
+        int getPriorityWeight(String? p) {
+          final lp = p?.toLowerCase().trim() ?? '';
+          if (lp == 'urgente') return 1;
+          if (lp == 'alta') return 2;
+          if (lp == 'media') return 3;
+          if (lp == 'baja') return 4;
+          if (lp == 'muy baja') return 5;
+          return 6; // N/A
+        }
+        valA = getPriorityWeight(a['level']?.toString());
+        valB = getPriorityWeight(b['level']?.toString());
+      } else if (sortKey == 'bp') {
+        valA = a['bpName']?.toString().toLowerCase() ?? '';
+        valB = b['bpName']?.toString().toLowerCase() ?? '';
+      } else if (sortKey == 'user') {
+        valA = a['userName']?.toString().toLowerCase() ?? '';
+        valB = b['userName']?.toString().toLowerCase() ?? '';
+      } else if (sortKey == 'salesRep') {
+        valA = a['salesRepName']?.toString().toLowerCase() ?? '';
+        valB = b['salesRepName']?.toString().toLowerCase() ?? '';
+      } else if (sortKey == 'description') {
+        valA = a['descriptionClean']?.toString().toLowerCase() ?? '';
+        valB = b['descriptionClean']?.toString().toLowerCase() ?? '';
+      } else if (sortKey == 'qtySpent') {
         valA = (a['qtySpent'] as num?)?.toDouble() ?? 0.0;
         valB = (b['qtySpent'] as num?)?.toDouble() ?? 0.0;
-      } else if (_sortKey == 'productChip') {
-        valA = a['productChipName']?.toString() ?? '';
-        valB = b['productChipName']?.toString() ?? '';
-      } else if (_sortKey == 'phase') {
-        valA = a['phaseName']?.toString() ?? '';
-        valB = b['phaseName']?.toString() ?? '';
-      } else if (_sortKey == 'task') {
-        valA = a['taskName']?.toString() ?? '';
-        valB = b['taskName']?.toString() ?? '';
-      } else if (_sortKey == 'created') {
-        valA = (a['original'] as Map?)?['Created']?.toString() ?? a['created']?.toString() ?? '';
-        valB = (b['original'] as Map?)?['Created']?.toString() ?? b['created']?.toString() ?? '';
-      } else if (_sortKey == 'confidentialType') {
-        final rawConfA = (a['original'] as Map?)?['ConfidentialType'];
-        valA = rawConfA is Map ? rawConfA['id']?.toString() ?? 'C' : rawConfA?.toString() ?? 'C';
-        final rawConfB = (b['original'] as Map?)?['ConfidentialType'];
-        valB = rawConfB is Map ? rawConfB['id']?.toString() ?? 'C' : rawConfB?.toString() ?? 'C';
+      } else if (sortKey == 'productChip') {
+        valA = a['productChipName']?.toString().toLowerCase() ?? '';
+        valB = b['productChipName']?.toString().toLowerCase() ?? '';
+      } else if (sortKey == 'phase') {
+        valA = a['phaseName']?.toString().toLowerCase() ?? '';
+        valB = b['phaseName']?.toString().toLowerCase() ?? '';
+      } else if (sortKey == 'task') {
+        valA = a['taskName']?.toString().toLowerCase() ?? '';
+        valB = b['taskName']?.toString().toLowerCase() ?? '';
+      } else if (sortKey == 'created') {
+        final strA = (a['original'] as Map?)?['Created']?.toString() ?? a['created']?.toString() ?? '';
+        final strB = (b['original'] as Map?)?['Created']?.toString() ?? b['created']?.toString() ?? '';
+        valA = DateTime.tryParse(strA)?.millisecondsSinceEpoch ?? 0;
+        valB = DateTime.tryParse(strB)?.millisecondsSinceEpoch ?? 0;
       }
 
       int cmp = 0;
@@ -145,20 +132,75 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
       } else {
         cmp = valA.toString().compareTo(valB.toString());
       }
-      return _sortAscending ? cmp : -cmp;
+      return sortAscending ? cmp : -cmp;
     });
   }
 
-  void _onSort(String key) {
-    setState(() {
-      if (_sortKey == key) {
-        _sortAscending = !_sortAscending;
-      } else {
-        _sortKey = key;
-        _sortAscending = true;
+  @override
+  State<RequestsDataTableCore> createState() => _RequestsDataTableCoreState();
+}
+
+class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
+  Set<int> get _selectedIds => widget.externalSelectedIds ?? _internalSelectedIds;
+  final Set<int> _internalSelectedIds = {};
+  
+  int? _lastSelectedIndex;
+
+  String? get _sortKey => widget.externalSortKey ?? _internalSortKey;
+  bool get _sortAscending => widget.externalSortAscending ?? _internalSortAscending;
+
+  String? _internalSortKey;
+  bool _internalSortAscending = true;
+  late List<Map<String, dynamic>> _sortedRequests;
+
+  @override
+  void initState() {
+    super.initState();
+    _sortedRequests = List.from(widget.requests);
+    if (widget.onSortChanged == null) {
+      RequestsDataTableCore.sortRequestsList(_sortedRequests, _sortKey, _sortAscending);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant RequestsDataTableCore oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.requests != widget.requests || oldWidget.externalSortKey != widget.externalSortKey || oldWidget.externalSortAscending != widget.externalSortAscending) {
+      _sortedRequests = List.from(widget.requests);
+      if (widget.onSortChanged == null) {
+        RequestsDataTableCore.sortRequestsList(_sortedRequests, _sortKey, _sortAscending);
       }
-      _applySort();
-    });
+    }
+  }
+
+  void _onSort(String key) {
+    if (widget.onSortChanged != null) {
+      bool ascending = true;
+      String? nextKey = key;
+      if (widget.externalSortKey == key) {
+        if (widget.externalSortAscending == true) {
+          ascending = false;
+        } else {
+          nextKey = null;
+        }
+      }
+      widget.onSortChanged!(nextKey, ascending);
+    } else {
+      setState(() {
+        if (_internalSortKey == key) {
+          if (_internalSortAscending == true) {
+            _internalSortAscending = false;
+          } else {
+            _internalSortKey = null;
+            _internalSortAscending = true;
+          }
+        } else {
+          _internalSortKey = key;
+          _internalSortAscending = true;
+        }
+        RequestsDataTableCore.sortRequestsList(_sortedRequests, _internalSortKey, _internalSortAscending);
+      });
+    }
   }
 
   int _getRealId(Map<String, dynamic> req) =>
@@ -175,21 +217,29 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
         HardwareKeyboard.instance.logicalKeysPressed.contains(
           LogicalKeyboardKey.shiftRight,
         );
-    setState(() {
-      if (isShiftPressed && _lastSelectedIndex != null) {
-        int start = min(_lastSelectedIndex!, index);
-        int end = max(_lastSelectedIndex!, index);
-        for (int i = start; i <= end; i++) {
-          final id = _getRealId(_sortedRequests[i]);
-          selected == true ? _selectedIds.add(id) : _selectedIds.remove(id);
-        }
-      } else {
-        selected == true
-            ? _selectedIds.add(realId)
-            : _selectedIds.remove(realId);
-        _lastSelectedIndex = index;
+    
+    final newSelection = Set<int>.from(_selectedIds);
+    
+    if (isShiftPressed && _lastSelectedIndex != null) {
+      int start = min(_lastSelectedIndex!, index);
+      int end = max(_lastSelectedIndex!, index);
+      for (int i = start; i <= end; i++) {
+        final id = _getRealId(_sortedRequests[i]);
+        selected == true ? newSelection.add(id) : newSelection.remove(id);
       }
-    });
+    } else {
+      selected == true ? newSelection.add(realId) : newSelection.remove(realId);
+      _lastSelectedIndex = index;
+    }
+
+    if (widget.onSelectionChanged != null) {
+      widget.onSelectionChanged!(newSelection);
+    } else {
+      setState(() {
+        _internalSelectedIds.clear();
+        _internalSelectedIds.addAll(newSelection);
+      });
+    }
   }
 
   @override
@@ -348,7 +398,6 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
       ResponsiveDataColumn(
         label: AppLocale.consumedHours.getString(context),
         sortKey: 'qtySpent',
-        numeric: true,
       ),
       if (!widget.showProjectContext)
         ResponsiveDataColumn(
@@ -358,7 +407,7 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
       if (AccessControl.isAdmin)
         ResponsiveDataColumn(label: AppLocale.created.getString(context), sortKey: 'created'),
       if (AccessControl.isRealAdmin)
-        ResponsiveDataColumn(label: AppLocale.confidentiality.getString(context), sortKey: 'confidentialType'),
+        ResponsiveDataColumn(label: AppLocale.confidentiality.getString(context)),
     ];
 
     List<DataCell> buildScrollableCells(Map<String, dynamic> alert) {
@@ -566,7 +615,13 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
                       context: context,
                       builder: (context) => BulkReopenRequestDialog(
                         selectedIds: _selectedIds,
-                        onSaved: () => setState(() => _selectedIds.clear()),
+                        onSaved: () {
+                          if (widget.onSelectionChanged != null) {
+                            widget.onSelectionChanged!(<int>{});
+                          } else {
+                            setState(() => _internalSelectedIds.clear());
+                          }
+                        },
                       ),
                     );
                   },
@@ -587,7 +642,13 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
                       context: context,
                       builder: (context) => BulkEditRequestDialog(
                         selectedIds: _selectedIds,
-                        onSaved: () => setState(() => _selectedIds.clear()),
+                        onSaved: () {
+                          if (widget.onSelectionChanged != null) {
+                            widget.onSelectionChanged!(<int>{});
+                          } else {
+                            setState(() => _internalSelectedIds.clear());
+                          }
+                        },
                       ),
                     );
                   },
@@ -645,13 +706,23 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
                 showCheckboxColumn: AccessControl.canManageRequests,
                 selectedIds: _selectedIds,
                 onSelectAll: (selected) {
-                  setState(() {
-                    selected == true
-                        ? _selectedIds.addAll(
-                            _sortedRequests.map((r) => _getRealId(r)),
-                          )
-                        : _selectedIds.clear();
-                  });
+                  final newSelection = Set<int>.from(_selectedIds);
+                  if (selected == true) {
+                    newSelection.addAll(_sortedRequests.map((r) => _getRealId(r)));
+                  } else {
+                    // Only clear the ones on the current page to preserve across pages
+                    final currentPageIds = _sortedRequests.map((r) => _getRealId(r)).toSet();
+                    newSelection.removeAll(currentPageIds);
+                  }
+                  
+                  if (widget.onSelectionChanged != null) {
+                    widget.onSelectionChanged!(newSelection);
+                  } else {
+                    setState(() {
+                      _internalSelectedIds.clear();
+                      _internalSelectedIds.addAll(newSelection);
+                    });
+                  }
                 },
                 onSelectChanged: (id, isSelected) {
                   final index = _sortedRequests.indexWhere(

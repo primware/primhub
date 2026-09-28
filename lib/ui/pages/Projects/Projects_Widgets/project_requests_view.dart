@@ -53,6 +53,11 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
   int _currentPageSize = 25;
   int _currentSkip = 0;
   int _totalRecords = 0;
+  
+  // Global Selection and Sorting state
+  Set<int> _selectedIds = {};
+  String? _sortKey;
+  bool _sortAscending = true;
 
   @override
   void initState() {
@@ -331,6 +336,9 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
       return match;
     }).toList();
 
+    // 1. Sort the entire filtered dataset FIRST
+    RequestsDataTableCore.sortRequestsList(filtered, _sortKey, _sortAscending);
+
     _totalRecords = filtered.length;
 
     // Apply Local Pagination
@@ -454,11 +462,31 @@ class _ProjectRequestsViewState extends State<ProjectRequestsView> {
                               statusIdMap: _statusIdMap,
                               priorityMap: priorityMap,
                               onEdit: (req) => _editRequest(req),
-                              onRefresh: () => _initData(showLoading: false),
+                              onRefresh: () {
+                                setState(() {
+                                  _selectedIds.clear();
+                                });
+                                _initData(showLoading: false);
+                              },
                               showProjectContext: true,
                               serverSidePagination: true,
                               paginationControls: _buildPaginationControls(),
                               useSimpleStatus: true,
+                              externalSelectedIds: _selectedIds,
+                              onSelectionChanged: (newSelection) {
+                                setState(() {
+                                  _selectedIds = newSelection;
+                                });
+                              },
+                              externalSortKey: _sortKey,
+                              externalSortAscending: _sortAscending,
+                              onSortChanged: (key, ascending) {
+                                setState(() {
+                                  _sortKey = key;
+                                  _sortAscending = ascending;
+                                });
+                                _applyFilters(resetPage: true);
+                              },
                             ),
                           ),
               ),

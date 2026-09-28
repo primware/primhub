@@ -532,7 +532,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                                 Tooltip(
                                   message: AppLocale.requiresAdditionalFields.getString(context),
                                   child: Icon(
-                                    Icons.format_list_bulleted_add,
+                                    Icons.post_add,
                                     size: 16,
                                     color: Theme.of(context).colorScheme.primary,
                                   ),

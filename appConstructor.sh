@@ -35,13 +35,13 @@ echo "Inyectando reglas de Prefetch para carga diferida..."
 for file in "$BUILD_DIR"/main.dart.js_*.part.js; do
   if [ -f "$file" ]; then
     FILENAME=$(basename "$file")
-    echo "  <link rel="prefetch" href="$FILENAME">" >> "$BUILD_DIR/prefetch_tags.txt"
+    echo "  <link rel=\"prefetch\" href=\"$FILENAME\">" >> "$BUILD_DIR/prefetch_tags.txt"
   fi
 done
 
 if [ -s "$BUILD_DIR/prefetch_tags.txt" ]; then
   awk -v tagsfile="$BUILD_DIR/prefetch_tags.txt" '
-  /</head>/ {
+  /<\/head>/ {
     system("cat " tagsfile)
     print "  </head>"
     next
