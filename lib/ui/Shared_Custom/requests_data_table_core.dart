@@ -503,16 +503,23 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
           if (AccessControl.isAdmin || AccessControl.isSupport)
             DataCell(Text(alert['situation']?.toString() ?? 'Sin tipo')),
         ],
-        DataCell(Text(finalCatName)),
+        DataCell(
+          SizedBox(
+            width: 130,
+            child: Text(finalCatName, overflow: TextOverflow.ellipsis),
+          ),
+        ),
         DataCell(
           Tooltip(
             message: alert['emailSubject']?.toString() ?? '',
             waitDuration: const Duration(milliseconds: 500),
             showDuration: const Duration(seconds: 2),
-            child: Text(
-              (alert['emailSubject']?.toString() ?? '').length > 25
-                  ? '${(alert['emailSubject']?.toString() ?? '').substring(0, 25)}...'
-                  : (alert['emailSubject']?.toString() ?? ''),
+            child: SizedBox(
+              width: 180,
+              child: Text(
+                alert['emailSubject']?.toString() ?? '',
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
         ),
@@ -533,19 +540,23 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
           ),
         ),
         if (widget.showProjectContext)
-          DataCell(Text(alert['phaseName']?.toString() ?? '-')),
+          DataCell(SizedBox(width: 120, child: Text(alert['phaseName']?.toString() ?? '-', overflow: TextOverflow.ellipsis))),
         if (widget.showProjectContext)
-          DataCell(Text(alert['taskName']?.toString() ?? '-')),
+          DataCell(SizedBox(width: 120, child: Text(alert['taskName']?.toString() ?? '-', overflow: TextOverflow.ellipsis))),
         if (AccessControl.isAdmin)
-          DataCell(Text(alert['bpName']?.toString() ?? '')),
+          DataCell(SizedBox(width: 150, child: Text(alert['bpName']?.toString() ?? '', overflow: TextOverflow.ellipsis))),
         if (AccessControl.isAdmin)
-          DataCell(Text(alert['userName']?.toString() ?? '')),
+          DataCell(SizedBox(width: 130, child: Text(alert['userName']?.toString() ?? '', overflow: TextOverflow.ellipsis))),
         if (AccessControl.isAdmin)
           DataCell(
-            Text(
-              repName.toString().isEmpty
-                  ? (alert['salesRepName']?.toString() ?? '')
-                  : repName.toString(),
+            SizedBox(
+              width: 130,
+              child: Text(
+                repName.toString().isEmpty
+                    ? (alert['salesRepName']?.toString() ?? '')
+                    : repName.toString(),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
         DataCell(
@@ -577,7 +588,8 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
             ),
           ),
         ),
-        if (!widget.showProjectContext) DataCell(Text(chipDesc)),
+        if (!widget.showProjectContext) 
+          DataCell(SizedBox(width: 130, child: Text(chipDesc, overflow: TextOverflow.ellipsis))),
         if (AccessControl.isAdmin) DataCell(Text(createdFormatted)),
         if (AccessControl.isRealAdmin) DataCell(Text(
           (() {
