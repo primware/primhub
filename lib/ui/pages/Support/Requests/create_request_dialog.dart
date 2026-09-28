@@ -485,54 +485,139 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
             child: Table(
               border: TableBorder.all(color: Colors.grey.withOpacity(0.3)),
               columnWidths: const {
-                0: FlexColumnWidth(1),
-                1: FlexColumnWidth(2),
+                0: FlexColumnWidth(1.5),
+                1: FlexColumnWidth(1),
+                2: FlexColumnWidth(2),
               },
               children: [
-                const TableRow(
-                  decoration: BoxDecoration(color: Colors.deepPurple),
+                TableRow(
+                  decoration: const BoxDecoration(color: Colors.deepPurple),
                   children: [
                     Padding(
                       padding: EdgeInsets.all(8.0),
-                      child: Text(
-                        'Categoría / Síntoma',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      child: Center(
+                        child: Text(
+                          AppLocale.categoryOrSymptom.getString(context),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                     Padding(
                       padding: EdgeInsets.all(8.0),
-                      child: Text(
-                        'Justificación Técnica',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      child: Center(
+                        child: Text(
+                          AppLocale.priority.getString(context),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Center(
+                        child: Text(
+                          AppLocale.technicalJustification.getString(context),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                ..._categoryRecords.map(
-                  (cat) => TableRow(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          cat['Name'] ?? '',
-                          style: const TextStyle(fontWeight: FontWeight.w500),
+                ...(() {
+                  final sortedCategories = List<Map<String, dynamic>>.from(_categoryRecords);
+                  sortedCategories.sort((a, b) {
+                    final int pA = int.tryParse(a['Priority']?.toString() ?? '5') ?? 5;
+                    final int pB = int.tryParse(b['Priority']?.toString() ?? '5') ?? 5;
+                    return pA.compareTo(pB);
+                  });
+                  return sortedCategories;
+                })().map(
+                  (cat) {
+                    final String pStr = cat['Priority']?.toString() ?? '5';
+                    final priorityName = {
+                          '1': AppLocale.urgent.getString(context),
+                          '3': AppLocale.high.getString(context),
+                          '5': AppLocale.medium.getString(context),
+                          '7': AppLocale.low.getString(context),
+                          '9': AppLocale.veryLow.getString(context),
+                        }[pStr] ??
+                        pStr;
+                    Color priorityColor = Colors.green;
+                    if (pStr == '1') {
+                      priorityColor = Colors.purple;
+                    } else if (pStr == '3') {
+                      priorityColor = Colors.red;
+                    } else if (pStr == '5') {
+                      priorityColor = Colors.amber.shade800;
+                    } else if (pStr == '9') {
+                      priorityColor = Colors.grey;
+                    }
+
+                    final rawVal = cat.entries
+                        .firstWhere(
+                            (e) =>
+                                e.key.toLowerCase() ==
+                                'primhub_additional_category_textfields',
+                            orElse: () => const MapEntry('', null))
+                        .value;
+                    final bool requiresAdditionalFields = rawVal == true || rawVal?.toString().toLowerCase() == 'true';
+                    
+                    return TableRow(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  cat['Name'] ?? '',
+                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              if (requiresAdditionalFields)
+                                Tooltip(
+                                  message: AppLocale.requiresAdditionalFields.getString(context),
+                                  child: Icon(
+                                    Icons.format_list_bulleted_add,
+                                    size: 16,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          cat['Description'] ??
-                              'Sin descripción técnica disponible.',
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Center(
+                            child: Text(
+                              priorityName,
+                              style: TextStyle(
+                                color: priorityColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            cat['Description'] ??
+                                AppLocale.noDescriptionAvailable.getString(context),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),

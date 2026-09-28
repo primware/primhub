@@ -29,6 +29,28 @@ awk -v ver="$VERSION" '{
 echo "Aplicando versión a main.dart.js dentro de flutter_bootstrap.js..."
 sed -i "s/main\.dart\.js/main.dart.js?v=$VERSION/g" "$BUILD_DIR/flutter_bootstrap.js"
 
+echo "Inyectando reglas de Prefetch para carga diferida..."
+# Creamos un archivo temporal con los tags
+> "$BUILD_DIR/prefetch_tags.txt"
+for file in "$BUILD_DIR"/main.dart.js_*.part.js; do
+  if [ -f "$file" ]; then
+    FILENAME=$(basename "$file")
+    echo "  <link rel="prefetch" href="$FILENAME">" >> "$BUILD_DIR/prefetch_tags.txt"
+  fi
+done
+
+if [ -s "$BUILD_DIR/prefetch_tags.txt" ]; then
+  awk -v tagsfile="$BUILD_DIR/prefetch_tags.txt" '
+  /</head>/ {
+    system("cat " tagsfile)
+    print "  </head>"
+    next
+  }
+  {print}
+  ' "$INDEX_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$INDEX_FILE"
+fi
+rm -f "$BUILD_DIR/prefetch_tags.txt"
+
 echo "Eliminando bloque previo de versión (si existiera)..."
 # Borra el bloque entre marcadores (multilínea) si existía
 perl -0777 -pe 's/<!-- BUILD_VERSION_START -->.*?<!-- BUILD_VERSION_END -->\n?//s' \

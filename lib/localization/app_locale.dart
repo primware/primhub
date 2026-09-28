@@ -261,6 +261,9 @@ class AppLocale {
   static const String noValidGanttDates = 'noValidGanttDates';
   static const String noRepliesYet = 'noRepliesYet';
   static const String categoryGuide = 'categoryGuide';
+  static const String categoryOrSymptom = 'categoryOrSymptom';
+  static const String technicalJustification = 'technicalJustification';
+  static const String requiresAdditionalFields = 'requiresAdditionalFields';
   static const String viewCategoryGuide = 'viewCategoryGuide';
   static const String selectCategory = 'selectCategory';
   static const String attachments = 'attachments';
@@ -750,6 +753,9 @@ class AppLocale {
     noValidGanttDates: 'Sin fechas válidas para el diagrama.',
     noRepliesYet: 'No hay respuestas aún',
     categoryGuide: 'Guía de categorías / síntomas',
+    categoryOrSymptom: 'Categoría / Síntoma',
+    technicalJustification: 'Justificación Técnica',
+    requiresAdditionalFields: 'Requiere campos adicionales',
     viewCategoryGuide: 'Ver guía de categorías',
     selectCategory: 'Seleccione categoría',
     attachments: 'Ver / Añadir adjuntos',
@@ -1240,6 +1246,9 @@ class AppLocale {
     noValidGanttDates: 'There are no valid dates for the chart.',
     noRepliesYet: 'No replies yet',
     categoryGuide: 'Category / symptom guide',
+    categoryOrSymptom: 'Category / Symptom',
+    technicalJustification: 'Technical Justification',
+    requiresAdditionalFields: 'Requires additional fields',
     viewCategoryGuide: 'View category guide',
     selectCategory: 'Select a category',
     attachments: 'View / Add attachments',
