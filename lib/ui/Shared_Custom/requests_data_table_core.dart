@@ -357,14 +357,26 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
         ),
         if (!isLaptop) ...[
           DataCell(
-            Text(
-              request_functions.cleanStatusName(
-                alert['status']?.toString() ?? 'Sin Estado',
+            SizedBox(
+              width: 160,
+              child: Text(
+                request_functions.cleanStatusName(
+                  alert['status']?.toString() ?? 'Sin Estado',
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
           if (AccessControl.isAdmin || AccessControl.isSupport)
-            DataCell(Text(alert['situation']?.toString() ?? 'Sin tipo')),
+            DataCell(
+              SizedBox(
+                width: 130,
+                child: Text(
+                  alert['situation']?.toString() ?? 'Sin tipo',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
         ],
       ];
     }
@@ -494,14 +506,26 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
       return [
         if (isLaptop) ...[
           DataCell(
-            Text(
-              request_functions.cleanStatusName(
-                alert['status']?.toString() ?? 'Sin Estado',
+            SizedBox(
+              width: 160,
+              child: Text(
+                request_functions.cleanStatusName(
+                  alert['status']?.toString() ?? 'Sin Estado',
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
           if (AccessControl.isAdmin || AccessControl.isSupport)
-            DataCell(Text(alert['situation']?.toString() ?? 'Sin tipo')),
+            DataCell(
+              SizedBox(
+                width: 130,
+                child: Text(
+                  alert['situation']?.toString() ?? 'Sin tipo',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
         ],
         DataCell(
           SizedBox(
@@ -719,11 +743,13 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
                 selectedIds: _selectedIds,
                 onSelectAll: (selected) {
                   final newSelection = Set<int>.from(_selectedIds);
-                  if (selected == true) {
-                    newSelection.addAll(_sortedRequests.map((r) => _getRealId(r)));
+                  final currentPageIds = _sortedRequests.map((r) => _getRealId(r)).toSet();
+                  final bool allOnPageSelected = currentPageIds.isNotEmpty && 
+                                                 currentPageIds.intersection(_selectedIds).length == currentPageIds.length;
+                  
+                  if (!allOnPageSelected) {
+                    newSelection.addAll(currentPageIds);
                   } else {
-                    // Only clear the ones on the current page to preserve across pages
-                    final currentPageIds = _sortedRequests.map((r) => _getRealId(r)).toSet();
                     newSelection.removeAll(currentPageIds);
                   }
                   

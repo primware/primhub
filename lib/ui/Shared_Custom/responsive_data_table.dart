@@ -139,9 +139,13 @@ class _ResponsiveDataTableState<T> extends State<ResponsiveDataTable<T>> {
     // --- Define Columns ---
     final List<DataColumn> allFixedColumns = [];
     if (widget.showCheckboxColumn) {
+      final currentPageIds = widget.items.map((i) => widget.getId(i)).toSet();
+      final bool allSelected = currentPageIds.isNotEmpty && currentPageIds.intersection(widget.selectedIds).length == currentPageIds.length;
+      final bool someSelected = widget.selectedIds.isNotEmpty;
+      
       allFixedColumns.add(
         DataColumn(
-          label: Checkbox(value: (widget.items.isNotEmpty && widget.selectedIds.length == widget.items.length) ? true : (widget.selectedIds.isNotEmpty ? null : false), tristate: true, onChanged: widget.onSelectAll),
+          label: Checkbox(value: allSelected ? true : (someSelected ? null : false), tristate: true, onChanged: widget.onSelectAll),
         ),
       );
     }

@@ -97,6 +97,7 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
   int? _lastRowsPerPage;
   int? _lastCurrentPage;
   bool? _lastShowHistory;
+  Set<int>? _lastSelectedIds;
 
   final ScrollController _outerScrollController = ScrollController();
 
@@ -108,7 +109,9 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
         _lastIsHistorySkeletonActive == currentSkeleton &&
         _lastRowsPerPage == _rowsPerPage &&
         _lastCurrentPage == _currentPage &&
-        _lastShowHistory == _showHistory) {
+        _lastShowHistory == _showHistory &&
+        _lastSelectedIds != null &&
+        setEquals(_lastSelectedIds, _selectedIds)) {
       return _cachedTable!;
     }
 
@@ -118,6 +121,7 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
     _lastRowsPerPage = _rowsPerPage;
     _lastCurrentPage = _currentPage;
     _lastShowHistory = _showHistory;
+    _lastSelectedIds = Set.from(_selectedIds);
 
     if (_isLoading || currentSkeleton) {
       _cachedTable = const SkeletonTable();
