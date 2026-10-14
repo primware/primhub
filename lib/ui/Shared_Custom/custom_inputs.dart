@@ -18,9 +18,9 @@ class CustomTextField extends StatelessWidget {
   final bool readOnly;
   final int? maxLength;
   final ScrollController? scrollController;
-  // --- Nuevo parámetro añadido ---
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
   final bool autofocus;
 
 
@@ -42,8 +42,9 @@ class CustomTextField extends StatelessWidget {
     this.readOnly = false,
     this.maxLength,
     this.scrollController,
-    this.inputFormatters, // Se añade al constructor
+    this.inputFormatters, 
     this.onChanged,
+    this.onSubmitted,
     this.autofocus = false,
   });
 
@@ -64,6 +65,7 @@ class CustomTextField extends StatelessWidget {
         readOnly: readOnly,
         inputFormatters: inputFormatters, // Se pasa al TextFormField nativo
         onChanged: onChanged,
+        onFieldSubmitted: onSubmitted,
         autofocus: autofocus,
         decoration: InputDecoration(
           labelText: label,
@@ -114,11 +116,13 @@ class CustomDropdown<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
+    final effectiveValue = (value != null && items.any((item) => item.value == value)) ? value : null;
+
     return SizedBox(
       width: width ?? double.infinity,
       height: height,
       child: DropdownButtonFormField<T>(
-        value: value,
+        value: effectiveValue,
         items: items,
         onChanged: onChanged,
         validator: validator,

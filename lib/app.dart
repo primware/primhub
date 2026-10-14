@@ -10,6 +10,7 @@ import 'package:primhub/navigation/deferred_registry.dart';
 import 'package:primhub/navigation/navigation_service.dart';
 import 'package:primhub/theme/theme.dart';
 import 'package:primhub/ui/pages/Metrics/client_workload_page.dart';
+import 'package:primhub/api/access_control.dart';
 import 'package:primhub/ui/pages/Login/login.dart';
 import 'package:primhub/ui/pages/Login/login_selection_page.dart';
 import 'package:primhub/ui/pages/Login/login_selection_args.dart';
@@ -112,13 +113,7 @@ final router = GoRouter(
         );
       },
     ),
-    GoRoute(
-      path: '/knowledge-base',
-      pageBuilder: (context, state) => NoTransitionPage(
-        key: state.pageKey,
-        child: DeferredRegistry.knowledgeBasePage(),
-      ),
-    ),
+
     GoRoute(
       path: '/deliverables',
       pageBuilder: (context, state) => NoTransitionPage(
@@ -177,13 +172,7 @@ final router = GoRouter(
         );
       },
     ),
-    GoRoute(
-      path: '/marketplace',
-      pageBuilder: (context, state) => NoTransitionPage(
-        key: state.pageKey,
-        child: DeferredRegistry.marketplacePage(),
-      ),
-    ),
+
     GoRoute(
       path: '/profile',
       pageBuilder: (context, state) => NoTransitionPage(
@@ -210,6 +199,17 @@ final router = GoRouter(
       pageBuilder: (context, state) => NoTransitionPage(
         key: state.pageKey,
         child: DeferredRegistry.bPartnerDocumentsPage('Seguimiento'),
+      ),
+    ),
+    GoRoute(
+      path: '/admin/users',
+      redirect: (context, state) {
+        if (!AccessControl.isRealAdmin) return '/';
+        return null;
+      },
+      pageBuilder: (context, state) => NoTransitionPage(
+        key: state.pageKey,
+        child: DeferredRegistry.userManagementPage(),
       ),
     ),
   ],

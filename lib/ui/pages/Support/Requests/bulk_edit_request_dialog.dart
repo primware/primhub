@@ -822,7 +822,7 @@ class _BulkEditRequestDialogState extends State<BulkEditRequestDialog> {
                         ),
                         DropdownMenuItem(value: 'I', child: Text(AppLocale.internalNote.getString(context))),
                         DropdownMenuItem(value: 'C', child: Text(AppLocale.visibleToClient.getString(context))),
-                        DropdownMenuItem(value: 'P', child: Text(AppLocale.publicLabel.getString(context))),
+                        DropdownMenuItem(value: 'A', child: Text(AppLocale.publicLabel.getString(context))),
                       ],
                       onChanged: (val) => setState(() => _selectedConfidentialType = val),
                     ),

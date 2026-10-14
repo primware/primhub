@@ -1,0 +1,595 @@
+{
+  "info": {
+    "name": "Primhub - Full API",
+    "description": "Colecci\u00f3n completa de todas las llamadas a la API generadas desde el c\u00f3digo fuente de Flutter.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{tokenPrimhub}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "BaseURL",
+      "value": "https://primhub.primware.net"
+    },
+    {
+      "key": "tokenPrimhub",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Autenticaci\u00f3n (Login)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/auth/tokens",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "tokens"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userName\": \"tu_usuario\",\n  \"password\": \"tu_password\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Obtener Solicitudes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/R_Request?$filter=C_BPartner_ID eq 1000013 and Created ge '2026-01-01T00:00:00Z' and Created le '2026-12-31T23:59:59Z'&$expand=C_Order_ID($select=DocumentNo),R_Status_ID($select=Name,IsOpen,IsClosed),R_RequestType_ID,R_Category_ID,C_BPartner_ID($select=Name,Description)&$orderby=Updated desc&$top=50",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "R_Request"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "C_BPartner_ID eq 1000013 and Created ge '2026-01-01T00:00:00Z' and Created le '2026-12-31T23:59:59Z'"
+            },
+            {
+              "key": "$expand",
+              "value": "C_Order_ID($select=DocumentNo),R_Status_ID($select=Name,IsOpen,IsClosed),R_RequestType_ID,R_Category_ID,C_BPartner_ID($select=Name,Description)"
+            },
+            {
+              "key": "$orderby",
+              "value": "Updated desc"
+            },
+            {
+              "key": "$top",
+              "value": "50"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener Actualizaciones",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/R_RequestUpdate?$filter=R_Request_ID eq 1000000&$expand=CreatedBy($select=Name),ConfidentialTypeEntry",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "R_RequestUpdate"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "R_Request_ID eq 1000000"
+            },
+            {
+              "key": "$expand",
+              "value": "CreatedBy($select=Name),ConfidentialTypeEntry"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener Usuarios (AD_User)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/AD_User?$filter=IsActive eq true",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "AD_User"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "IsActive eq true"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener Terceros (C_BPartner)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/C_BPartner?$filter=IsActive eq true",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "C_BPartner"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "IsActive eq true"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener Estados (R_Status)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/R_Status?$filter=IsActive eq true",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "R_Status"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "IsActive eq true"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener Categorias (R_Category)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/R_Category?$filter=IsActive eq true",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "R_Category"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "IsActive eq true"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener Tipos de Solicitud (R_RequestType)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/R_RequestType?$filter=IsActive eq true",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "R_RequestType"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "IsActive eq true"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener Grupos (R_Group)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/R_Group?$filter=IsActive eq true",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "R_Group"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "IsActive eq true"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener Proyectos (C_Project)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/C_Project?$filter=IsActive eq true&$expand=C_BPartner_ID($select=Name)",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "C_Project"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "IsActive eq true"
+            },
+            {
+              "key": "$expand",
+              "value": "C_BPartner_ID($select=Name)"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener Tareas de Proyecto (C_ProjectTask)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/C_ProjectTask?$filter=C_Project_ID eq 1000000",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "C_ProjectTask"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "C_Project_ID eq 1000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener Fases de Proyecto (C_ProjectPhase)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/C_ProjectPhase?$filter=C_Project_ID eq 1000000",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "C_ProjectPhase"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "C_Project_ID eq 1000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Crear Solicitud",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/R_Request",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "R_Request"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"Summary\": \"Resumen del ticket\",\n  \"Result\": \"Cuerpo del ticket\",\n  \"C_BPartner_ID\": 1000013,\n  \"R_RequestType_ID\": 1000000,\n  \"R_Status_ID\": 1000000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Actualizar Solicitud",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/R_Request/1000000",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "R_Request",
+            "1000000"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"Summary\": \"Nuevo resumen\",\n  \"R_Status_ID\": 1000001\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Crear Actualizaci\u00f3n (Respuesta)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/R_RequestUpdate",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "R_RequestUpdate"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"R_Request_ID\": 1000000,\n  \"Result\": \"<p><strong>Etiquetados:</strong> @Usuario</p> Respuesta aqu\\u00ed\",\n  \"ConfidentialTypeEntry\": \"C\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Eliminar Solicitud",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/R_Request/1000000",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "R_Request",
+            "1000000"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Eliminar Actualizaci\u00f3n",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/models/R_RequestUpdate/1000000",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "models",
+            "R_RequestUpdate",
+            "1000000"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Enviar Correo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{BaseURL}}/api/v1/processes/SendMail",
+          "host": [
+            "{{BaseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "processes",
+            "SendMail"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"R_Request_ID\": 1000000,\n  \"AD_User_ID\": 1000000,\n  \"MailTemplateType\": \"Update\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

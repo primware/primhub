@@ -1,1 +1,1 @@
-const String appBuildVersion = '20260928151025';
+const String appBuildVersion = '20261012150826';

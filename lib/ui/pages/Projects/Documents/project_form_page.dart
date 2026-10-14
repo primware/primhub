@@ -500,13 +500,11 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
             items: _users,
             idKey: 'AD_User_ID',
             icon: Icons.person_search_rounded,
-            onSelected: _isReactivation
-                ? (id, name) {}
-                : (id, name) => setState(() {
-                    _cBPartnerSrId = _parseId(id);
-                    _salesRepController.text = name;
-                    _validateForm();
-                  }),
+            onSelected: (id, name) => setState(() {
+              _cBPartnerSrId = _parseId(id);
+              _salesRepController.text = name;
+              _validateForm();
+            }),
           ),
           const SizedBox(height: 16),
           _buildSearchField(

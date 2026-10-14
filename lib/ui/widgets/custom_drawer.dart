@@ -587,6 +587,45 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   ],
                 ),
               ),
+              
+              // Módulo de Administración de Usuarios (Solo Admins)
+              if (AccessControl.isAdmin)
+                HoverListTile(
+                  builder: (isHovered) {
+                    bool isSelected = widget.currentRoute == '/admin/users';
+                    return Material(
+                      color: Colors.transparent,
+                      child: ListTile(
+                        selected: isSelected,
+                        selectedTileColor: colorScheme.primary.withOpacity(0.2),
+                        tileColor: isHovered
+                            ? Colors.blue.withOpacity(0.1)
+                            : Colors.transparent,
+                        leading: Icon(
+                          Icons.manage_accounts_rounded,
+                          color: isHovered || isSelected
+                              ? colorScheme.primary
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                        title: Text(
+                          'Gestión de Usuarios y Terceros',
+                          style: TextStyle(
+                            color: isHovered || isSelected
+                                ? colorScheme.primary
+                                : colorScheme.onSurface,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/admin/users');
+                        },
+                      ),
+                    );
+                  },
+                ),
               const Divider(),
               HoverListTile(
                 builder: (isHovered) => Material(

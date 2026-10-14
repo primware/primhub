@@ -1387,8 +1387,8 @@ Future<bool> sendRequestStatusEmail({
     Set<int> targetUsers = {};
     if (adUserId > 0) targetUsers.add(adUserId);
 
-    // Agregar Representante Comercial si existe en la solicitud (Excepto en Cambio de Estado = updateRequest)
-    if (templateType != MailTemplateType.updateRequest && req != null && req['SalesRep_ID'] != null) {
+    // Agregar Representante Comercial únicamente al crear una nueva solicitud
+    if (templateType == MailTemplateType.newRequest && req != null && req['SalesRep_ID'] != null) {
       final salesRepData = req['SalesRep_ID'];
       int salesRepId = salesRepData is Map 
           ? (salesRepData['id'] as num).toInt() 
@@ -1396,6 +1396,11 @@ Future<bool> sendRequestStatusEmail({
       if (salesRepId > 0) {
         targetUsers.add(salesRepId);
       }
+    }
+
+    // Evitar enviar el correo a la misma persona que realizó la acción (SOLO aplica para cambios de estado)
+    if (templateType == MailTemplateType.statusUpdate && User.userID != null) {
+      targetUsers.remove(User.userID);
     }
 
     if (targetUsers.isEmpty) return true; // No hay a quien enviar, no es un fallo

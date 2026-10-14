@@ -161,9 +161,18 @@ class _RequestUpdatesPageState extends State<RequestUpdatesPage> {
         adUserId: _requestDetails?['AD_User_ID'] is Map
             ? (_requestDetails!['AD_User_ID']['id'] as num?)?.toInt()
             : (_requestDetails?['AD_User_ID'] as num?)?.toInt() ?? 0,
-        bPartnerId: _requestDetails?['C_BPartner_ID'] is Map
-            ? (_requestDetails!['C_BPartner_ID']['id'] as num?)?.toInt()
-            : (_requestDetails?['C_BPartner_ID'] as num?)?.toInt() ?? _requestDetails?['bpId'],
+        bPartnerId: () {
+          final bp = _requestDetails?['C_BPartner_ID'] ?? 
+                     _requestDetails?['c_bpartner_id'] ?? 
+                     _requestDetails?['bpId'] ?? 
+                     _requestDetails?['C_BPartner'];
+          if (bp is Map) {
+            return (bp['id'] as num?)?.toInt();
+          } else if (bp is num) {
+            return bp.toInt();
+          }
+          return int.tryParse(bp?.toString() ?? '');
+        }(),
         salesRepId: _requestDetails?['SalesRep_ID'] is Map
             ? (_requestDetails!['SalesRep_ID']['id'] as num?)?.toInt()
             : (_requestDetails?['SalesRep_ID'] as num?)?.toInt() ?? 0,
@@ -236,14 +245,16 @@ class _RequestUpdatesPageState extends State<RequestUpdatesPage> {
                     padding: const EdgeInsets.all(16),
                     itemCount: updates.length,
                     separatorBuilder: (context, index) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) => _UpdateCard(
-                      update: updates[index],
-                      onUpdateChanged: () {
-                        setState(() {
-                          _updatesFuture = fetchRequestUpdates(widget.requestId);
-                        });
-                      },
-                    ),
+                    itemBuilder: (context, index) {
+                      return _UpdateCard(
+                        update: updates[index],
+                        onUpdateChanged: () {
+                          setState(() {
+                            _updatesFuture = fetchRequestUpdates(widget.requestId);
+                          });
+                        },
+                      );
+                    },
                   );
                 },
               ),
@@ -258,7 +269,11 @@ class _RequestUpdatesPageState extends State<RequestUpdatesPage> {
 class _UpdateCard extends StatelessWidget {
   final Map<String, dynamic> update;
   final VoidCallback? onUpdateChanged;
-  const _UpdateCard({required this.update, this.onUpdateChanged});
+
+  const _UpdateCard({
+    required this.update, 
+    this.onUpdateChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -267,7 +282,23 @@ class _UpdateCard extends StatelessWidget {
 
     final created = DateTime.tryParse(update['Created'] ?? '');
     final formattedDate = created != null ? '${created.day}/${created.month}/${created.year} ${AppLocale.atTime.getString(context)} ${created.hour.toString().padLeft(2, '0')}:${created.minute.toString().padLeft(2, '0')}' : AppLocale.unknownDate.getString(context);
-    final result = update['Result'] ?? AppLocale.noResult.getString(context);
+    
+    String rawResult = update['Result']?.toString() ?? AppLocale.noResult.getString(context);
+    List<Map<String, dynamic>> parsedMentions = [];
+
+    // Parse inyectado: <p><strong>Etiquetados:</strong> @User1, @User2</p><br/>
+    final mentionRegex = RegExp(r'<p><strong>Etiquetados:<\/strong>\s*(.*?)<\/p>(<br\/>)?');
+    final match = mentionRegex.firstMatch(rawResult);
+
+    if (match != null) {
+      final namesString = match.group(1) ?? '';
+      final names = namesString.split(',').map((e) => e.trim().replaceAll('@', '')).where((e) => e.isNotEmpty).toList();
+      
+      for (var name in names) {
+        parsedMentions.add({'Name': name});
+      }
+      rawResult = rawResult.replaceAll(mentionRegex, '').trim();
+    }
     final confidential = update['ConfidentialTypeEntry']?['identifier'] ?? 'N/A';
     final confId = update['ConfidentialTypeEntry']?['id']?.toString() ?? update['ConfidentialTypeEntry']?.toString() ?? '';
 
@@ -359,8 +390,12 @@ class _UpdateCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 12.0),
               child: Divider(height: 1),
             ),
+            if (parsedMentions.isNotEmpty)
+              MentionsHeader(
+                taggedUsers: parsedMentions,
+              ),
             Html(
-              data: result,
+              data: rawResult,
               style: {
                 "body": Style(
                   margin: Margins.zero,
@@ -404,6 +439,76 @@ class _UpdateCard extends StatelessWidget {
   }
 }
 
+class MentionsHeader extends StatelessWidget {
+  final List<Map<String, dynamic>> taggedUsers;
+
+  const MentionsHeader({
+    super.key,
+    required this.taggedUsers,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final allPills = <Widget>[];
+
+    for (var user in taggedUsers) {
+      final uName = (user['Name'] ?? 'Usuario').toString();
+      
+      allPills.add(_buildPill(
+        context: context,
+        name: uName,
+        backgroundColor: colorScheme.primary,
+        textColor: colorScheme.onPrimary,
+      ));
+    }
+
+    if (allPills.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Wrap(
+        spacing: 8.0,
+        runSpacing: 8.0,
+        children: allPills,
+      ),
+    );
+  }
+
+  Widget _buildPill({
+    required BuildContext context,
+    required String name,
+    required Color backgroundColor,
+    required Color textColor,
+  }) {
+    return Tooltip(
+      message: name,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(6.0),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.alternate_email, size: 14, color: textColor),
+            const SizedBox(width: 4),
+            Text(
+              name,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AddUpdateDialog extends StatefulWidget {
   final int requestId;
   final int? currentStatusId;
@@ -435,8 +540,11 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
   final List<PlatformFile?> _evidences = [null, null, null, null];
   bool _isSaving = false;
   int? _newStatusId;
-
   int _currentLength = 0;
+
+  bool _isLoadingDevTeam = true;
+  List<Map<String, dynamic>> _taggableContacts = [];
+  List<Map<String, dynamic>> _selectedMentions = [];
 
   @override
   void initState() {
@@ -448,7 +556,169 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
       _newStatusId = null;
     }
     
+    _initTaggableContacts();
     _resultController.addListener(_onTextChanged);
+  }
+
+  void _initTaggableContacts() {
+    _taggableContacts = [];
+    if (widget.bPartnerId != null && widget.bPartnerId! > 0) {
+      _isLoadingDevTeam = true;
+      _fetchDevTeamContacts();
+    } else {
+      _isLoadingDevTeam = false;
+    }
+  }
+
+  Future<void> _fetchDevTeamContacts() async {
+    if (widget.bPartnerId == null || widget.bPartnerId! <= 0) {
+      if (mounted) setState(() => _isLoadingDevTeam = false);
+      return;
+    }
+    try {
+      final uri = Uri.parse('${Endpoint.primDevTeam}?\$filter=C_BPartner_ID eq ${widget.bPartnerId}&\$expand=AD_User_ID');
+      final response = await http.get(uri, headers: {
+        'Content-Type': 'application/json',
+        'Authorization': Token.token,
+      });
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        final records = jsonResponse['records'] as List?;
+        if (records != null && records.isNotEmpty) {
+          List<Map<String, dynamic>> devTeamUsers = [];
+          
+          for (var r in records) {
+            if (r['IsActive'] == false) continue;
+            final userData = r['AD_User_ID'];
+            int uId = 0;
+            String uName = '';
+
+            if (userData is Map) {
+              if (userData['IsActive'] == false) continue;
+              uId = (userData['id'] as num?)?.toInt() ?? 0;
+              uName = (userData['Name'] ?? userData['identifier'] ?? '').toString().trim();
+            } else if (userData is num) {
+              uId = userData.toInt();
+            }
+
+            if (uId == 0) continue;
+
+            Map<String, dynamic>? cachedUser;
+            for (var u in GlobalCache.users) {
+              if (u is Map && (u['id'] as num?)?.toInt() == uId) {
+                cachedUser = Map<String, dynamic>.from(u);
+                break;
+              }
+            }
+            if (cachedUser != null && cachedUser['IsActive'] == false) {
+              continue;
+            }
+
+            if (uName.isEmpty && cachedUser != null) {
+              uName = (cachedUser['Name'] ?? '').toString().trim();
+            }
+            if (uName.isEmpty) {
+              uName = 'Usuario $uId';
+            }
+
+            if (!devTeamUsers.any((c) => c['id'] == uId)) {
+              devTeamUsers.add({
+                'id': uId,
+                'Name': uName,
+              });
+            }
+          }
+          
+          devTeamUsers.sort((a, b) => (a['Name'] as String).compareTo(b['Name'] as String));
+
+          if (mounted) {
+            setState(() {
+              _taggableContacts = devTeamUsers;
+              _isLoadingDevTeam = false;
+            });
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      CurrentLogMessage.add('Error _fetchDevTeamContacts: $e', level: 'ERROR');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingDevTeam = false;
+        });
+      }
+    }
+  }
+
+  void _showMentionsModal() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            bool allSelected = _selectedMentions.length == _taggableContacts.length && _taggableContacts.isNotEmpty;
+            
+            return CustomModal(
+              title: 'Etiquetar Miembros del Equipo',
+              width: 400,
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CheckboxListTile(
+                    title: const Text('Seleccionar Todos', style: TextStyle(fontWeight: FontWeight.bold)),
+                    value: allSelected,
+                    onChanged: (val) {
+                      setModalState(() {
+                        if (val == true) {
+                          _selectedMentions = List.from(_taggableContacts);
+                        } else {
+                          _selectedMentions.clear();
+                        }
+                      });
+                      setState(() {});
+                    },
+                  ),
+                  const Divider(),
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _taggableContacts.length,
+                      itemBuilder: (context, index) {
+                        final contact = _taggableContacts[index];
+                        final bool isSelected = _selectedMentions.any((c) => c['id'] == contact['id']);
+                        
+                        return CheckboxListTile(
+                          title: Text(contact['Name'] ?? 'Sin nombre'),
+                          value: isSelected,
+                          onChanged: (val) {
+                            setModalState(() {
+                              if (val == true) {
+                                _selectedMentions.add(contact);
+                              } else {
+                                _selectedMentions.removeWhere((c) => c['id'] == contact['id']);
+                              }
+                            });
+                            setState(() {});
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                CustomButton(
+                  text: AppLocale.accept.getString(context),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _onTextChanged() {
@@ -525,7 +795,13 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
 
     setState(() => _isSaving = true);
 
-    final resultHtml = HtmlEditorUtils.deltaToHtml(_resultController.document);
+    String resultHtml = HtmlEditorUtils.deltaToHtml(_resultController.document);
+
+    if (_selectedMentions.isNotEmpty) {
+      final mentionsText = _selectedMentions.map((m) => '@${m['Name']}').join(', ');
+      final mentionsHtml = '<p><strong>Etiquetados:</strong> $mentionsText</p><br/>';
+      resultHtml = mentionsHtml + resultHtml;
+    }
 
     final result = await createRequestUpdate(requestId: widget.requestId, resultText: resultHtml, confidentialType: _confidentialType, evidences: _evidences);
 
@@ -542,11 +818,9 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
           }
         }
 
-        // --- INICIO Lógica Correos ---
+        // --- INICIO Lógica Correos (Solo equipo asignado del tercero) ---
         _sendEmailsInBackground(
           requestId: widget.requestId,
-          adUserId: widget.adUserId,
-          salesRepId: widget.salesRepId,
           bPartnerId: widget.bPartnerId,
           currentStatusId: widget.currentStatusId,
           statusChanged: statusChanged,
@@ -594,8 +868,6 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
 
   Future<void> _sendEmailsInBackground({
     required int requestId,
-    required int? adUserId,
-    required int? salesRepId,
     required int? bPartnerId,
     required int? currentStatusId,
     required bool statusChanged,
@@ -612,82 +884,44 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
         }
       }
 
-      bool hasAdUser = adUserId != null && adUserId > 0;
-      bool hasSalesRep = salesRepId != null && salesRepId > 0;
-      bool success1 = true;
-      bool success2 = true;
+      // Si la actualización es interna ('I'), no se envían correos a terceros ni equipo
+      if (_confidentialType == 'I') return;
+
       bool emailsAttempted = false;
+      bool allSuccess = true;
 
-      bool isAdUserCurrentUser = adUserId != null && User.userID != null && adUserId == User.userID;
-
-      if (hasAdUser) {
+      // Se toma en cuenta EXCLUSIVAMENTE el equipo asignado del tercero
+      if (_selectedMentions.isNotEmpty) {
         emailsAttempted = true;
-        if (statusChanged && !isAdUserCurrentUser) {
-          success1 = await sendRequestStatusEmail(
-            requestId: requestId,
-            adUserId: adUserId,
-            bPartnerId: bPartnerId ?? 0,
-            templateType: MailTemplateType.statusUpdate,
-            updateText: resultHtml,
-            oldStatusName: oldStatusName,
-            updateId: updateId,
-          );
-        }
-        bool s1b = true;
-        if (_confidentialType != 'I') {
-          s1b = await sendRequestStatusEmail(
-            requestId: requestId,
-            adUserId: adUserId,
-            bPartnerId: bPartnerId ?? 0,
-            templateType: MailTemplateType.updateRequest,
-            updateText: resultHtml,
-            oldStatusName: oldStatusName,
-            updateId: updateId,
-          );
-        }
-        success1 = success1 && s1b;
-      }
+        for (var mention in _selectedMentions) {
+          final int? mentionId = (mention['id'] as num?)?.toInt();
+          if (mentionId == null || mentionId <= 0) continue;
 
-      bool isSalesRepCurrentUser = salesRepId != null && User.userID != null && salesRepId == User.userID;
+          // Evitar auto-notificarse si el usuario logueado está entre los etiquetados
+          if (User.userID != null && mentionId == User.userID) continue;
 
-      if (hasSalesRep && salesRepId != adUserId) {
-        emailsAttempted = true;
-        
-        if (statusChanged && !isSalesRepCurrentUser) {
-          bool s2a = await sendRequestStatusEmail(
+          final template = statusChanged 
+              ? MailTemplateType.statusUpdate 
+              : MailTemplateType.updateRequest;
+
+          bool sent = await sendRequestStatusEmail(
             requestId: requestId,
-            adUserId: salesRepId,
+            adUserId: mentionId,
             bPartnerId: bPartnerId ?? 0,
-            templateType: MailTemplateType.statusUpdate,
+            templateType: template,
             updateText: resultHtml,
             oldStatusName: oldStatusName,
             updateId: updateId,
           );
-          success2 = success2 && s2a;
+          allSuccess = allSuccess && sent;
         }
-
-        bool s2b = true;
-        if (_confidentialType != 'I') {
-          s2b = await sendRequestStatusEmail(
-            requestId: requestId,
-            adUserId: salesRepId,
-            bPartnerId: bPartnerId ?? 0,
-            templateType: MailTemplateType.updateRequest,
-            updateText: resultHtml,
-            oldStatusName: oldStatusName,
-            updateId: updateId,
-          );
-        }
-        success2 = success2 && s2b;
       }
 
       if (!emailsAttempted) return;
 
       if (mounted) {
-        if (success1 && success2) {
-          bool isInternal = AccessControl.isAdmin;
-          String msg = isInternal ? AppLocale.emailSentToClient.getString(context) : AppLocale.emailSentToTeam.getString(context);
-          ToastMessage.show(context: context, message: msg, type: ToastType.success);
+        if (allSuccess) {
+          ToastMessage.show(context: context, message: AppLocale.emailSentToTeam.getString(context), type: ToastType.success);
         } else {
           ToastMessage.show(context: context, message: AppLocale.notificationEmailFailed.getString(context), type: ToastType.failure);
         }
@@ -752,9 +986,96 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
                     ],
                   ),
                 ),
+                ),
               ),
             ),
-            ),
+            const SizedBox(height: 12),
+            if (_isLoadingDevTeam) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2, 
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Cargando equipo de trabajo...',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ] else if (_taggableContacts.isNotEmpty) ...[
+              InkWell(
+                onTap: _showMentionsModal,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.alternate_email, color: Theme.of(context).colorScheme.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _selectedMentions.isEmpty 
+                              ? 'CC: Etiquetar miembros del equipo (Opcional)' 
+                              : 'CC: ${_selectedMentions.map((e) => e['Name']).join(', ')}',
+                          style: TextStyle(
+                            color: _selectedMentions.isEmpty ? Theme.of(context).colorScheme.onSurfaceVariant : Theme.of(context).colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(Icons.arrow_drop_down, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.35),
+                  border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Este tercero no tiene un equipo asignado por el momento y para poder etiquetar hay que crear un equipo.',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             QuillExpandableField(
               controller: _resultController,
               label: AppLocale.resultOrComment.getString(context),
@@ -787,7 +1108,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
                       items: [
                         DropdownMenuItem(value: 'I', child: Text(AppLocale.internalNote.getString(context))),
                         DropdownMenuItem(value: 'C', child: Text(AppLocale.visibleToClient.getString(context))),
-                        DropdownMenuItem(value: 'P', child: Text(AppLocale.publicLabel.getString(context))),
+                        DropdownMenuItem(value: 'A', child: Text(AppLocale.publicLabel.getString(context))),
                       ],
                       onChanged: (val) {
                         if (val != null) setState(() => _confidentialType = val);

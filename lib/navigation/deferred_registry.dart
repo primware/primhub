@@ -101,19 +101,16 @@ abstract final class DeferredRegistry {
     builder: () => metrics.buildMetricRequestsPage(projectId, filterStatus, filterType),
   );
 
-  static Widget knowledgeBasePage() => DeferredRoutePage(
-    loadLibrary: secondary.loadLibrary,
-    builder: () => secondary.buildKnowledgeBasePage(),
-  );
 
-  static Widget marketplacePage() => DeferredRoutePage(
-    loadLibrary: secondary.loadLibrary,
-    builder: () => secondary.buildMarketplacePage(),
-  );
 
   static Widget profilePage() => DeferredRoutePage(
     loadLibrary: secondary.loadLibrary,
     builder: () => secondary.buildProfilePage(),
+  );
+
+  static Widget userManagementPage() => DeferredRoutePage(
+    loadLibrary: secondary.loadLibrary,
+    builder: () => secondary.buildUserManagementPage(),
   );
 
   static Widget bPartnerDocumentsPage(String viewType) => DeferredRoutePage(

@@ -97,44 +97,67 @@ class FilePreviewManager {
                               );
                             }
                             if (snapshot.hasData && snapshot.data != null) {
+                              Widget previewWidget;
                               if (isImage) {
-                                return ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxHeight: 500,
-                                  ),
-                                  child: Center(
-                                    child: Image.memory(
-                                      snapshot.data!,
-                                      fit: BoxFit.contain,
+                                previewWidget = Image.memory(
+                                  snapshot.data!,
+                                  fit: BoxFit.contain,
+                                );
+                              } else if (isPdf) {
+                                previewWidget = PdfPreview(
+                                  build: (format) async => snapshot.data!,
+                                  allowPrinting: false,
+                                  allowSharing: false,
+                                  canChangeOrientation: false,
+                                  canChangePageFormat: false,
+                                  canDebug: false,
+                                  padding: const EdgeInsets.all(8),
+                                );
+                              } else if (isCsv) {
+                                previewWidget = _buildCsvPreview(snapshot.data!);
+                              } else if (isText) {
+                                previewWidget = _buildTextPreview(snapshot.data!);
+                              } else {
+                                previewWidget = const Center(child: Text('No disponible'));
+                              }
+
+                              return Stack(
+                                children: [
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxHeight: 500,
+                                      minHeight: 200,
+                                      minWidth: double.infinity,
+                                    ),
+                                    child: Center(
+                                      child: isPdf 
+                                        ? SizedBox(
+                                            height: 500,
+                                            child: ScrollConfiguration(
+                                              behavior: ScrollConfiguration.of(context).copyWith(scrollbars: true),
+                                              child: previewWidget,
+                                            ),
+                                          )
+                                        : previewWidget,
                                     ),
                                   ),
-                                );
-                              }
-                              if (isPdf) {
-                                return SizedBox(
-                                  height: 500,
-                                  child: ScrollConfiguration(
-                                    behavior: ScrollConfiguration.of(
-                                      context,
-                                    ).copyWith(scrollbars: true),
-                                    child: PdfPreview(
-                                      build: (format) async => snapshot.data!,
-                                      allowPrinting: false,
-                                      allowSharing: false,
-                                      canChangeOrientation: false,
-                                      canChangePageFormat: false,
-                                      canDebug: false,
-                                      padding: const EdgeInsets.all(8),
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.5),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(Icons.fullscreen, color: Colors.white),
+                                        tooltip: 'Ampliar',
+                                        onPressed: () => _showFullScreenPreview(context, previewWidget, currentVisualName),
+                                      ),
                                     ),
                                   ),
-                                );
-                              }
-                              if (isCsv) {
-                                return _buildCsvPreview(snapshot.data!);
-                              }
-                              if (isText) {
-                                return _buildTextPreview(snapshot.data!);
-                              }
+                                ],
+                              );
                             }
                             return const Padding(
                               padding: EdgeInsets.all(32.0),
@@ -245,6 +268,42 @@ class FilePreviewManager {
               ],
             );
           },
+        );
+      },
+    );
+  }
+
+  static void _showFullScreenPreview(BuildContext context, Widget previewWidget, String visualName) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(16),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                  maxHeight: MediaQuery.of(context).size.height * 0.9,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: previewWidget,
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

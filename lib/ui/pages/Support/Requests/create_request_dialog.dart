@@ -1861,7 +1861,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                           items: [
                             DropdownMenuItem(value: 'I', child: Text(AppLocale.internalNote.getString(context))),
                             DropdownMenuItem(value: 'C', child: Text(AppLocale.visibleToClient.getString(context))),
-                            DropdownMenuItem(value: 'P', child: Text(AppLocale.publicLabel.getString(context))),
+                            DropdownMenuItem(value: 'A', child: Text(AppLocale.publicLabel.getString(context))),
                           ],
                           onChanged: (val) {
                             if (val != null) setState(() => _confidentialType = val);

@@ -35,6 +35,8 @@ class Endpoint {
   static String get cBPartner => "$baseUrl/api/v1/models/C_BPartner";
   static String get adUser => "$baseUrl/api/v1/models/AD_User";
   static String get primConfig => "$baseUrl/api/v1/models/Prim_Config";
+  static String get primDevTeam => "$baseUrl/api/v1/models/PRIM_Dev_Team";
+  static String get adUserRoles => "$baseUrl/api/v1/models/AD_User_Roles";
   static String get project => "$baseUrl/api/v1/models/C_Project";
   static String get primDocuments => "$baseUrl/api/v1/models/PRIM_Documents";
   static String get currency => "$baseUrl/api/v1/models/C_Currency";

@@ -100,8 +100,13 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     _currentPriority = widget.request['level'] ?? 'Media';
     _currentStatus = widget.request['status'] ?? '';
     final rawConf = widget.request['original']?['ConfidentialType'] ?? widget.request['ConfidentialType'];
-    final confValStr = rawConf is Map ? rawConf['id']?.toString() : rawConf?.toString();
-    _confidentialType = confValStr ?? widget.request['confidentialType'] ?? 'C';
+    String? confValStr = rawConf is Map ? rawConf['id']?.toString() : rawConf?.toString();
+    if (confValStr == 'P') confValStr = 'A';
+    final fallbackConf = widget.request['confidentialType']?.toString();
+    final normalizedFallback = fallbackConf == 'P' ? 'A' : fallbackConf;
+    _confidentialType = (confValStr == 'I' || confValStr == 'C' || confValStr == 'A')
+        ? confValStr!
+        : ((normalizedFallback == 'I' || normalizedFallback == 'A') ? normalizedFallback! : 'C');
     _statusId = widget.request['statusId'];
 
     if (_statusId != null && _statusIdMap.isNotEmpty) {
@@ -1744,7 +1749,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                             items: [
                               DropdownMenuItem(value: 'I', child: Text(AppLocale.internalNote.getString(context))),
                               DropdownMenuItem(value: 'C', child: Text(AppLocale.visibleToClient.getString(context))),
-                              DropdownMenuItem(value: 'P', child: Text(AppLocale.publicLabel.getString(context))),
+                              DropdownMenuItem(value: 'A', child: Text(AppLocale.publicLabel.getString(context))),
                             ],
                             onChanged: _isReadOnly
                                 ? null
