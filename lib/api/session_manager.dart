@@ -11,6 +11,7 @@ import 'package:primhub/api/api_utils.dart';
 import 'package:primhub/endpoint/endpoint.dart';
 import 'package:primhub/navigation/navigation_service.dart';
 import 'package:flutter_localization/flutter_localization.dart';
+import 'package:primhub/api/connectivity_manager.dart';
 
 class SessionManager {
   // Singleton pattern
@@ -50,6 +51,7 @@ class SessionManager {
   }
 
   Future<void> _logoutDueToInactivity() async {
+    ConnectivityManager().reset();
     await Token.clear();
     GlobalCache.clear();
     stopKeepAliveTimer();
@@ -106,13 +108,16 @@ class SessionManager {
 
           // 2. Verificación remota (Ping)
           final response = await http.get(
-            Uri.parse(Endpoint.authRoles),
+            Uri.parse('${Endpoint.baseUrl}/api/v1/models/R_Status?\$top=1'),
             headers: {'Content-Type': 'application/json', 'Authorization': Token.token}
           );
           
           if (response.statusCode == 200) {
           } else if (response.statusCode == 401) {
-            showSessionExpiredDialog();
+            final refreshed = await handleTokenRefresh();
+            if (!refreshed) {
+              showSessionExpiredDialog();
+            }
           }
         } catch (e) {
           // Si es un error de CORS debido a un 401 en Web, intentamos refrescar la sesión
@@ -147,6 +152,7 @@ class SessionManager {
     _isDialogShowing = true;
 
     // 1. Limpiar credenciales y caché inmediatamente para invalidar accesos
+    ConnectivityManager().reset();
     Token.clear(); // Se ejecuta de forma asíncrona pero las variables en RAM se limpian síncronamente
     GlobalCache.clear();
 

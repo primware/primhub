@@ -51,6 +51,7 @@ class _TeamModalState extends State<TeamModal> {
     }).toList();
 
     int? currentSalesRepId;
+    String? currentSalesRepName;
     if (selectedBPartnerId != null) {
       final bp = widget.bPartners.firstWhere(
         (e) => (e['id'] ?? e['C_BPartner_ID']) == selectedBPartnerId, 
@@ -60,9 +61,19 @@ class _TeamModalState extends State<TeamModal> {
       if (sr != null) {
         if (sr is Map) {
           currentSalesRepId = sr['id'] is int ? sr['id'] : int.tryParse(sr['id'].toString());
+          if (sr['identifier'] != null) {
+            currentSalesRepName = sr['identifier'].toString();
+          }
         } else {
           currentSalesRepId = int.tryParse(sr.toString());
         }
+      }
+      if (currentSalesRepId != null && currentSalesRepName == null) {
+        final srUser = widget.allUsers.cast<Map<String, dynamic>?>().firstWhere(
+          (u) => (u?['AD_User_ID'] ?? u?['id']) == currentSalesRepId,
+          orElse: () => null,
+        );
+        currentSalesRepName = srUser?['Name'] ?? 'ID $currentSalesRepId';
       }
     }
 
@@ -93,51 +104,65 @@ class _TeamModalState extends State<TeamModal> {
                 );
                 if (res != null) {
                   setState(() {
-                    // Eliminar al líder anterior si se cambia de tercero
-                    if (selectedBPartnerId != null) {
-                      final oldBp = widget.bPartners.firstWhere(
-                        (e) => (e['id'] ?? e['C_BPartner_ID']) == selectedBPartnerId, 
-                        orElse: () => {}
-                      );
-                      final oldSr = oldBp['SalesRep_ID'];
-                      if (oldSr != null) {
-                        int? oldSrId;
-                        if (oldSr is Map) {
-                          oldSrId = oldSr['id'] is int ? oldSr['id'] : int.tryParse(oldSr['id'].toString());
-                        } else {
-                          oldSrId = int.tryParse(oldSr.toString());
-                        }
-                        if (oldSrId != null) {
-                          selectedUserIds.remove(oldSrId);
-                        }
-                      }
-                    }
-
                     selectedBPartnerId = res;
-                    
-                    // Auto-añadir al representante comercial si el BPartner lo tiene
-                    final bp = widget.bPartners.firstWhere(
-                      (e) => (e['id'] ?? e['C_BPartner_ID']) == res, 
-                      orElse: () => {}
-                    );
-                    
-                    final sr = bp['SalesRep_ID'];
-                    if (sr != null) {
-                      int? srId;
-                      if (sr is Map) {
-                        srId = sr['id'] is int ? sr['id'] : int.tryParse(sr['id'].toString());
-                      } else {
-                        srId = int.tryParse(sr.toString());
-                      }
-                      if (srId != null) {
-                        selectedUserIds.add(srId);
-                      }
-                    }
                   });
                 }
               },
             ),
             const SizedBox(height: 16),
+          ],
+          if (selectedBPartnerId != null) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.35),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.25),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.star_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        text: 'Rep. Comercial (Supuesto Líder): ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: currentSalesRepName ?? 'Sin asignar en este tercero',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          if (currentSalesRepId != null)
+                            TextSpan(
+                              text: selectedUserIds.contains(currentSalesRepId)
+                                  ? '  •  (Agregado al equipo)'
+                                  : '  •  (No incluido - márquelo en la lista abajo si desea agregarlo)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: selectedUserIds.contains(currentSalesRepId)
+                                    ? Colors.green.shade700
+                                    : Colors.orange.shade800,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
           CustomTextField(
             label: 'Buscar Usuario a añadir/quitar',
@@ -157,7 +182,7 @@ class _TeamModalState extends State<TeamModal> {
                   final u = displayUsers[index];
                   final uId = u['AD_User_ID'] as int;
                   final isLeader = currentSalesRepId != null && uId == currentSalesRepId;
-                  final isSelected = selectedUserIds.contains(uId) || isLeader;
+                  final isSelected = selectedUserIds.contains(uId);
                   
                   return CheckboxListTile(
                     title: Row(
@@ -165,14 +190,36 @@ class _TeamModalState extends State<TeamModal> {
                         Flexible(child: Text(u['Name'] ?? '')),
                         if (isLeader) ...[
                           const SizedBox(width: 8),
-                          Icon(Icons.star, color: Theme.of(context).colorScheme.primary, size: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.4)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.star, color: Theme.of(context).colorScheme.primary, size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Rep. Comercial / Supuesto Líder',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ]
                     ),
                     subtitle: Text(u['EMail'] ?? ''),
                     value: isSelected,
                     activeColor: Theme.of(context).colorScheme.primary,
-                    onChanged: isLeader ? null : (val) {
+                    onChanged: (val) {
                       setState(() {
                         if (val == true) {
                           selectedUserIds.add(uId);

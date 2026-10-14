@@ -560,89 +560,213 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
     _resultController.addListener(_onTextChanged);
   }
 
+  static Set<int>? _validPrimhubRoles;
+
+  static bool _isTruthy(dynamic val) {
+    if (val == null) return false;
+    if (val is bool) return val;
+    if (val is num) return val != 0;
+    if (val is Map) return _isTruthy(val['id'] ?? val['value']);
+    final str = val.toString().trim().toUpperCase();
+    return str == 'Y' || str == 'TRUE' || str == '1';
+  }
+
   void _initTaggableContacts() {
     _taggableContacts = [];
     if (widget.bPartnerId != null && widget.bPartnerId! > 0) {
       _isLoadingDevTeam = true;
-      _fetchDevTeamContacts();
+      _fetchTaggableContacts();
     } else {
       _isLoadingDevTeam = false;
     }
   }
 
-  Future<void> _fetchDevTeamContacts() async {
+  Future<void> _fetchTaggableContacts() async {
     if (widget.bPartnerId == null || widget.bPartnerId! <= 0) {
       if (mounted) setState(() => _isLoadingDevTeam = false);
       return;
     }
     try {
-      final uri = Uri.parse('${Endpoint.primDevTeam}?\$filter=C_BPartner_ID eq ${widget.bPartnerId}&\$expand=AD_User_ID');
-      final response = await http.get(uri, headers: {
+      final teamUri = Uri.parse('${Endpoint.primDevTeam}?\$filter=C_BPartner_ID eq ${widget.bPartnerId}&\$expand=AD_User_ID');
+      final contactsUri = Uri.parse('${Endpoint.adUser}?\$filter=C_BPartner_ID eq ${widget.bPartnerId} and IsActive eq true&\$select=AD_User_ID,Name,EMail,IsActive');
+
+      final headers = {
         'Content-Type': 'application/json',
         'Authorization': Token.token,
-      });
+      };
 
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+      List<Future<http.Response>> futures = [
+        http.get(teamUri, headers: headers),
+        http.get(contactsUri, headers: headers),
+      ];
+
+      final bool needConfig = _validPrimhubRoles == null;
+      if (needConfig) {
+        final configUri = Uri.parse('${Endpoint.primConfig}?\$filter=IsActive eq true');
+        futures.add(http.get(configUri, headers: headers));
+      }
+
+      final responses = await Future.wait(futures);
+      final teamRes = responses[0];
+      final contactsRes = responses[1];
+
+      if (needConfig && responses.length > 2 && responses[2].statusCode == 200) {
+        try {
+          final decoded = json.decode(utf8.decode(responses[2].bodyBytes));
+          final records = (decoded['records'] as List?) ?? [];
+          final Set<int> roles = {};
+          for (var conf in records) {
+            final rData = conf['AD_Role_ID'];
+            if (rData != null) {
+              final rId = ((rData is Map ? rData['id'] : rData) as num?)?.toInt();
+              if (rId != null) roles.add(rId);
+            }
+          }
+          _validPrimhubRoles = roles;
+        } catch (_) {}
+      }
+
+      final Set<int> validRoles = _validPrimhubRoles ?? {};
+
+      // Mapa de candidatos deduplicados por ID de usuario
+      final Map<int, Map<String, dynamic>> candidateMap = {};
+
+      // A. Procesar miembros del equipo asignado
+      if (teamRes.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(teamRes.bodyBytes));
         final records = jsonResponse['records'] as List?;
-        if (records != null && records.isNotEmpty) {
-          List<Map<String, dynamic>> devTeamUsers = [];
-          
+        if (records != null) {
           for (var r in records) {
-            if (r['IsActive'] == false) continue;
+            if (!_isTruthy(r['IsActive'])) continue;
             final userData = r['AD_User_ID'];
             int uId = 0;
             String uName = '';
+            String uEmail = '';
 
             if (userData is Map) {
-              if (userData['IsActive'] == false) continue;
+              if (!_isTruthy(userData['IsActive'])) continue;
               uId = (userData['id'] as num?)?.toInt() ?? 0;
               uName = (userData['Name'] ?? userData['identifier'] ?? '').toString().trim();
+              uEmail = (userData['EMail'] ?? '').toString().trim();
             } else if (userData is num) {
               uId = userData.toInt();
             }
 
-            if (uId == 0) continue;
+            if (uId <= 0) continue;
 
-            Map<String, dynamic>? cachedUser;
-            for (var u in GlobalCache.users) {
-              if (u is Map && (u['id'] as num?)?.toInt() == uId) {
-                cachedUser = Map<String, dynamic>.from(u);
-                break;
+            if (uName.isEmpty) {
+              final cached = GlobalCache.users.cast<Map<String, dynamic>?>().firstWhere(
+                (u) => (u?['id'] as num?)?.toInt() == uId,
+                orElse: () => null,
+              );
+              if (cached != null) {
+                if (!_isTruthy(cached['IsActive'])) continue;
+                uName = (cached['Name'] ?? '').toString().trim();
+                uEmail = (cached['EMail'] ?? '').toString().trim();
               }
             }
-            if (cachedUser != null && cachedUser['IsActive'] == false) {
-              continue;
-            }
 
-            if (uName.isEmpty && cachedUser != null) {
-              uName = (cachedUser['Name'] ?? '').toString().trim();
-            }
-            if (uName.isEmpty) {
-              uName = 'Usuario $uId';
-            }
+            if (uName.isEmpty) uName = 'Usuario $uId';
 
-            if (!devTeamUsers.any((c) => c['id'] == uId)) {
-              devTeamUsers.add({
-                'id': uId,
-                'Name': uName,
-              });
-            }
-          }
-          
-          devTeamUsers.sort((a, b) => (a['Name'] as String).compareTo(b['Name'] as String));
-
-          if (mounted) {
-            setState(() {
-              _taggableContacts = devTeamUsers;
-              _isLoadingDevTeam = false;
-            });
-            return;
+            candidateMap[uId] = {
+              'id': uId,
+              'Name': uName,
+              'EMail': uEmail,
+              'isTeam': true,
+              'isContact': false,
+            };
           }
         }
       }
+
+      // B. Procesar contactos del tercero
+      if (contactsRes.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(contactsRes.bodyBytes));
+        final records = jsonResponse['records'] as List?;
+        if (records != null) {
+          for (var r in records) {
+            if (!_isTruthy(r['IsActive'])) continue;
+            final int uId = (r['AD_User_ID'] is Map 
+                ? (r['AD_User_ID']['id'] as num?)?.toInt() 
+                : (r['AD_User_ID'] as num?)?.toInt() ?? (r['id'] as num?)?.toInt()) ?? 0;
+            if (uId <= 0) continue;
+
+            final String uName = (r['Name'] ?? '').toString().trim();
+            final String uEmail = (r['EMail'] ?? '').toString().trim();
+
+            if (candidateMap.containsKey(uId)) {
+              candidateMap[uId]!['isContact'] = true;
+            } else {
+              candidateMap[uId] = {
+                'id': uId,
+                'Name': uName.isNotEmpty ? uName : 'Usuario $uId',
+                'EMail': uEmail,
+                'isTeam': false,
+                'isContact': true,
+              };
+            }
+          }
+        }
+      }
+
+      // C. Filtrar para que solo queden aquellos con rol válido en Primhub
+      final List<int> candidateIds = candidateMap.keys.toList();
+      final Set<int> usersWithValidRole = {};
+
+      if (candidateIds.isNotEmpty && validRoles.isNotEmpty) {
+        for (int i = 0; i < candidateIds.length; i += 20) {
+          final chunk = candidateIds.skip(i).take(20).toList();
+          final userConditions = chunk.map((id) => "AD_User_ID eq $id").join(' or ');
+          final rolesUri = Uri.parse(
+            '${Endpoint.adUserRoles}?\$filter=IsActive eq true and ($userConditions)&\$select=AD_User_ID,AD_Role_ID,IsActive',
+          );
+
+          final rolesRes = await http.get(rolesUri, headers: headers);
+          if (rolesRes.statusCode == 200) {
+            final jsonRoles = json.decode(utf8.decode(rolesRes.bodyBytes));
+            final records = (jsonRoles['records'] as List?) ?? [];
+            for (var ur in records) {
+              if (!_isTruthy(ur['IsActive'])) continue;
+              final rData = ur['AD_Role_ID'];
+              final uData = ur['AD_User_ID'];
+              final rId = ((rData is Map ? rData['id'] : rData) as num?)?.toInt();
+              final uId = ((uData is Map ? uData['id'] : uData) as num?)?.toInt();
+              if (uId != null && rId != null && validRoles.contains(rId)) {
+                usersWithValidRole.add(uId);
+              }
+            }
+          }
+        }
+      }
+
+      // D. Construir la lista final de candidatos etiquetables
+      final List<Map<String, dynamic>> taggable = [];
+      for (var entry in candidateMap.entries) {
+        if (usersWithValidRole.contains(entry.key)) {
+          final u = entry.value;
+          final bool isTeam = u['isTeam'] == true;
+          final bool isContact = u['isContact'] == true;
+          String badgeLabel = 'Miembro del Equipo';
+          if (isTeam && isContact) {
+            badgeLabel = 'Equipo y Contacto';
+          } else if (isContact) {
+            badgeLabel = 'Contacto del Tercero';
+          }
+          u['badgeLabel'] = badgeLabel;
+          taggable.add(u);
+        }
+      }
+
+      taggable.sort((a, b) => (a['Name'] as String).toLowerCase().compareTo((b['Name'] as String).toLowerCase()));
+
+      if (mounted) {
+        setState(() {
+          _taggableContacts = taggable;
+          _isLoadingDevTeam = false;
+        });
+      }
     } catch (e) {
-      CurrentLogMessage.add('Error _fetchDevTeamContacts: $e', level: 'ERROR');
+      CurrentLogMessage.add('Error _fetchTaggableContacts: $e', level: 'ERROR');
     } finally {
       if (mounted) {
         setState(() {
@@ -661,8 +785,8 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
             bool allSelected = _selectedMentions.length == _taggableContacts.length && _taggableContacts.isNotEmpty;
             
             return CustomModal(
-              title: 'Etiquetar Miembros del Equipo',
-              width: 400,
+              title: 'Etiquetar Equipo y Contactos',
+              width: 480,
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -681,16 +805,26 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
                     },
                   ),
                   const Divider(),
-                  Flexible(
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 350),
                     child: ListView.builder(
                       shrinkWrap: true,
                       itemCount: _taggableContacts.length,
                       itemBuilder: (context, index) {
                         final contact = _taggableContacts[index];
                         final bool isSelected = _selectedMentions.any((c) => c['id'] == contact['id']);
+                        final String badgeLabel = contact['badgeLabel'] ?? '';
+                        final String email = contact['EMail'] ?? '';
                         
                         return CheckboxListTile(
-                          title: Text(contact['Name'] ?? 'Sin nombre'),
+                          title: Text(contact['Name'] ?? 'Sin nombre', style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text(
+                            [if (badgeLabel.isNotEmpty) badgeLabel, if (email.isNotEmpty) email].join(' • '),
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                           value: isSelected,
                           onChanged: (val) {
                             setModalState(() {
@@ -1009,7 +1143,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      'Cargando equipo de trabajo...',
+                      'Cargando equipo y contactos...',
                       style: TextStyle(
                         fontSize: 13,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1035,7 +1169,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
                       Expanded(
                         child: Text(
                           _selectedMentions.isEmpty 
-                              ? 'CC: Etiquetar miembros del equipo (Opcional)' 
+                              ? 'CC: Etiquetar equipo o contactos (Opcional)' 
                               : 'CC: ${_selectedMentions.map((e) => e['Name']).join(', ')}',
                           style: TextStyle(
                             color: _selectedMentions.isEmpty ? Theme.of(context).colorScheme.onSurfaceVariant : Theme.of(context).colorScheme.onSurface,
@@ -1064,7 +1198,7 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Este tercero no tiene un equipo asignado por el momento y para poder etiquetar hay que crear un equipo.',
+                        'No hay miembros del equipo ni contactos de este tercero con acceso válido a Primhub para etiquetar.',
                         style: TextStyle(
                           fontSize: 12.5,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,

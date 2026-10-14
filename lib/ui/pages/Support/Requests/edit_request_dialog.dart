@@ -22,6 +22,7 @@ import 'package:primhub/api/global_cache.dart';
 import 'package:primhub/api/api_utils.dart';
 import 'package:primhub/ui/widgets/duration_formatter.dart';
 import 'package:flutter_localization/flutter_localization.dart';
+import 'package:primhub/api/connectivity_manager.dart';
 
 class EditRequestDialog extends StatefulWidget {
   final Map<String, dynamic> request;
@@ -96,6 +97,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
   @override
   void initState() {
     super.initState();
+    ConnectivityManager.connectionRestoredNotifier.addListener(_onConnectionRestored);
     _statusIdMap = widget.statusIdMap;
     _currentPriority = widget.request['level'] ?? 'Media';
     _currentStatus = widget.request['status'] ?? '';
@@ -254,6 +256,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
 
   @override
   void dispose() {
+    ConnectivityManager.connectionRestoredNotifier.removeListener(_onConnectionRestored);
     _modalScrollController.dispose();
     _descriptionScrollController.dispose();
     _resultController.dispose();
@@ -390,7 +393,19 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     }
   }
 
-  Future<void> _fetchCategories() async {
+  void _onConnectionRestored() {
+    if (!mounted) return;
+    if (_categoryMap.isEmpty) {
+      _fetchCategories(forceRefresh: true);
+    }
+    if (_requestTypeMap.isEmpty) _fetchRequestTypes();
+    if (_statusIdMap.isEmpty) _fetchStatuses();
+    if (_groupMap.isEmpty) _fetchGroups();
+    if (_users.isEmpty) _fetchUsers();
+    if (_bPartnersList.isEmpty) _fetchBPartners();
+  }
+
+  Future<void> _fetchCategories({bool forceRefresh = false}) async {
     try {
       final bool isProject =
           (widget.request['recordUU'] != null &&
@@ -398,7 +413,16 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
           (widget.request['Record_UU'] != null &&
               widget.request['Record_UU'].toString().trim().isNotEmpty);
 
-      final allRecords = await fetchCategories();
+      List<Map<String, dynamic>> allRecords;
+      if (!forceRefresh && GlobalCache.rawCategories.isNotEmpty) {
+        allRecords = List<Map<String, dynamic>>.from(GlobalCache.rawCategories);
+      } else {
+        allRecords = await fetchCategories(forceRefresh: forceRefresh);
+      }
+
+      if (allRecords.isEmpty && GlobalCache.rawCategories.isNotEmpty) {
+        allRecords = List<Map<String, dynamic>>.from(GlobalCache.rawCategories);
+      }
 
       final records = allRecords.where((c) {
         final bool isPrimhub = c['showinprimhub'] == true;
@@ -1572,43 +1596,59 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                         isLoading: _isLoadingCategories,
                         isDisabled: _isReadOnly || _isLoadingCategories,
                         displayText: _selectedCategory ?? '',
-                        onTap: () => _openSearchModal<String>(
-                          title: AppLocale.category.getString(context),
-                          items: _categoryMap.keys.toList(),
-                          currentValue: _selectedCategory,
-                          getTitle: (item) => item.toString(),
-                          getValue: (item) => item.toString(),
-                          onSelected: (val) {
-                            setState(() {
-                              _selectedCategory = val;
-                              final bool isProject =
-                                  (widget.request['recordUU'] != null &&
-                                      widget.request['recordUU']
-                                          .toString()
-                                          .trim()
-                                          .isNotEmpty) ||
-                                  (widget.request['Record_UU'] != null &&
-                                      widget.request['Record_UU']
-                                          .toString()
-                                          .trim()
-                                          .isNotEmpty);
+                        onTap: () async {
+                          if (_isLoadingCategories) return;
+                          if (_categoryMap.isEmpty) {
+                            setState(() => _isLoadingCategories = true);
+                            await _fetchCategories(forceRefresh: true);
+                          }
+                          if (!mounted) return;
+                          if (_categoryMap.isEmpty) {
+                            ToastMessage.show(
+                              context: context,
+                              message: 'No se pudieron cargar las categorías. Comprueba tu conexión.',
+                              type: ToastType.warning,
+                            );
+                            return;
+                          }
+                          _openSearchModal<String>(
+                            title: AppLocale.category.getString(context),
+                            items: _categoryMap.keys.toList(),
+                            currentValue: _selectedCategory,
+                            getTitle: (item) => item.toString(),
+                            getValue: (item) => item.toString(),
+                            onSelected: (val) {
+                              setState(() {
+                                _selectedCategory = val;
+                                final bool isProject =
+                                    (widget.request['recordUU'] != null &&
+                                        widget.request['recordUU']
+                                            .toString()
+                                            .trim()
+                                            .isNotEmpty) ||
+                                    (widget.request['Record_UU'] != null &&
+                                        widget.request['Record_UU']
+                                            .toString()
+                                            .trim()
+                                            .isNotEmpty);
 
-                              if (!isProject &&
-                                  val != null &&
-                                  _categoryPriorityMap.containsKey(val)) {
-                                final pValue = _categoryPriorityMap[val]!;
-                                final label = widget.priorityMap.entries
-                                    .firstWhere(
-                                      (e) => e.value == pValue,
-                                      orElse: () => widget.priorityMap.entries
-                                          .firstWhere((e) => e.key == 'Media'),
-                                    )
-                                    .key;
-                                _currentPriority = label;
-                              }
-                            });
-                          },
-                        ),
+                                if (!isProject &&
+                                    val != null &&
+                                    _categoryPriorityMap.containsKey(val)) {
+                                  final pValue = _categoryPriorityMap[val]!;
+                                  final label = widget.priorityMap.entries
+                                      .firstWhere(
+                                        (e) => e.value == pValue,
+                                        orElse: () => widget.priorityMap.entries
+                                            .firstWhere((e) => e.key == 'Media'),
+                                      )
+                                      .key;
+                                  _currentPriority = label;
+                                }
+                              });
+                            },
+                          );
+                        },
                       ),
                     ),
                     Padding(

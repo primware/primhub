@@ -16,6 +16,8 @@ import 'package:primhub/ui/pages/Login/login_selection_page.dart';
 import 'package:primhub/ui/pages/Login/login_selection_args.dart';
 import 'package:primhub/localization/app_locale.dart';
 import 'package:flutter_localization/flutter_localization.dart';
+import 'package:primhub/api/connectivity_manager.dart';
+import 'package:primhub/ui/widgets/connectivity_blocker_overlay.dart';
 
 final ValueNotifier<bool> sessionHydrated = ValueNotifier(false);
 
@@ -230,6 +232,7 @@ class _MainAppState extends State<MainApp> {
   @override
   void initState() {
     super.initState();
+    ConnectivityManager().init();
     _localization.init(
       mapLocales: const [
         MapLocale('es', AppLocale.es),
@@ -270,7 +273,9 @@ class _MainAppState extends State<MainApp> {
             supportedLocales: _localization.supportedLocales,
             locale: _localization.currentLocale,
             builder: (context, child) {
-              return ToastificationWrapper(child: child!);
+              return ToastificationWrapper(
+                child: ConnectivityBlockerOverlay(child: child!),
+              );
             },
           ),
         );

@@ -102,13 +102,14 @@ class _UserManagementPageState extends State<UserManagementPage> with SingleTick
     );
   }
 
-  void _showUserModal(Map<String, dynamic>? user, {String? initialSearch}) {
+  void _showUserModal(Map<String, dynamic>? user, {String? initialSearch, int? initialBPartnerId}) {
     showDialog(
       context: context,
       builder: (context) {
         return UserModal(
           user: user,
           initialSearch: initialSearch,
+          initialBPartnerId: initialBPartnerId,
           bPartners: _bPartners,
           roles: _primhubRoles,
           allRoles: _roles,
@@ -802,13 +803,26 @@ class _UserManagementPageState extends State<UserManagementPage> with SingleTick
               );
               final sr = bp['SalesRep_ID'];
               int? salesRepId;
+              String? salesRepName;
               if (sr != null) {
                 if (sr is Map) {
                   salesRepId = sr['id'] is int ? sr['id'] : int.tryParse(sr['id'].toString());
+                  if (sr['identifier'] != null) {
+                    salesRepName = sr['identifier'].toString();
+                  }
                 } else {
                   salesRepId = int.tryParse(sr.toString());
                 }
               }
+              if (salesRepId != null && salesRepName == null) {
+                final srUser = _allUsers.cast<Map<String, dynamic>?>().firstWhere(
+                  (u) => (u?['AD_User_ID'] ?? u?['id']) == salesRepId,
+                  orElse: () => null,
+                );
+                salesRepName = srUser?['Name'] ?? 'ID $salesRepId';
+              }
+              final isSalesRepInTeam = salesRepId != null &&
+                  users.any((u) => (u['AD_User_ID'] ?? u['id']) == salesRepId);
 
               final key = _teamKeys.putIfAbsent(teamBpId, () => GlobalKey());
               final tileController = _teamTileControllers.putIfAbsent(teamBpId, () => ExpansionTileController());
@@ -837,18 +851,84 @@ class _UserManagementPageState extends State<UserManagementPage> with SingleTick
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(team['Name']),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${users.length} usuarios en el equipo',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              team['Name'],
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                            const SizedBox(height: 4),
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 4,
+                              children: [
+                                Text(
+                                  '${users.length} usuarios en el equipo',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                if (salesRepName != null) ...[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: (isSalesRepInTeam ? Colors.green : Colors.amber).withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: (isSalesRepInTeam ? Colors.green : Colors.amber.shade800).withOpacity(0.4),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.star,
+                                          size: 13,
+                                          color: isSalesRepInTeam ? Colors.green.shade700 : Colors.amber.shade900,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Rep. Comercial: $salesRepName${isSalesRepInTeam ? '' : ' (No asignado al equipo)'}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: isSalesRepInTeam ? Colors.green.shade800 : Colors.amber.shade900,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ] else ...[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'Sin Rep. Comercial asignado',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade600,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
+                      CustomButton(
+                        text: 'Ver contactos',
+                        icon: Icons.people_outline,
+                        onPressed: () => _showBPartnerContactsModal(bp, teamBpId),
+                      ),
+                      const SizedBox(width: 8),
                       CustomButton(
                         text: 'Añadir/editar',
                         icon: Icons.edit,
@@ -856,7 +936,39 @@ class _UserManagementPageState extends State<UserManagementPage> with SingleTick
                       ),
                     ],
                   ),
-                  children: users.map((u) {
+                  children: [
+                    if (salesRepName != null && !isSalesRepInTeam)
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.amber.withOpacity(0.35)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.star_outline_rounded, size: 20, color: Colors.amber.shade900),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'El representante comercial de este tercero es $salesRepName, pero no ha sido agregado a este equipo de trabajo.',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: Colors.amber.shade900,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: () => _showTeamModal(team),
+                              icon: const Icon(Icons.person_add_alt_1, size: 16),
+                              label: const Text('Gestionar equipo', style: TextStyle(fontSize: 12)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ...users.map((u) {
                     final isActive = u['IsActive'] == true;
                     final isSalesRep = salesRepId != null && 
                                        ((u['AD_User_ID'] == salesRepId) || (u['id'] == salesRepId));
@@ -976,9 +1088,10 @@ class _UserManagementPageState extends State<UserManagementPage> with SingleTick
                         ],
                       ),
                     );
-                  }).toList(),
-                ),
-              );
+                  }),
+                ],
+              ),
+            );
             }).toList(),
           ),
         ),
@@ -1030,7 +1143,11 @@ class _UserManagementPageState extends State<UserManagementPage> with SingleTick
                 );
                 
                 final String bpName = bp['Name'] ?? 'Sin nombre';
-                final String bpValue = bp['Value'] ?? 'Sin código';
+                final String bpValue = (bp['Value'] != null && bp['Value'].toString().trim().isNotEmpty)
+                    ? bp['Value'].toString().trim()
+                    : ((bp['TaxID'] != null && bp['TaxID'].toString().trim().isNotEmpty)
+                        ? bp['TaxID'].toString().trim()
+                        : 'Sin código');
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -1038,64 +1155,75 @@ class _UserManagementPageState extends State<UserManagementPage> with SingleTick
                     leading: const Icon(Icons.business, color: Colors.blueGrey, size: 36),
                     title: Text(bpName, style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text('Código: $bpValue\n${team != null ? 'Tiene un equipo asignado (${(team['Users'] as List).length} miembros)' : 'Sin equipo asignado'}'),
-                    trailing: team != null
-                        ? CustomButton(
-                            text: 'Ver equipo',
-                            icon: Icons.group,
-                            onPressed: () {
-                              setState(() {
-                                if (_teamSearchQuery.isNotEmpty) {
-                                  _teamSearchController.clear();
-                                  _teamSearchQuery = '';
-                                }
-                                _tabController.animateTo(1); 
-                              });
-                              Future.delayed(const Duration(milliseconds: 300), () {
-                                // Cerrar cualquier otro equipo abierto
-                                for (final entry in _teamTileControllers.entries) {
-                                  if (entry.key != bpId) {
-                                    try {
-                                      if (entry.value.isExpanded) {
-                                        entry.value.collapse();
-                                      }
-                                    } catch (_) {}
-                                  }
-                                }
-
-                                final key = _teamKeys[bpId];
-                                final tileCtrl = _teamTileControllers[bpId];
-                                
-                                if (tileCtrl != null) {
-                                  try {
-                                    if (!tileCtrl.isExpanded) {
-                                      tileCtrl.expand();
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CustomButton(
+                          text: 'Ver contactos',
+                          icon: Icons.people_outline,
+                          onPressed: () => _showBPartnerContactsModal(bp, bpId),
+                        ),
+                        const SizedBox(width: 8),
+                        team != null
+                            ? CustomButton(
+                                text: 'Ver equipo',
+                                icon: Icons.group,
+                                onPressed: () {
+                                  setState(() {
+                                    if (_teamSearchQuery.isNotEmpty) {
+                                      _teamSearchController.clear();
+                                      _teamSearchQuery = '';
                                     }
-                                  } catch (_) {}
-                                }
-                                
-                                if (key != null && key.currentContext != null) {
-                                  Scrollable.ensureVisible(
-                                    key.currentContext!,
-                                    duration: const Duration(milliseconds: 500),
-                                    curve: Curves.easeInOut,
-                                    alignment: 0.1, // Un poco despistado del borde superior
-                                  );
-                                }
-                              });
-                            },
-                          )
-                        : CustomButton(
-                            text: 'Crear equipo',
-                            icon: Icons.add,
-                            backgroundColor: Colors.teal,
-                            onPressed: () {
-                              _showTeamModal({
-                                'C_BPartner_ID': bpId,
-                                'Name': 'Equipo de $bpName',
-                                'Users': [],
-                              });
-                            },
-                          ),
+                                    _tabController.animateTo(1); 
+                                  });
+                                  Future.delayed(const Duration(milliseconds: 300), () {
+                                    // Cerrar cualquier otro equipo abierto
+                                    for (final entry in _teamTileControllers.entries) {
+                                      if (entry.key != bpId) {
+                                        try {
+                                          if (entry.value.isExpanded) {
+                                            entry.value.collapse();
+                                          }
+                                        } catch (_) {}
+                                      }
+                                    }
+
+                                    final key = _teamKeys[bpId];
+                                    final tileCtrl = _teamTileControllers[bpId];
+                                    
+                                    if (tileCtrl != null) {
+                                      try {
+                                        if (!tileCtrl.isExpanded) {
+                                          tileCtrl.expand();
+                                        }
+                                      } catch (_) {}
+                                    }
+                                    
+                                    if (key != null && key.currentContext != null) {
+                                      Scrollable.ensureVisible(
+                                        key.currentContext!,
+                                        duration: const Duration(milliseconds: 500),
+                                        curve: Curves.easeInOut,
+                                        alignment: 0.1, // Un poco despistado del borde superior
+                                      );
+                                    }
+                                  });
+                                },
+                              )
+                            : CustomButton(
+                                text: 'Crear equipo',
+                                icon: Icons.add,
+                                backgroundColor: Colors.teal,
+                                onPressed: () {
+                                  _showTeamModal({
+                                    'C_BPartner_ID': bpId,
+                                    'Name': 'Equipo de $bpName',
+                                    'Users': [],
+                                  });
+                                },
+                              ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -1180,6 +1308,221 @@ class _UserManagementPageState extends State<UserManagementPage> with SingleTick
           onSuccess: _loadData,
         );
       }
+    );
+  }
+
+  void _showBPartnerContactsModal(Map<String, dynamic> bp, int? bpId) {
+    if (bpId == null) return;
+    final String bpName = bp['Name'] ?? 'Tercero';
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        String filterQuery = '';
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            // Filtrar los usuarios que pertenecen a este tercero
+            final allContacts = _allUsers.where((u) => u['C_BPartner_ID'] == bpId).toList();
+            allContacts.sort((a, b) => (a['Name']?.toString() ?? '').toLowerCase().compareTo((b['Name']?.toString() ?? '').toLowerCase()));
+
+            final filteredContacts = allContacts.where((u) {
+              if (filterQuery.isEmpty) return true;
+              final q = filterQuery.toLowerCase();
+              final name = (u['Name'] ?? '').toString().toLowerCase();
+              final email = (u['EMail'] ?? '').toString().toLowerCase();
+              return name.contains(q) || email.contains(q);
+            }).toList();
+
+            return CustomModal(
+              title: 'Contactos de $bpName',
+              width: 700,
+              content: SizedBox(
+                height: 480,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomTextField(
+                            label: 'Buscar contacto por nombre o correo',
+                            prefixIcon: const Icon(Icons.search, size: 20),
+                            onChanged: (val) => setModalState(() => filterQuery = val),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        CustomButton(
+                          text: 'Crear Contacto',
+                          icon: Icons.person_add,
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            _showUserModal(null, initialBPartnerId: bpId);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${filteredContacts.length} de ${allContacts.length} ${allContacts.length == 1 ? 'contacto' : 'contactos'}',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                        Text(
+                          'Solo usuarios con rol válido en Primhub pueden ser etiquetados',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontStyle: FontStyle.italic,
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(height: 1),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: allContacts.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.people_outline, size: 48, color: Colors.grey.shade400),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Este tercero no tiene contactos registrados.',
+                                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  CustomButton(
+                                    text: 'Crear primer contacto',
+                                    icon: Icons.person_add,
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      _showUserModal(null, initialBPartnerId: bpId);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            )
+                          : filteredContacts.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    'No se encontraron contactos para "$filterQuery"',
+                                    style: TextStyle(color: Colors.grey.shade600),
+                                  ),
+                                )
+                              : ListView.separated(
+                                  itemCount: filteredContacts.length,
+                                  separatorBuilder: (context, index) => const Divider(height: 1),
+                                  itemBuilder: (context, index) {
+                                    final u = filteredContacts[index];
+                                    final bool isActive = u['IsActive'] == true;
+                                    final bool hasValidRole = u['HasValidRole'] == true;
+
+                                    return ListTile(
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      leading: CircleAvatar(
+                                        backgroundColor: isActive 
+                                            ? (hasValidRole ? Colors.green.withOpacity(0.12) : Colors.orange.withOpacity(0.12))
+                                            : Colors.grey.withOpacity(0.12),
+                                        child: Icon(
+                                          Icons.person,
+                                          color: isActive
+                                              ? (hasValidRole ? Colors.green.shade700 : Colors.orange.shade800)
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                      title: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              u['Name'] ?? 'Sin nombre',
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                            ),
+                                          ),
+                                          if (!isActive)
+                                            Container(
+                                              margin: const EdgeInsets.only(left: 6),
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.red.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                'Inactivo',
+                                                style: TextStyle(fontSize: 10, color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            u['EMail'] ?? 'Sin correo electrónico',
+                                            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Wrap(
+                                            spacing: 6,
+                                            runSpacing: 4,
+                                            children: [
+                                              if (hasValidRole && isActive)
+                                                _buildBadge('Tiene Acceso a Primhub', Colors.green.shade700, Icons.check_circle_outline),
+                                              ..._buildRoleBadges(u),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Tooltip(
+                                            message: 'Ver Información',
+                                            child: IconButton(
+                                              icon: const Icon(Icons.visibility),
+                                              color: Theme.of(context).colorScheme.primary,
+                                              onPressed: () => _showUserInfoModal(u),
+                                            ),
+                                          ),
+                                          Tooltip(
+                                            message: 'Editar Usuario',
+                                            child: IconButton(
+                                              icon: const Icon(Icons.edit),
+                                              color: Theme.of(context).colorScheme.primary,
+                                              onPressed: () {
+                                                Navigator.pop(ctx);
+                                                _showUserModal(u);
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                CustomButton(
+                  text: 'Cerrar',
+                  backgroundColor: Colors.grey.shade600,
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

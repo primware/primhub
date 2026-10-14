@@ -11,6 +11,7 @@ import 'package:primhub/ui/pages/Admin/user_management_logic.dart';
 class UserModal extends StatefulWidget {
   final Map<String, dynamic>? user;
   final String? initialSearch;
+  final int? initialBPartnerId;
   final List<Map<String, dynamic>> bPartners;
   final Map<int, String> roles; // (primhubRoles)
   final Map<int, String> allRoles; // (todas las roles del sistema)
@@ -20,6 +21,7 @@ class UserModal extends StatefulWidget {
     super.key,
     required this.user,
     this.initialSearch,
+    this.initialBPartnerId,
     required this.bPartners,
     required this.roles,
     required this.allRoles,
@@ -70,7 +72,7 @@ class _UserModalState extends State<UserModal> {
     originalRoles = widget.user != null ? List<Map<String, dynamic>>.from(widget.user!['RolesDetails'] ?? []) : [];
     currentRoles = List.from(originalRoles);
     
-    selectedBPartnerId = widget.user?['C_BPartner_ID'];
+    selectedBPartnerId = widget.user?['C_BPartner_ID'] ?? widget.initialBPartnerId;
     isActive = widget.user != null ? widget.user!['IsActive'] == true : true;
   }
 
@@ -119,11 +121,11 @@ class _UserModalState extends State<UserModal> {
                 child: SearchableDropdown<int>(
                   label: 'Tercero (Empresa) *',
                   value: selectedBPartnerId,
-                  displayText: selectedBPartnerId != null 
-                    ? widget.bPartners.firstWhere(
-                        (e) => (e['id'] ?? e['C_BPartner_ID']) == selectedBPartnerId,
-                        orElse: () => {'Name': 'Desconocido'})['Name']
-                    : 'Seleccionar...',
+                    displayText: selectedBPartnerId != null 
+                      ? widget.bPartners.firstWhere(
+                          (e) => (e['id'] ?? e['C_BPartner_ID']) == selectedBPartnerId,
+                          orElse: () => {'Name': widget.user?['Company'] ?? 'Desconocido'})['Name']
+                      : 'Seleccionar...',
                   onTap: () async {
                     final res = await SearchableDropdown.openSearchModal<int>(
                       context: context,

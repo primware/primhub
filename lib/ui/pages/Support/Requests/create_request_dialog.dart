@@ -22,6 +22,7 @@ import 'package:primhub/api/global_cache.dart';
 import 'package:primhub/ImagesManagment/post_attachments.dart';
 import 'package:primhub/ui/widgets/duration_formatter.dart';
 import 'package:flutter_localization/flutter_localization.dart';
+import 'package:primhub/api/connectivity_manager.dart';
 
 class CreateRequestDialog extends StatefulWidget {
   final String? linkedRecordUU;
@@ -124,6 +125,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
   @override
   void initState() {
     super.initState();
+    ConnectivityManager.connectionRestoredNotifier.addListener(_onConnectionRestored);
     _salesReps = GlobalCache.salesReps;
     _isLoadingSalesReps = false;
     _fetchInitialData();
@@ -157,6 +159,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
 
   @override
   void dispose() {
+    ConnectivityManager.connectionRestoredNotifier.removeListener(_onConnectionRestored);
     _summaryQuillController.dispose();
     _dateStartController.dispose();
     _dateCompleteController.dispose();
@@ -630,12 +633,33 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
     );
   }
 
-  Future<void> _fetchCategories() async {
+  void _onConnectionRestored() {
+    if (!mounted) return;
+    if (_categoryMap.isEmpty) {
+      _fetchCategories(forceRefresh: true);
+    }
+    if (_requestTypeMap.isEmpty) _fetchRequestTypes();
+    if (_statusIdMap.isEmpty) _fetchStatuses();
+    if (_groupMap.isEmpty) _fetchGroups();
+    if (_users.isEmpty) _fetchUsers();
+    if (_bPartnersList.isEmpty) _fetchBPartners();
+  }
+
+  Future<void> _fetchCategories({bool forceRefresh = false}) async {
     try {
       final bool isProject =
           widget.linkedRecordUU != null && widget.linkedRecordUU!.isNotEmpty;
 
-      final allRecords = await fetchCategories();
+      List<Map<String, dynamic>> allRecords;
+      if (!forceRefresh && GlobalCache.rawCategories.isNotEmpty) {
+        allRecords = List<Map<String, dynamic>>.from(GlobalCache.rawCategories);
+      } else {
+        allRecords = await fetchCategories(forceRefresh: forceRefresh);
+      }
+
+      if (allRecords.isEmpty && GlobalCache.rawCategories.isNotEmpty) {
+        allRecords = List<Map<String, dynamic>>.from(GlobalCache.rawCategories);
+      }
 
       // Filtrar categorías según el contexto:
       // Si es Proyecto: mostrar las que tienen showinprimhub = false
@@ -1659,35 +1683,51 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                       isLoading: _isLoadingCategories,
                       isDisabled: false,
                       displayText: _selectedCategory ?? '',
-                      onTap: () => _openSearchModal<String>(
-                        title: AppLocale.category.getString(context),
-                        items: _categoryMap.keys.toList(),
-                        currentValue: _selectedCategory,
-                        getTitle: (item) => item.toString(),
-                        getValue: (item) => item.toString(),
-                        onSelected: (val) {
-                          setState(() {
-                            _selectedCategory = val;
-                            final bool isProject =
-                                widget.linkedRecordUU != null &&
-                                widget.linkedRecordUU!.isNotEmpty;
+                      onTap: () async {
+                        if (_isLoadingCategories) return;
+                        if (_categoryMap.isEmpty) {
+                          setState(() => _isLoadingCategories = true);
+                          await _fetchCategories(forceRefresh: true);
+                        }
+                        if (!mounted) return;
+                        if (_categoryMap.isEmpty) {
+                          ToastMessage.show(
+                            context: context,
+                            message: 'No se pudieron cargar las categorías. Comprueba tu conexión.',
+                            type: ToastType.warning,
+                          );
+                          return;
+                        }
+                        _openSearchModal<String>(
+                          title: AppLocale.category.getString(context),
+                          items: _categoryMap.keys.toList(),
+                          currentValue: _selectedCategory,
+                          getTitle: (item) => item.toString(),
+                          getValue: (item) => item.toString(),
+                          onSelected: (val) {
+                            setState(() {
+                              _selectedCategory = val;
+                              final bool isProject =
+                                  widget.linkedRecordUU != null &&
+                                  widget.linkedRecordUU!.isNotEmpty;
 
-                            // La automatización de prioridad solo aplica a SOPORTE (no proyectos)
-                            if (!isProject &&
-                                _categoryPriorityMap.containsKey(val)) {
-                              final pValue = _categoryPriorityMap[val]!;
-                              final label = _priorityMap.entries
-                                  .firstWhere(
-                                    (e) => e.value == pValue,
-                                    orElse: () => _priorityMap.entries
-                                        .firstWhere((e) => e.key == 'Media'),
-                                  )
-                                  .key;
-                              _selectedPriority = label;
-                            }
-                          });
-                        },
-                      ),
+                              // La automatización de prioridad solo aplica a SOPORTE (no proyectos)
+                              if (!isProject &&
+                                  _categoryPriorityMap.containsKey(val)) {
+                                final pValue = _categoryPriorityMap[val]!;
+                                final label = _priorityMap.entries
+                                    .firstWhere(
+                                      (e) => e.value == pValue,
+                                      orElse: () => _priorityMap.entries
+                                          .firstWhere((e) => e.key == 'Media'),
+                                    )
+                                    .key;
+                                _selectedPriority = label;
+                              }
+                            });
+                          },
+                        );
+                      },
                     ),
                   ),
                   Padding(

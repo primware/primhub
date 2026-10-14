@@ -83,7 +83,7 @@ class GlobalCache {
     final List<Future<dynamic>> fetchFutures = [
       fetchStatusesWithMetadata(), // 0
       fetchRequestTypesWithMetadata(), // 1
-      fetchCategories(), // 2
+      fetchCategories(forceRefresh: true), // 2
       fetchGroups(), // 3
       ProjectsLogic().fetchUsers(), // 4
       ProjectsLogic().fetchSalesReps(), // 5
@@ -467,6 +467,7 @@ class GlobalCache {
     requestTypes.clear();
     requestTypeCategoryMap.clear();
     categories.clear();
+    rawCategories.clear();
     groups.clear();
     
     isDataLoaded = false;

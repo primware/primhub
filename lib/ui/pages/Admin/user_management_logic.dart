@@ -1,24 +1,102 @@
 import 'dart:convert';
 import 'package:primhub/api/api_http.dart' as http;
+import 'package:primhub/api/global_cache.dart';
 import 'package:primhub/api/token.dart';
 import 'package:primhub/endpoint/endpoint.dart';
+import 'package:primhub/ui/pages/Projects/Documents/documents_logic.dart';
 
 class UserManagementLogic {
+  static bool isTruthy(dynamic val) {
+    if (val == null) return false;
+    if (val is bool) return val;
+    if (val is num) return val != 0;
+    if (val is Map) return isTruthy(val['id'] ?? val['value']);
+    final str = val.toString().trim().toUpperCase();
+    return str == 'Y' || str == 'TRUE' || str == '1';
+  }
+
+  static Future<List<Map<String, dynamic>>> _fetchAllPaginated(String baseUrl) async {
+    List<Map<String, dynamic>> allRecords = [];
+    int skip = 0;
+    const int pageSize = 100;
+    bool hasMore = true;
+
+    while (hasMore) {
+      final sep = baseUrl.contains('?') ? '&' : '?';
+      final url = '$baseUrl$sep\$skip=$skip&\$top=$pageSize';
+      final res = await http.get(Uri.parse(url), headers: {
+        'Content-Type': 'application/json',
+        'Authorization': Token.token,
+      });
+
+      if (res.statusCode == 200) {
+        final decoded = json.decode(utf8.decode(res.bodyBytes));
+        final records = (decoded['records'] as List?) ?? [];
+        allRecords.addAll(records.map((e) => Map<String, dynamic>.from(e)));
+        if (records.length < pageSize) {
+          hasMore = false;
+        } else {
+          skip += pageSize;
+        }
+      } else {
+        hasMore = false;
+      }
+    }
+    return allRecords;
+  }
+
+  static Future<List<Map<String, dynamic>>> _fetchBPartnersForTeams() async {
+    try {
+      // Misma consulta que en "Crear proyecto": IsCustomer eq true and IsActive eq true
+      final url = '${Endpoint.cBPartner}?\$filter=IsCustomer eq true and IsActive eq true&\$orderby=Name';
+      final records = await _fetchAllPaginated(url);
+      if (records.isNotEmpty) {
+        return records;
+      }
+    } catch (_) {}
+
+    if (GlobalCache.bPartners.isNotEmpty) {
+      return GlobalCache.bPartners;
+    }
+    final raw = await ProjectsLogic().fetchBPartners();
+    return raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
   static Future<Map<String, dynamic>> fetchFullUsersAndTeams() async {
     try {
+      final bPartnersFuture = _fetchBPartnersForTeams();
+
       final results = await Future.wait([
-        http.get(Uri.parse('${Endpoint.primConfig}?\$limit=100'), headers: {'Authorization': Token.token}),
-        http.get(Uri.parse('${Endpoint.adUserRoles}?\$limit=5000'), headers: {'Authorization': Token.token}),
-        http.get(Uri.parse('${Endpoint.primDevTeam}?\$limit=5000'), headers: {'Authorization': Token.token}),
-        http.get(Uri.parse('${Endpoint.adUser}?\$limit=5000&\$select=AD_User_ID,Name,EMail,IsActive,C_BPartner_ID,AD_User_UU,Password'), headers: {'Authorization': Token.token}),
-        http.get(Uri.parse('${Endpoint.cBPartner}?\$limit=5000&\$select=C_BPartner_ID,Name,IsCustomer,IsSalesRep,IsEmployee,SalesRep_ID'), headers: {'Authorization': Token.token}),
+        _fetchAllPaginated('${Endpoint.primConfig}?\$filter=IsActive eq true'),
+        _fetchAllPaginated('${Endpoint.adUserRoles}?\$filter=IsActive eq true'),
+        _fetchAllPaginated('${Endpoint.primDevTeam}?\$filter=IsActive eq true'),
+        _fetchAllPaginated('${Endpoint.adUser}?\$select=AD_User_ID,Name,EMail,IsActive,C_BPartner_ID,AD_User_UU,Password'),
+        bPartnersFuture,
       ]);
 
-      final configRecords = (json.decode(utf8.decode(results[0].bodyBytes))['records'] as List?) ?? [];
-      final userRolesRecords = (json.decode(utf8.decode(results[1].bodyBytes))['records'] as List?) ?? [];
-      final devTeamRecords = (json.decode(utf8.decode(results[2].bodyBytes))['records'] as List?) ?? [];
-      final adUserRecords = (json.decode(utf8.decode(results[3].bodyBytes))['records'] as List?) ?? [];
-      final bPartnerRecords = (json.decode(utf8.decode(results[4].bodyBytes))['records'] as List?) ?? [];
+      final configRecords = results[0];
+      final userRolesRecords = results[1];
+      final devTeamRecords = results[2];
+      final adUserRecords = results[3];
+      final rawBPartners = List<Map<String, dynamic>>.from(results[4]);
+
+      // Asegurar inclusión de la empresa administradora (La Casa del Software) si está en caché
+      if (GlobalCache.bPartners.isNotEmpty) {
+        final adminComp = GlobalCache.bPartners.cast<Map<String, dynamic>?>().firstWhere(
+          (b) {
+            final name = (b?['Name'] ?? '').toString().toUpperCase();
+            final uuid = b?['C_BPartner_UU'] ?? b?['Record_UU'] ?? b?['UUID'] ?? b?['uuid'];
+            return name.contains('LA CASA DEL SOFTWARE') || uuid == 'e4e48cad-f8f8-4f61-954c-60f431bd5d95';
+          },
+          orElse: () => null,
+        );
+        if (adminComp != null) {
+          final adminId = (adminComp['id'] as num? ?? adminComp['C_BPartner_ID'] as num?)?.toInt();
+          if (adminId != null && !rawBPartners.any((b) => (b['id'] ?? b['C_BPartner_ID']) == adminId)) {
+            rawBPartners.add(adminComp);
+          }
+        }
+      }
 
       // 1. Roles config y extracción de nombres por foreign keys
       Set<int> validRoles = {};
@@ -28,12 +106,14 @@ class UserManagementLogic {
       for (var conf in configRecords) {
         final rData = conf['AD_Role_ID'];
         if (rData != null) {
-          final rId = rData is Map ? (rData['id'] as num).toInt() : (rData as num).toInt();
-          validRoles.add(rId);
-          if (rData is Map && rData['identifier'] != null) {
-            final name = rData['identifier'].toString();
-            roleNames[rId] = name;
-            primhubRoles[rId] = name;
+          final rId = ((rData is Map ? rData['id'] : rData) as num?)?.toInt();
+          if (rId != null) {
+            validRoles.add(rId);
+            if (rData is Map && rData['identifier'] != null) {
+              final name = rData['identifier'].toString();
+              roleNames[rId] = name;
+              primhubRoles[rId] = name;
+            }
           }
         }
       }
@@ -41,63 +121,117 @@ class UserManagementLogic {
       // 2. AD_User_Roles
       Map<int, List<Map<String, dynamic>>> userToRolesDetails = {};
       for (var ur in userRolesRecords) {
-        if (ur['IsActive'] == false) continue;
+        if (!isTruthy(ur['IsActive'])) continue;
         final rData = ur['AD_Role_ID'];
         final uData = ur['AD_User_ID'];
         if (rData != null && uData != null) {
           if (rData is Map && rData['identifier'] == '~.~') continue; // Filtramos roles inactivos o inválidos en el sistema
           
-          final rId = rData is Map ? (rData['id'] as num).toInt() : (rData as num).toInt();
-          final uId = uData is Map ? (uData['id'] as num).toInt() : (uData as num).toInt();
+          final rId = ((rData is Map ? rData['id'] : rData) as num?)?.toInt();
+          final uId = ((uData is Map ? uData['id'] : uData) as num?)?.toInt();
           
-          if (rData is Map && rData['identifier'] != null) {
-            roleNames[rId] = rData['identifier'].toString();
+          if (rId != null && uId != null) {
+            if (rData is Map && rData['identifier'] != null) {
+              roleNames[rId] = rData['identifier'].toString();
+            }
+
+            final rUuid = ur['uid'] ?? ur['AD_User_Roles_UU'] ?? ur['uuid'] ?? ur['UU'];
+            userToRolesDetails.putIfAbsent(uId, () => []).add({'roleId': rId, 'uuid': rUuid});
           }
-
-          final rUuid = ur['uid'] ?? ur['AD_User_Roles_UU'] ?? ur['uuid'] ?? ur['UU'];
-          userToRolesDetails.putIfAbsent(uId, () => []).add({'roleId': rId, 'uuid': rUuid});
         }
       }
 
-      // 3. BPartners map
+      // 3. Filtrar terceros para la visual de los equipos:
+      // Deben llegar todos los terceros activos que son al menos clientes y que definitivamente NO son colaborador ni representante comercial.
+      final List<Map<String, dynamic>> filteredBPartners = rawBPartners.where((bp) {
+        final name = (bp['Name']?.toString() ?? '').trim();
+        if (name.startsWith('~')) return false;
+
+        final isSpecificAdmin =
+            name.toUpperCase().contains('LA CASA DEL SOFTWARE') ||
+            bp['C_BPartner_UU'] == 'e4e48cad-f8f8-4f61-954c-60f431bd5d95' ||
+            bp['Record_UU'] == 'e4e48cad-f8f8-4f61-954c-60f431bd5d95' ||
+            bp['UUID'] == 'e4e48cad-f8f8-4f61-954c-60f431bd5d95' ||
+            bp['uuid'] == 'e4e48cad-f8f8-4f61-954c-60f431bd5d95';
+
+        if (isSpecificAdmin) return true;
+
+        // Debe estar activo
+        final rawActive = bp['IsActive'] ?? bp['isActive'];
+        final isActiveStr = rawActive?.toString().trim().toLowerCase();
+        final isActive = rawActive == null || isActiveStr == 'true' || isActiveStr == 'y';
+        if (!isActive) return false;
+
+        // Debe ser al menos cliente
+        final rawCustomer = bp['IsCustomer'] ?? bp['isCustomer'];
+        final isCustomerStr = rawCustomer?.toString().trim().toLowerCase();
+        final isCustomer = isCustomerStr == 'true' || isCustomerStr == 'y';
+        if (!isCustomer) return false;
+
+        // Definitivamente NO colaborador (IsEmployee)
+        final rawEmployee = bp['IsEmployee'] ?? bp['isEmployee'];
+        final isEmployeeStr = rawEmployee?.toString().trim().toLowerCase();
+        final isEmployee = isEmployeeStr == 'true' || isEmployeeStr == 'y';
+        if (isEmployee) return false;
+
+        // Definitivamente NO representante comercial (IsSalesRep)
+        final rawSalesRep = bp['IsSalesRep'] ?? bp['isSalesRep'];
+        final isSalesRepStr = rawSalesRep?.toString().trim().toLowerCase();
+        final isSalesRep = isSalesRepStr == 'true' || isSalesRepStr == 'y';
+        if (isSalesRep) return false;
+
+        return true;
+      }).toList();
+
+      filteredBPartners.sort((a, b) =>
+          (a['Name']?.toString() ?? '').toLowerCase().compareTo((b['Name']?.toString() ?? '').toLowerCase()));
+
+      // 4. BPartners map para asociaciones rápidas
       Map<int, Map<String, dynamic>> bpMap = {};
-      for (var bp in bPartnerRecords) {
-        final id = bp['id'] ?? bp['C_BPartner_ID'];
+      for (var bp in filteredBPartners) {
+        final rawId = bp['id'] ?? (bp['C_BPartner_ID'] is Map ? bp['C_BPartner_ID']['id'] : bp['C_BPartner_ID']);
+        final id = (rawId as num?)?.toInt();
         if (id != null) {
-          bpMap[(id as num).toInt()] = bp;
+          bp['id'] = id;
+          bp['C_BPartner_ID'] = id;
+          bpMap[id] = bp;
         }
       }
 
-      // 4. Teams
+      // 5. Teams
       Map<int, List<Map<String, dynamic>>> bpToUsersInTeam = {};
       Map<int, List<String>> userToTeams = {};
       for (var dt in devTeamRecords) {
-        if (dt['IsActive'] == false) continue;
+        if (!isTruthy(dt['IsActive'])) continue;
         final bpData = dt['C_BPartner_ID'];
         final uData = dt['AD_User_ID'];
         if (bpData != null && uData != null) {
-          final bpId = bpData is Map ? (bpData['id'] as num).toInt() : (bpData as num).toInt();
-          final uId = uData is Map ? (uData['id'] as num).toInt() : (uData as num).toInt();
+          final bpId = ((bpData is Map ? bpData['id'] : bpData) as num?)?.toInt();
+          final uId = ((uData is Map ? uData['id'] : uData) as num?)?.toInt();
           final teamId = dt['PRIM_Dev_Team_ID'] ?? dt['id'];
           
-          bpToUsersInTeam.putIfAbsent(bpId, () => []).add({'uId': uId, 'teamId': teamId});
-          String bpName = bpMap[bpId]?['Name'] ?? 'ID $bpId';
-          userToTeams.putIfAbsent(uId, () => []).add('Equipo de $bpName');
+          if (bpId != null && uId != null) {
+            bpToUsersInTeam.putIfAbsent(bpId, () => []).add({'uId': uId, 'teamId': teamId});
+            String bpName = bpMap[bpId]?['Name'] ?? (bpData is Map ? (bpData['identifier'] ?? bpData['Name'] ?? 'ID $bpId') : 'ID $bpId');
+            userToTeams.putIfAbsent(uId, () => []).add('Equipo de $bpName');
+          }
         }
       }
 
-      // 5. Final Users List
+      // 6. Final Users List
       List<Map<String, dynamic>> finalUsers = [];
       Map<int, Map<String, dynamic>> userMap = {};
       
       for (var u in adUserRecords) {
-        final uId = (u['id'] ?? u['AD_User_ID'] as num?)?.toInt();
+        final rawUId = u['id'] ?? (u['AD_User_ID'] is Map ? u['AD_User_ID']['id'] : u['AD_User_ID']);
+        final uId = (rawUId as num?)?.toInt();
         if (uId == null) continue;
 
         final bpData = u['C_BPartner_ID'];
-        final bpId = bpData is Map ? (bpData['id'] as num?)?.toInt() : (bpData as num?)?.toInt();
+        final bpId = ((bpData is Map ? bpData['id'] : bpData) as num?)?.toInt();
         
         final bpInfo = bpId != null ? bpMap[bpId] : null;
+        final bpName = bpInfo?['Name'] ?? (bpData is Map ? (bpData['identifier'] ?? bpData['Name']) : null) ?? 'Ninguna';
 
         List<Map<String, dynamic>> uRolesDetails = userToRolesDetails[uId] ?? [];
         uRolesDetails.sort((a, b) {
@@ -115,9 +249,9 @@ class UserManagementLogic {
           'uuid': (u['uid'] ?? u['AD_User_UU'] ?? u['uuid'] ?? u['UU'] ?? '').toString().trim(),
           'Name': (u['Name'] ?? '').toString(),
           'EMail': (u['EMail'] ?? '').toString(),
-          'IsActive': u['IsActive'] == true,
+          'IsActive': isTruthy(u['IsActive']),
           'C_BPartner_ID': bpId,
-          'Company': bpInfo?['Name'] ?? 'Ninguna',
+          'Company': bpName,
           'IsCustomer': bpInfo?['IsCustomer'] == true,
           'IsSalesRep': bpInfo?['IsSalesRep'] == true,
           'IsEmployee': bpInfo?['IsEmployee'] == true,
@@ -143,8 +277,12 @@ class UserManagementLogic {
         
         final usersInTeam = bpEntry.value.map((uData) {
           final u = userMap[uData['uId']];
-          if (u != null) u['DevTeamID'] = uData['teamId'];
-          return u;
+          if (u != null) {
+            final copy = Map<String, dynamic>.from(u);
+            copy['DevTeamID'] = uData['teamId'];
+            return copy;
+          }
+          return null;
         }).where((u) => u != null).toList();
         teamsList.add({
           'C_BPartner_ID': bpId,
@@ -152,13 +290,13 @@ class UserManagementLogic {
           'Users': usersInTeam,
         });
       }
-      teamsList.sort((a, b) => a['Name'].compareTo(b['Name']));
+      teamsList.sort((a, b) => (a['Name'] as String).compareTo(b['Name'] as String));
 
       return {
         'users': finalUsers,
         'roles': roleNames,
         'primhubRoles': primhubRoles,
-        'bPartners': bpMap.values.toList(),
+        'bPartners': filteredBPartners,
         'teams': teamsList,
       };
     } catch (e) {
@@ -364,7 +502,17 @@ class UserManagementLogic {
       for (var id in idsToRemove) {
         final uri = Uri.parse('${Endpoint.primDevTeam}/$id');
         final res = await http.delete(uri, headers: {'Authorization': Token.token});
-        if (res.statusCode >= 400) success = false;
+        if (res.statusCode >= 400) {
+          final putRes = await http.put(
+            uri,
+            body: json.encode({'IsActive': false}),
+            headers: {
+              'Authorization': Token.token,
+              'Content-Type': 'application/json',
+            },
+          );
+          if (putRes.statusCode >= 400) success = false;
+        }
       }
       
       // 2. Add users

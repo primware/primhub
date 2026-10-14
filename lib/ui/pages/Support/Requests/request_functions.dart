@@ -562,7 +562,13 @@ Future<Map<String, int>> fetchRequestTypes() async {
   return data['nameToId'] as Map<String, int>;
 }
 
-Future<List<Map<String, dynamic>>> fetchCategories({bool? isPrimhub}) async {
+Future<List<Map<String, dynamic>>> fetchCategories({
+  bool? isPrimhub,
+  bool forceRefresh = false,
+}) async {
+  if (!forceRefresh && GlobalCache.rawCategories.isNotEmpty) {
+    return List<Map<String, dynamic>>.from(GlobalCache.rawCategories);
+  }
   try {
     final url = Uri.parse('${Endpoint.baseUrl}/api/v1/models/R_Category');
     
@@ -578,7 +584,7 @@ Future<List<Map<String, dynamic>>> fetchCategories({bool? isPrimhub}) async {
       final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
       final List records = jsonResponse['records'] ?? [];
       
-      return records.map((r) {
+      final mapped = records.map((r) {
         final map = Map<String, dynamic>.from(r);
         // Extraer ID de prioridad si viene como objeto
         if (map['Priority'] is Map) {
@@ -592,11 +598,23 @@ Future<List<Map<String, dynamic>>> fetchCategories({bool? isPrimhub}) async {
         map['showinprimhub'] = rawShow == true || rawShow?.toString().toLowerCase() == 'true';
         return map;
       }).toList();
-    } else {
+
+      if (mapped.isNotEmpty) {
+        GlobalCache.rawCategories = mapped;
+        GlobalCache.categories = {
+          for (var c in mapped)
+            if (c['id'] != null && c['Name'] != null)
+              c['Name'].toString().trim(): c['id'] as int
+        };
+      }
+      return mapped;
     }
   } catch (_) {
-      // Ignored: Fail silently
-    }
+    // Ignored: Fail silently
+  }
+  if (GlobalCache.rawCategories.isNotEmpty) {
+    return List<Map<String, dynamic>>.from(GlobalCache.rawCategories);
+  }
   return [];
 }
 
