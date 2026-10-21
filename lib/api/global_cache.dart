@@ -454,6 +454,7 @@ class GlobalCache {
       }
 
     } catch (e) {
+      isFullyLoaded = true;
       if (!(_phase2Completer?.isCompleted ?? true)) _phase2Completer?.completeError(e);
       if (!(_phase2bCompleter?.isCompleted ?? true)) _phase2bCompleter?.completeError(e);
     }

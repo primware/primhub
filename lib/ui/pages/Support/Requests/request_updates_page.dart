@@ -953,9 +953,11 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
           }
         }
 
-        // --- INICIO Lógica Correos (Solo equipo asignado del tercero) ---
+        // --- INICIO Lógica Correos ---
         _sendEmailsInBackground(
           requestId: widget.requestId,
+          adUserId: widget.adUserId,
+          salesRepId: widget.salesRepId,
           bPartnerId: widget.bPartnerId,
           currentStatusId: widget.currentStatusId,
           statusChanged: statusChanged,
@@ -1003,6 +1005,8 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
 
   Future<void> _sendEmailsInBackground({
     required int requestId,
+    required int? adUserId,
+    required int? salesRepId,
     required int? bPartnerId,
     required int? currentStatusId,
     required bool statusChanged,
@@ -1025,25 +1029,66 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
       bool emailsAttempted = false;
       bool allSuccess = true;
 
-      // Se toma en cuenta EXCLUSIVAMENTE el equipo asignado del tercero
-      if (_selectedMentions.isNotEmpty) {
-        emailsAttempted = true;
+      // 1. Destinatarios para el correo de Actualización:
+      //    Etiquetados en CC + Usuario de la solicitud + Representante comercial
+      final Set<int> updateRecipients = {};
+      for (var mention in _selectedMentions) {
+        final int? mentionId = (mention['id'] as num?)?.toInt();
+        if (mentionId != null && mentionId > 0) {
+          updateRecipients.add(mentionId);
+        }
+      }
+      if (adUserId != null && adUserId > 0) {
+        updateRecipients.add(adUserId);
+      }
+      if (salesRepId != null && salesRepId > 0) {
+        updateRecipients.add(salesRepId);
+      }
+      if (User.userID != null) {
+        updateRecipients.remove(User.userID);
+      }
+
+      // 2. Destinatarios para el correo de Cambio de Estado:
+      //    Únicamente los usuarios etiquetados en CC (si cambió el estado)
+      final Set<int> statusRecipients = {};
+      if (statusChanged && _selectedMentions.isNotEmpty) {
         for (var mention in _selectedMentions) {
           final int? mentionId = (mention['id'] as num?)?.toInt();
-          if (mentionId == null || mentionId <= 0) continue;
+          if (mentionId != null && mentionId > 0) {
+            statusRecipients.add(mentionId);
+          }
+        }
+        if (User.userID != null) {
+          statusRecipients.remove(User.userID);
+        }
+      }
 
-          // Evitar auto-notificarse si el usuario logueado está entre los etiquetados
-          if (User.userID != null && mentionId == User.userID) continue;
-
-          final template = statusChanged 
-              ? MailTemplateType.statusUpdate 
-              : MailTemplateType.updateRequest;
-
+      // Enviar correos de Actualización
+      if (updateRecipients.isNotEmpty) {
+        emailsAttempted = true;
+        for (int recipientId in updateRecipients) {
           bool sent = await sendRequestStatusEmail(
             requestId: requestId,
-            adUserId: mentionId,
+            adUserId: recipientId,
             bPartnerId: bPartnerId ?? 0,
-            templateType: template,
+            templateType: MailTemplateType.updateRequest,
+            updateText: resultHtml,
+            oldStatusName: oldStatusName,
+            updateId: updateId,
+          );
+          allSuccess = allSuccess && sent;
+        }
+      }
+
+      // Enviar correos de Cambio de Estado
+      if (statusRecipients.isNotEmpty) {
+        emailsAttempted = true;
+        for (int recipientId in statusRecipients) {
+          bool sent = await sendRequestStatusEmail(
+            requestId: requestId,
+            adUserId: recipientId,
+            bPartnerId: bPartnerId ?? 0,
+            templateType: MailTemplateType.statusUpdate,
             updateText: resultHtml,
             oldStatusName: oldStatusName,
             updateId: updateId,

@@ -97,6 +97,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
     try {
       await GlobalCache.syncData(force: forceRefresh);
 
+
       List<dynamic> projects = [];
       if (_showInactive || _viewingInactive) {
         projects = await _logic.fetchProjects(

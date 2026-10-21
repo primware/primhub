@@ -1264,10 +1264,10 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
               updateId: updateId,
             );
           }
-        } else if (resultHtml.isNotEmpty) {
+        }
+        if (resultHtml.isNotEmpty) {
           if (!isAdUserCurrentUser) {
-            // If status didn't change but there's a comment, send update template 1000017
-            success1 = await sendRequestStatusEmail(
+            bool s1b = await sendRequestStatusEmail(
               requestId: requestId,
               adUserId: adUserId,
               bPartnerId: bPartnerId ?? 0,
@@ -1276,6 +1276,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
               oldStatusName: oldStatusName,
               updateId: updateId,
             );
+            success1 = success1 && s1b;
           }
         }
       }

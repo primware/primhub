@@ -9,6 +9,7 @@ import 'package:primhub/ui/pages/Projects/dialogs/project_info_dialog.dart';
 import 'package:primhub/ui/pages/Projects/Projects_Widgets/phase_item.dart';
 import 'package:primhub/ui/pages/Projects/Projects_Widgets/task_item.dart';
 import 'package:primhub/api/global_cache.dart';
+import 'package:primhub/ui/Shared_Custom/custom_skeleton.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 
 class ProjectItem extends StatelessWidget {
@@ -74,19 +75,6 @@ class ProjectItem extends StatelessWidget {
       }
     }
     
-    int totalRequests = 0;
-    try {
-      final projIdStr = projId.toString();
-      totalRequests = GlobalCache.requests.where((r) {
-        final rProjId = r['C_Project_ID'];
-        if (rProjId is Map) {
-          return rProjId['id']?.toString() == projIdStr;
-        }
-        return rProjId?.toString() == projIdStr;
-      }).length;
-    } catch (_) {
-      // Ignored: Fail silently
-    }
 
     final colorScheme = Theme.of(context).colorScheme;
     final uniformColor = colorScheme.primary;
@@ -175,9 +163,28 @@ class ProjectItem extends StatelessWidget {
                     Icons.task_alt, 
                     AppLocale.tasksCount.getStringWithVariables(context, {'count': '$totalTasks'}),
                   ),
-                  _buildCounterBadge(
-                    Icons.assignment_ind_outlined, 
-                    AppLocale.requestsCount.getStringWithVariables(context, {'count': '$totalRequests'}),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalCache.backgroundSyncNotifier,
+                    builder: (context, isSyncing, child) {
+                      if (!GlobalCache.isFullyLoaded) {
+                        return _buildCounterBadgeSkeleton(Icons.assignment_ind_outlined);
+                      }
+                      int count = 0;
+                      try {
+                        final projIdStr = projId.toString();
+                        count = GlobalCache.requests.where((r) {
+                          final rProjId = r['C_Project_ID'];
+                          if (rProjId is Map) {
+                            return rProjId['id']?.toString() == projIdStr;
+                          }
+                          return rProjId?.toString() == projIdStr;
+                        }).length;
+                      } catch (_) {}
+                      return _buildCounterBadge(
+                        Icons.assignment_ind_outlined, 
+                        AppLocale.requestsCount.getStringWithVariables(context, {'count': '$count'}),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -347,6 +354,20 @@ class ProjectItem extends StatelessWidget {
           Icon(icon, size: 16, color: Colors.blueGrey),
           const SizedBox(width: 6),
           Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.blueGrey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCounterBadgeSkeleton(IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: Colors.blueGrey),
+          const SizedBox(width: 6),
+          const CustomSkeleton(width: 70, height: 14, borderRadius: 4),
         ],
       ),
     );
