@@ -401,17 +401,31 @@ class GlobalCache {
       if (!(_phase2Completer?.isCompleted ?? true)) _phase2Completer?.complete();
       if (progressNotifier != null) progressNotifier.value = 0.75;
 
-      // 2. Cargar el historial (últimos 3 años) en background real (Fase 2b)
+      // 2. Cargar en background el año anterior (cubre cambio de año y solicitudes recientes)
+      //    Y solicitudes de proyectos históricas para que ningún contador de proyecto se altere
+      final prevYear = currentYear - 1;
       final List<Future<List<Map<String, dynamic>>>> futures = [];
-      final List<int> years = [];
 
-      for (var year = currentYear - 1; year >= currentYear - 3; year--) {
-        years.add(year);
+      // A) Año anterior completo (soporte y proyectos)
+      futures.add(fetchRequest(
+        filter: getFilterForYear(prevYear),
+        expand: 'C_Order_ID(\$select=DocumentNo),C_BPartner_ID(\$select=Name,Description)',
+      ).then((v) {
+        if (progressNotifier != null) progressNotifier.value += 0.15;
+        return v;
+      }));
+
+      // B) Histórico de solicitudes de proyectos (anteriores al año anterior)
+      if (isAdmin || isProject) {
+        String projectHistoryFilter = "C_Project_ID gt 0 and Created lt '$prevYear-01-01T00:00:00Z'";
+        if (!isAdmin && User.cBPartnerID != null) {
+          projectHistoryFilter += " and C_BPartner_ID eq ${User.cBPartnerID}";
+        }
         futures.add(fetchRequest(
-          filter: getFilterForYear(year),
+          filter: projectHistoryFilter,
           expand: 'C_Order_ID(\$select=DocumentNo),C_BPartner_ID(\$select=Name,Description)',
         ).then((v) {
-          if (progressNotifier != null) progressNotifier.value += (0.25 / 3);
+          if (progressNotifier != null) progressNotifier.value += 0.10;
           return v;
         }));
       }
@@ -419,21 +433,17 @@ class GlobalCache {
       final List<List<Map<String, dynamic>>> results = await Future.wait(futures);
 
       bool newHistoryAdded = false;
-      for (int i = 0; i < results.length; i++) {
-        final year = years[i];
-        final yearReqs = results[i];
-        
-        if (yearReqs.isNotEmpty) {
-          final existingIds = requests.map((r) => r['id']).toSet();
-          for (var r in yearReqs) {
-            if (!existingIds.contains(r['id'])) {
-              requests.add(Map<String, dynamic>.from(r));
-              newHistoryAdded = true;
-            }
+      final existingIds = requests.map((r) => r['id']).toSet();
+      for (var list in results) {
+        for (var r in list) {
+          if (!existingIds.contains(r['id'])) {
+            requests.add(Map<String, dynamic>.from(r));
+            existingIds.add(r['id']);
+            newHistoryAdded = true;
           }
-          _archivedYearsLoaded.add(year);
         }
       }
+      _archivedYearsLoaded.add(prevYear);
 
       isFullyLoaded = true;
       if (progressNotifier != null) progressNotifier.value = 1.0;
@@ -667,7 +677,6 @@ class GlobalCache {
 
     try {      
       final currentYear = DateTime.now().year;
-      final threeYearsAgo = currentYear - 3;
       
       // 1. Cargar solicitudes del AÑO ACTUAL para este Proyecto (por ID directo)
       final reqsCurrent = await fetchRequest(
@@ -680,8 +689,8 @@ class GlobalCache {
         if (onUpdate != null) onUpdate(projectRequestsCache[projectId]!);
       }
 
-      // 2. Cargar HISTÓRICO (3 años) para este Proyecto (por ID directo)
-      final filterHistory = "C_Project_ID eq $projectId and Created ge '$threeYearsAgo-01-01T00:00:00Z' and Created lt '$currentYear-01-01T00:00:00Z'";
+      // 2. Cargar HISTÓRICO completo para este Proyecto (sin límite inferior de años)
+      final filterHistory = "C_Project_ID eq $projectId and Created lt '$currentYear-01-01T00:00:00Z'";
       final reqsHistory = await fetchRequest(
         filter: filterHistory,
         expand: 'C_Order_ID(\$select=DocumentNo),R_Status_ID,R_RequestType_ID,R_Category_ID,C_BPartner_ID(\$select=Name,Description)'
@@ -726,7 +735,7 @@ class GlobalCache {
 
     try {
       final currentYear = DateTime.now().year;
-      final threeYearsAgo = currentYear - 3;
+      final previousYear = currentYear - 1;
       
       final filterCurrent = "C_BPartner_ID eq $bpId and Created ge '$currentYear-01-01T00:00:00Z' and Record_UU eq null";
       final reqsCurrent = await fetchRequest(
@@ -738,7 +747,7 @@ class GlobalCache {
         _mergeSupportRequests(reqsCurrent);
       }
 
-      final filterHistory = "C_BPartner_ID eq $bpId and Created ge '$threeYearsAgo-01-01T00:00:00Z' and Created lt '$currentYear-01-01T00:00:00Z' and Record_UU eq null";
+      final filterHistory = "C_BPartner_ID eq $bpId and Created ge '$previousYear-01-01T00:00:00Z' and Created lt '$currentYear-01-01T00:00:00Z' and Record_UU eq null";
       final reqsHistory = await fetchRequest(
         filter: filterHistory,
         expand: 'C_Order_ID(\$select=DocumentNo),C_BPartner_ID(\$select=Name,Description)'

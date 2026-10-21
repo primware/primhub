@@ -667,8 +667,11 @@ Future<Map<String, dynamic>> processRequests(List<dynamic> requests, Map<String,
 
     // Lógica de horas basada en metadatos de estado (IsFinalClose)
     bool isFinalCloseStatus = false;
-    if (statusIdFromReq != null && GlobalCache.statusIsFinalCloseMap.containsKey(statusIdFromReq)) {
-      isFinalCloseStatus = GlobalCache.statusIsFinalCloseMap[statusIdFromReq]!;
+    final int? sIdInt = (statusIdFromReq is num)
+        ? statusIdFromReq.toInt()
+        : int.tryParse(statusIdFromReq?.toString() ?? '');
+    if (sIdInt != null && GlobalCache.statusIsFinalCloseMap.containsKey(sIdInt)) {
+      isFinalCloseStatus = GlobalCache.statusIsFinalCloseMap[sIdInt]!;
     } else {
       isFinalCloseStatus = statusName.toLowerCase().contains('archivada') ||
                            statusName.toLowerCase().contains('anulada') ||

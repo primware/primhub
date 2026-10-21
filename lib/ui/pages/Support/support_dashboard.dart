@@ -95,7 +95,7 @@ class _SupportDashboardPageState extends State<SupportDashboardPage> {
   }
 
   void _onBackgroundSyncChanged() async {
-    if (!GlobalCache.backgroundSyncNotifier.value && mounted) {
+    if (mounted) {
       // Asegurar que _refreshData se llama después del frame actual para evitar setState durante la construcción.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _refreshData();
@@ -195,7 +195,7 @@ class _SupportDashboardPageState extends State<SupportDashboardPage> {
         await GlobalCache.loadSupportBpRequestsInBackground(_selectedBpId!);
       }
       await _fetchProductChips(); // Cargar fichas para el BP seleccionado
-      _statusIdMap = await fetchStatuses();
+      _statusIdMap = GlobalCache.statuses.isNotEmpty ? GlobalCache.statuses : await fetchStatuses();
       await _refreshData();
     } catch (_) {
       // Manejar excepciones de forma silenciosa o relanzar
@@ -248,28 +248,51 @@ class _SupportDashboardPageState extends State<SupportDashboardPage> {
   }
 
   Future<void> _loadSupportData() async {
-    String filter = "";
-    List<String> conditions = [];
+    final int? targetBpId = _selectedBpId ?? (!AccessControl.isAdmin ? User.cBPartnerID : null);
 
-    if (_selectedBpId != null) {
-      conditions.add("(C_BPartner_ID eq $_selectedBpId)");
-    } else if (!AccessControl.isAdmin && User.cBPartnerID != null) {
-      conditions.add("(C_BPartner_ID eq ${User.cBPartnerID})");
-    }
+    // 1. Alimentar directamente desde la caché en memoria (GlobalCache)
+    final rawRequests = GlobalCache.requests.where((r) {
+      // Filtrar que no sea solicitud de proyecto
+      final rProj = r['C_Project_ID'];
+      final projId = rProj is Map ? (rProj['id'] as num?)?.toInt() : (rProj as num?)?.toInt();
+      if (projId != null && projId > 0) return false;
 
-    filter = conditions.join(" and ");
+      final recordUU = r['Record_UU']?.toString().trim();
+      if (recordUU != null && recordUU.isNotEmpty) return false;
 
-    // Filtramos solo solicitudes que no sean de proyecto
-    // Priorizamos C_Project_ID eq null y mantenemos Record_UU eq null como refuerzo
-    final String supportFilter = "(C_Project_ID eq null and Record_UU eq null)";
-    filter = filter.isNotEmpty ? "$filter and $supportFilter" : supportFilter;
+      // Filtrar por Tercero si está seleccionado o si es cliente
+      if (targetBpId != null) {
+        final rawBp = r['C_BPartner_ID'];
+        final bpId = rawBp is Map ? (rawBp['id'] as num?)?.toInt() : (rawBp as num?)?.toInt();
+        if (bpId != targetBpId) return false;
+      }
 
-    final rawRequests = await fetchRequest(filter: filter, expand: 'C_Order_ID(\$select=DocumentNo)');
+      // Debe estar activa (IsActive)
+      final rawActive = r['IsActive'] ?? r['isActive'];
+      final isActive = rawActive == true || rawActive == 'Y' || rawActive == 'true';
+      if (!isActive) return false;
 
-    final processedData = await processRequests(rawRequests, _statusIdMap);
-    final allRequests = (processedData['requests'] as List<Map<String, dynamic>>).where((req) => req['productChipId'] != null).toList();
+      return true;
+    }).toList();
 
-    final List<Map<String, dynamic>> closedRequests = allRequests.where((req) => req['isClosed'] == true).toList();
+    final statuses = _statusIdMap.isNotEmpty ? _statusIdMap : GlobalCache.statuses;
+    final processedData = await processRequests(rawRequests, statuses);
+    final List<Map<String, dynamic>> allProcessed = (processedData['requests'] as List<Map<String, dynamic>>);
+
+    // Todas las solicitudes con ficha vinculada (para cálculos de horas contratadas/estimadas)
+    final allRequests = allProcessed.where((req) {
+      return req['productChipId'] != null;
+    }).toList();
+
+    // Para la tabla "Registro de horas consumidas":
+    // 1. Tengan ficha vinculada (productChipId != null - ya filtrado en allRequests)
+    // 2. Horas consumidas abiertas (pueden ser 0 o nulas)
+    // 3. Estén activas (garantizado en el filtro inicial)
+    // 4. Estado sea de cierre final según los checks de iDempiere (isClosed == true)
+    final List<Map<String, dynamic>> closedRequests = allRequests.where((req) {
+      final bool isClosed = req['isClosed'] == true;
+      return isClosed;
+    }).toList();
 
     final searchedRequests = closedRequests.where((req) {
       if (_searchController.text.isNotEmpty) {
