@@ -22,6 +22,8 @@ class RequestFilterModel {
   final List<int> requestTypeIds;
   final List<int> categoryIds;
   final List<int> productChipIds;
+  final DateTime? createdFrom;
+  final DateTime? createdTo;
 
   const RequestFilterModel({
     this.bpIds = const [],
@@ -34,6 +36,8 @@ class RequestFilterModel {
     this.requestTypeIds = const [],
     this.categoryIds = const [],
     this.productChipIds = const [],
+    this.createdFrom,
+    this.createdTo,
   });
 
   /// Creates a copy of this filter object with the given fields replaced with the new values.
@@ -48,6 +52,11 @@ class RequestFilterModel {
     List<int>? requestTypeIds,
     List<int>? categoryIds,
     List<int>? productChipIds,
+    DateTime? createdFrom,
+    DateTime? createdTo,
+    bool clearCreatedFrom = false,
+    bool clearCreatedTo = false,
+    bool clearCreatedRange = false,
   }) {
     return RequestFilterModel(
       bpIds: bpIds ?? this.bpIds,
@@ -60,6 +69,12 @@ class RequestFilterModel {
       requestTypeIds: requestTypeIds ?? this.requestTypeIds,
       categoryIds: categoryIds ?? this.categoryIds,
       productChipIds: productChipIds ?? this.productChipIds,
+      createdFrom: (clearCreatedRange || clearCreatedFrom)
+          ? null
+          : (createdFrom ?? this.createdFrom),
+      createdTo: (clearCreatedRange || clearCreatedTo)
+          ? null
+          : (createdTo ?? this.createdTo),
     );
   }
 
@@ -75,12 +90,13 @@ class RequestFilterModel {
     if (requestTypeIds.isNotEmpty) count++;
     if (categoryIds.isNotEmpty) count++;
     if (productChipIds.isNotEmpty) count++;
+    if (createdFrom != null || createdTo != null) count++;
     return count;
   }
 }
 
 /// Enum para identificar los tipos de filtro activos.
-enum ActiveFilterType { year, bp, level, status, situation, salesRep, user, search, productChip }
+enum ActiveFilterType { year, bp, level, status, situation, salesRep, user, search, productChip, dateRange }
 
 /// A reusable modal dialog for filtering requests.
 class RequestFilterModal extends StatefulWidget {
@@ -242,6 +258,262 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
     );
   }
 
+  Widget _buildDateField({
+    required String label,
+    required DateTime? date,
+    required VoidCallback onTap,
+    required VoidCallback onClear,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final dateStr = date != null
+        ? '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}'
+        : '';
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: date != null ? colorScheme.primary : colorScheme.outline.withOpacity(0.4),
+            width: date != null ? 1.5 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.event_outlined,
+              size: 18,
+              color: date != null ? colorScheme.primary : colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: date != null ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    dateStr.isNotEmpty ? dateStr : 'dd/mm/aaaa',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: date != null ? FontWeight.bold : FontWeight.normal,
+                      color: date != null ? colorScheme.onSurface : colorScheme.outline,
+                      height: 1.1,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (date != null)
+              InkWell(
+                onTap: onClear,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Icon(
+                    Icons.close,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateRangeSection() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final hasActiveDates = _tempFilter.createdFrom != null || _tempFilter.createdTo != null;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: hasActiveDates 
+            ? colorScheme.primaryContainer.withOpacity(0.12)
+            : colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: hasActiveDates 
+              ? colorScheme.primary.withOpacity(0.4)
+              : colorScheme.outlineVariant.withOpacity(0.6),
+          width: hasActiveDates ? 1.5 : 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.calendar_today_rounded,
+                  size: 18,
+                  color: colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Fecha de Creación de Solicitudes',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Filtra los tickets por el día en que fueron creados en el sistema',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (hasActiveDates)
+                TextButton.icon(
+                  icon: const Icon(Icons.clear, size: 14),
+                  label: const Text('Limpiar', style: TextStyle(fontSize: 11)),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: colorScheme.error,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _tempFilter = _tempFilter.copyWith(
+                        clearCreatedFrom: true,
+                        clearCreatedTo: true,
+                      );
+                    });
+                  },
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDateField(
+                  label: 'Creado Desde',
+                  date: _tempFilter.createdFrom,
+                  onTap: _pickCreatedFrom,
+                  onClear: () => setState(() => _tempFilter = _tempFilter.copyWith(clearCreatedFrom: true)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildDateField(
+                  label: 'Creado Hasta',
+                  date: _tempFilter.createdTo,
+                  onTap: _pickCreatedTo,
+                  onClear: () => setState(() => _tempFilter = _tempFilter.copyWith(clearCreatedTo: true)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickCreatedFrom() async {
+    final now = DateTime.now();
+    final initial = _tempFilter.createdFrom ?? (_tempFilter.createdTo ?? now);
+    final last = _tempFilter.createdTo ?? DateTime(2101);
+    final initialSafe = initial.isAfter(last) ? last : initial;
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialSafe,
+      firstDate: DateTime(2000),
+      lastDate: last,
+      cancelText: 'CANCELAR',
+      confirmText: 'ACEPTAR',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _tempFilter = _tempFilter.copyWith(createdFrom: picked);
+      });
+    }
+  }
+
+  Future<void> _pickCreatedTo() async {
+    final now = DateTime.now();
+    final first = _tempFilter.createdFrom ?? DateTime(2000);
+    final initial = _tempFilter.createdTo ?? (_tempFilter.createdFrom ?? now);
+    final initialSafe = initial.isBefore(first) ? first : initial;
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialSafe,
+      firstDate: first,
+      lastDate: DateTime(2101),
+      cancelText: 'CANCELAR',
+      confirmText: 'ACEPTAR',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _tempFilter = _tempFilter.copyWith(createdTo: picked);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<dynamic> modalUsers = _users;
@@ -285,6 +557,8 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                       Text('• Tercero → Fichas de Producto:\n  Seleccionado: Muestra las fichas asociadas al tercero.\n  Sin seleccionar: Si eres administrador, esta opción se desactiva hasta elegir un tercero. Para otros roles, muestra sus fichas.'),
                       SizedBox(height: 12),
                       Text('• Tipo de Solicitud → Estado:\n  Seleccionado: Muestra solo los estados válidos para esa solicitud.\n  Sin seleccionar: Muestra todos los estados disponibles agrupados por categoría.'),
+                      SizedBox(height: 12),
+                      Text('• Fecha de creación:\n  Permite filtrar solicitudes creadas dentro de un rango de fechas específico (Desde / Hasta).'),
                     ],
                   ),
                   actions: [
@@ -539,6 +813,7 @@ class _RequestFilterModalState extends State<RequestFilterModal> {
                 );
               },
             ),
+            if (AccessControl.isAdmin) _buildDateRangeSection(),
           ],
         ),
       ),

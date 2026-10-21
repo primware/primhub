@@ -22,6 +22,7 @@ class ConnectivityManager {
 
   Timer? _countdownTimer;
   bool _isChecking = false;
+  bool _isVerifying = false;
   bool _isInitialized = false;
 
   void init() {
@@ -44,11 +45,46 @@ class ConnectivityManager {
     // Si no hay sesión iniciada, no bloqueamos la interfaz
     if (Token.auth == null || Token.auth!.trim().isEmpty) return;
 
-    // Si ya está activo el bloqueo, evitamos disparar temporizadores duplicados
-    if (isDisconnectedNotifier.value) return;
+    // Si ya está activo el bloqueo o ya se está verificando/reconectando, evitamos duplicados
+    if (isDisconnectedNotifier.value || _isVerifying || _isChecking) return;
 
-    isDisconnectedNotifier.value = true;
-    _startCountdown();
+    // En Web, si el navegador reporta explícitamente estar offline:
+    if (kIsWeb) {
+      try {
+        if (html.window.navigator.onLine == false) {
+          isDisconnectedNotifier.value = true;
+          _startCountdown();
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // Antes de bloquear la interfaz, verificar si realmente el servidor/red no responde,
+    // o si fue un fallo puntual en una petición (error 500, proceso lento, etc.)
+    _verifyAndNotify();
+  }
+
+  Future<void> _verifyAndNotify() async {
+    if (_isVerifying) return;
+    _isVerifying = true;
+    try {
+      final pingUri = Uri.parse('${Endpoint.baseUrl}/');
+      final pingRes = await http_client
+          .get(pingUri)
+          .timeout(const Duration(milliseconds: 2500));
+      if (pingRes.statusCode > 0) {
+        // El servidor está en línea y respondió. NO bloquear la interfaz por un fallo puntual.
+        return;
+      }
+    } catch (_) {
+      // El ping falló, confirmando que la red o el servidor están caídos.
+      if (!isDisconnectedNotifier.value) {
+        isDisconnectedNotifier.value = true;
+        _startCountdown();
+      }
+    } finally {
+      _isVerifying = false;
+    }
   }
 
   void _startCountdown() {

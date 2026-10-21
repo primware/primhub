@@ -97,9 +97,37 @@ class _UserManagementPageState extends State<UserManagementPage> with SingleTick
           onProceedToCreate: (query) {
             _showUserModal(null, initialSearch: query);
           },
+          onSelectExistingUser: (user) {
+            _openExistingUserFromCheck(user);
+          },
         );
       },
     );
+  }
+
+  void _openExistingUserFromCheck(Map<String, dynamic> rawUser) async {
+    final int? userId = ((rawUser['AD_User_ID'] ?? rawUser['id']) as num?)?.toInt();
+    if (userId == null) {
+      _showUserModal(rawUser);
+      return;
+    }
+
+    // Buscar primero en la lista en memoria (_allUsers) que ya tiene RolesDetails, Company, etc.
+    final existingInList = _allUsers.cast<Map<String, dynamic>?>().firstWhere(
+      (u) => (u?['AD_User_ID'] as num?)?.toInt() == userId,
+      orElse: () => null,
+    );
+
+    if (existingInList != null) {
+      _showUserModal(existingInList);
+      return;
+    }
+
+    // Si no está en _allUsers (por ejemplo si estaba inactivo o no cargado en la vista inicial),
+    // consultamos el usuario con sus roles asociados desde el backend
+    final fullUser = await UserManagementLogic.fetchUserForEditing(userId);
+    if (!mounted) return;
+    _showUserModal(fullUser ?? rawUser);
   }
 
   void _showUserModal(Map<String, dynamic>? user, {String? initialSearch, int? initialBPartnerId}) {

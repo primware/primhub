@@ -243,6 +243,10 @@ class UserManagementLogic {
         List<int> uRoles = uRolesDetails.map((e) => e['roleId'] as int).toList();
         List<String> uRoleNames = uRoles.map((rId) => roleNames[rId] ?? 'Rol $rId').toList();
         bool hasValidRole = uRoles.any((r) => validRoles.contains(r));
+        List<String> validRoleNames = uRolesDetails
+            .where((e) => validRoles.contains(e['roleId']))
+            .map((e) => roleNames[e['roleId']] ?? 'Rol ${e['roleId']}')
+            .toList();
 
         final userData = {
           'AD_User_ID': uId,
@@ -256,6 +260,7 @@ class UserManagementLogic {
           'IsSalesRep': bpInfo?['IsSalesRep'] == true,
           'IsEmployee': bpInfo?['IsEmployee'] == true,
           'RoleNames': uRoleNames.join(', '),
+          'ValidRoleNames': validRoleNames.join(', '),
           'RoleIds': uRoles,
           'RolesDetails': uRolesDetails,
           'HasValidRole': hasValidRole,
@@ -454,7 +459,7 @@ class UserManagementLogic {
   static Future<List<Map<String, dynamic>>> checkUserExists(String query) async {
     try {
       final filter = "(contains(tolower(EMail), '${query.toLowerCase()}') or contains(tolower(Name), '${query.toLowerCase()}'))";
-      final uri = Uri.parse('${Endpoint.adUser}?\$filter=$filter&\$top=10&\$select=AD_User_ID,Name,EMail,C_BPartner_ID');
+      final uri = Uri.parse('${Endpoint.adUser}?\$filter=$filter&\$top=15&\$select=AD_User_ID,AD_User_UU,Name,EMail,C_BPartner_ID,IsActive');
       final response = await http.get(uri, headers: {'Authorization': Token.token});
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
@@ -466,19 +471,89 @@ class UserManagementLogic {
     }
   }
 
+  static Future<Map<String, dynamic>?> fetchUserForEditing(int userId) async {
+    try {
+      final userUri = Uri.parse('${Endpoint.adUser}/$userId');
+      final rolesUri = Uri.parse('${Endpoint.adUserRoles}?\$filter=AD_User_ID eq $userId and IsActive eq true');
+      
+      final results = await Future.wait([
+        http.get(userUri, headers: {'Authorization': Token.token}),
+        http.get(rolesUri, headers: {'Authorization': Token.token}),
+      ]);
+
+      if (results[0].statusCode == 200) {
+        final userData = json.decode(utf8.decode(results[0].bodyBytes));
+        List<Map<String, dynamic>> rolesDetails = [];
+        
+        if (results[1].statusCode == 200) {
+          final rolesData = json.decode(utf8.decode(results[1].bodyBytes));
+          final records = List<Map<String, dynamic>>.from(rolesData['records'] ?? []);
+          for (var r in records) {
+            final rData = r['AD_Role_ID'];
+            final rId = ((rData is Map ? rData['id'] : rData) as num?)?.toInt();
+            final rUuid = r['uid'] ?? r['AD_User_Roles_UU'] ?? r['uuid'] ?? r['UU'];
+            if (rId != null) {
+              rolesDetails.add({'roleId': rId, 'uuid': rUuid});
+            }
+          }
+        }
+
+        final bpData = userData['C_BPartner_ID'];
+        final bpId = ((bpData is Map ? bpData['id'] : bpData) as num?)?.toInt();
+
+        return {
+          'AD_User_ID': userId,
+          'uuid': (userData['uid'] ?? userData['AD_User_UU'] ?? userData['uuid'] ?? userData['UU'] ?? '').toString().trim(),
+          'Name': (userData['Name'] ?? '').toString(),
+          'EMail': (userData['EMail'] ?? '').toString(),
+          'IsActive': isTruthy(userData['IsActive']),
+          'C_BPartner_ID': bpId,
+          'RolesDetails': rolesDetails,
+        };
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<List<Map<String, dynamic>>> checkBPartnerExists(String query) async {
     try {
       // Busca por Value o Name
       final filter = "(contains(tolower(Value), '${query.toLowerCase()}') or contains(tolower(Name), '${query.toLowerCase()}'))";
-      final uri = Uri.parse('${Endpoint.cBPartner}?\$filter=$filter&\$top=10&\$select=C_BPartner_ID,Name,Value');
+      final uri = Uri.parse('${Endpoint.cBPartner}?\$filter=$filter&\$top=15&\$select=C_BPartner_ID,Name,Value,TaxID,Description,C_BP_Group_ID,LCO_TaxIdType_ID,SalesRep_ID,IsCustomer,IsVendor,IsEmployee,IsSalesRep,IsActive');
       final response = await http.get(uri, headers: {'Authorization': Token.token});
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
         return List<Map<String, dynamic>>.from(data['records'] ?? []);
       }
+      // Fallback a select básico si la vista OData no expone algún campo
+      final fallbackUri = Uri.parse('${Endpoint.cBPartner}?\$filter=$filter&\$top=15&\$select=C_BPartner_ID,Name,Value');
+      final fallbackRes = await http.get(fallbackUri, headers: {'Authorization': Token.token});
+      if (fallbackRes.statusCode == 200) {
+        final data = json.decode(utf8.decode(fallbackRes.bodyBytes));
+        return List<Map<String, dynamic>>.from(data['records'] ?? []);
+      }
       return [];
     } catch (e) {
       return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>?> fetchBPartnerById(int id) async {
+    try {
+      final uri = Uri.parse('${Endpoint.cBPartner}/$id');
+      final response = await http.get(uri, headers: {
+        'Authorization': Token.token,
+        'Content-Type': 'application/json',
+      });
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        return Map<String, dynamic>.from(data);
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 
@@ -487,6 +562,20 @@ class UserManagementLogic {
       final uri = Uri.parse(Endpoint.cBPartner);
       final response = await http.post(uri, body: json.encode(payload), headers: {'Authorization': Token.token, 'Content-Type': 'application/json'});
       return (response.statusCode == 200 || response.statusCode == 201);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> updateBPartner(int id, Map<String, dynamic> payload) async {
+    try {
+      final uri = Uri.parse('${Endpoint.cBPartner}/$id');
+      final response = await http.put(
+        uri,
+        body: json.encode(payload),
+        headers: {'Authorization': Token.token, 'Content-Type': 'application/json'},
+      );
+      return (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204);
     } catch (e) {
       return false;
     }

@@ -814,17 +814,18 @@ class _AddUpdateDialogState extends State<_AddUpdateDialog> {
                         final contact = _taggableContacts[index];
                         final bool isSelected = _selectedMentions.any((c) => c['id'] == contact['id']);
                         final String badgeLabel = contact['badgeLabel'] ?? '';
-                        final String email = contact['EMail'] ?? '';
                         
                         return CheckboxListTile(
                           title: Text(contact['Name'] ?? 'Sin nombre', style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text(
-                            [if (badgeLabel.isNotEmpty) badgeLabel, if (email.isNotEmpty) email].join(' • '),
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
+                          subtitle: badgeLabel.isNotEmpty
+                              ? Text(
+                                  badgeLabel,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                )
+                              : null,
                           value: isSelected,
                           onChanged: (val) {
                             setModalState(() {

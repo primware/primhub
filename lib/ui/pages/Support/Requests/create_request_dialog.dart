@@ -1472,6 +1472,7 @@ class _CreateRequestDialogState extends State<CreateRequestDialog> {
                 recordID: newId,
                 tableName: tableName,
                 convertedFile: convertedFile,
+                shouldUpdateStatus: false,
               );
             }
           }

@@ -2,6 +2,7 @@ import 'package:primhub/ui/Shared_Custom/custom_toast.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http_client;
 import 'package:primhub/api/api_http.dart' as http;
 import 'package:primhub/api/api_utils.dart';
 import 'package:primhub/api/token.dart';
@@ -775,6 +776,18 @@ Future<Map<String, dynamic>> processRequests(List<dynamic> requests, Map<String,
       if (found.isNotEmpty) userName = (found['Name'] ?? '').toString().trim();
     }
 
+    final createdByRaw = req['CreatedBy'];
+    final createdById = createdByRaw is Map ? (createdByRaw['id'] as num?)?.toInt() : (createdByRaw as num?)?.toInt();
+    String createdByName = createdByRaw is Map ? (createdByRaw['identifier'] ?? createdByRaw['Name'] ?? '').toString().trim() : '';
+    if (createdByName.isEmpty && createdById != null) {
+      final found = GlobalCache.users.firstWhere((u) => ((u['AD_User_ID'] ?? u['id']) as num?)?.toInt() == createdById, orElse: () => {});
+      if (found.isNotEmpty) {
+        createdByName = (found['Name'] ?? '').toString().trim();
+      } else {
+        createdByName = createdById.toString();
+      }
+    }
+
     String salesRepName = req['SalesRep_ID'] is Map ? (req['SalesRep_ID']['identifier'] ?? req['SalesRep_ID']['Name'] ?? '').toString().trim() : '';
     if (salesRepName.isEmpty && salesRepId != null) {
       final found = GlobalCache.salesReps.firstWhere((r) => ((r['AD_User_ID'] ?? r['id']) as num?)?.toInt() == salesRepId, orElse: () => {});
@@ -886,6 +899,9 @@ Future<Map<String, dynamic>> processRequests(List<dynamic> requests, Map<String,
       'bpName': bpName,
       'bpDescription': bpDescription,
       'result': req['Result'] ?? '',
+      'resultClean': stripHtmlTags(req['Result'] ?? ''),
+      'createdByName': createdByName,
+      'created': req['Created'],
       'type': getDropdownValue(req['R_RequestType_ID']),
       'category': categoryName,
       'group': getDropdownValue(req['R_Group_ID']),
@@ -1106,6 +1122,7 @@ Future<Map<String, dynamic>> createRequestUpdate({
             'title': file.name,
             'base64': base64Encode(file.bytes!),
           },
+          shouldUpdateStatus: false,
         );
         if (!success) allUploadsOk = false;
       }
@@ -1434,19 +1451,25 @@ Future<bool> sendRequestStatusEmail({
         'R_MailText_ID': finalMailTextId.toString(),
       };
 
-      final response = await http.post(
-        uri,
-        headers: {
-          'Authorization': Token.token,
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(payload),
-      );
-      
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        CurrentLogMessage.add('sendRequestStatusEmail exitoso para usuario $targetUserId. Respuesta: ${response.body}', level: 'INFO', tag: 'sendRequestStatusEmail');
-      } else {
-        CurrentLogMessage.add('sendRequestStatusEmail falló para usuario $targetUserId: ${response.statusCode}, ${response.body}', level: 'ERROR', tag: 'sendRequestStatusEmail');
+      try {
+        await preemptiveTokenCheck();
+        final response = await http_client.post(
+          uri,
+          headers: {
+            'Authorization': Token.token,
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(payload),
+        ).timeout(const Duration(seconds: 15));
+        
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          CurrentLogMessage.add('sendRequestStatusEmail exitoso para usuario $targetUserId. Respuesta: ${response.body}', level: 'INFO', tag: 'sendRequestStatusEmail');
+        } else {
+          CurrentLogMessage.add('sendRequestStatusEmail falló para usuario $targetUserId: ${response.statusCode}, ${response.body}', level: 'ERROR', tag: 'sendRequestStatusEmail');
+          allSuccess = false;
+        }
+      } catch (err) {
+        CurrentLogMessage.add('Excepcion en peticion sendRequestStatusEmail para usuario $targetUserId: $err', level: 'ERROR', tag: 'sendRequestStatusEmail');
         allSuccess = false;
       }
     }

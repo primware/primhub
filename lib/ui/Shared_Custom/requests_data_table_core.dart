@@ -124,6 +124,9 @@ class RequestsDataTableCore extends StatefulWidget {
         final strB = (b['original'] as Map?)?['Created']?.toString() ?? b['created']?.toString() ?? '';
         valA = DateTime.tryParse(strA)?.millisecondsSinceEpoch ?? 0;
         valB = DateTime.tryParse(strB)?.millisecondsSinceEpoch ?? 0;
+      } else if (sortKey == 'createdBy') {
+        valA = a['createdByName']?.toString().toLowerCase() ?? '';
+        valB = b['createdByName']?.toString().toLowerCase() ?? '';
       }
 
       int cmp = 0;
@@ -418,6 +421,11 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
         ),
       if (AccessControl.isAdmin)
         ResponsiveDataColumn(label: AppLocale.created.getString(context), sortKey: 'created'),
+      if (AccessControl.isAdmin)
+        const ResponsiveDataColumn(
+          label: 'Creado por',
+          sortKey: 'createdBy',
+        ),
       if (AccessControl.isRealAdmin)
         ResponsiveDataColumn(label: AppLocale.confidentiality.getString(context)),
     ];
@@ -615,6 +623,18 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
         if (!widget.showProjectContext) 
           DataCell(SizedBox(width: 130, child: Text(chipDesc, overflow: TextOverflow.ellipsis))),
         if (AccessControl.isAdmin) DataCell(Text(createdFormatted)),
+        if (AccessControl.isAdmin)
+          DataCell(
+            SizedBox(
+              width: 130,
+              child: Text(
+                alert['createdByName']?.toString().isNotEmpty == true
+                    ? alert['createdByName'].toString()
+                    : '-',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
         if (AccessControl.isRealAdmin) DataCell(Text(
           (() {
             final rawConf = original['ConfidentialType'];

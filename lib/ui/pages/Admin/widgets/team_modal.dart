@@ -46,8 +46,14 @@ class _TeamModalState extends State<TeamModal> {
   Widget build(BuildContext context) {
     final displayUsers = widget.allUsers.where((u) {
       if (searchUserQuery.isEmpty) return true;
-      return (u['Name'] ?? '').toString().toLowerCase().contains(searchUserQuery.toLowerCase()) || 
-             (u['EMail'] ?? '').toString().toLowerCase().contains(searchUserQuery.toLowerCase());
+      final q = searchUserQuery.toLowerCase();
+      final validRolesStr = (u['ValidRoleNames'] ?? '').toString().toLowerCase();
+      final bool hasValidRole = u['HasValidRole'] == true && validRolesStr.isNotEmpty;
+      final statusStr = hasValidRole ? validRolesStr : 'sin acceso al primhub';
+
+      return (u['Name'] ?? '').toString().toLowerCase().contains(q) || 
+             (u['EMail'] ?? '').toString().toLowerCase().contains(q) ||
+             statusStr.contains(q);
     }).toList();
 
     int? currentSalesRepId;
@@ -216,7 +222,105 @@ class _TeamModalState extends State<TeamModal> {
                         ],
                       ]
                     ),
-                    subtitle: Text(u['EMail'] ?? ''),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 2.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if ((u['EMail'] ?? '').toString().isNotEmpty)
+                            Text(
+                              u['EMail'].toString(),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          const SizedBox(height: 3),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              if (u['HasValidRole'] == true && (u['ValidRoleNames'] ?? '').toString().trim().isNotEmpty)
+                                Tooltip(
+                                  message: u['ValidRoleNames'].toString(),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(5),
+                                      border: Border.all(
+                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.35),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.shield_outlined,
+                                          size: 13,
+                                          color: Theme.of(context).colorScheme.primary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Flexible(
+                                          child: Text(
+                                            u['ValidRoleNames'].toString(),
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: Theme.of(context).colorScheme.primary,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(5),
+                                    border: Border.all(
+                                      color: Colors.red.withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.warning_amber_rounded,
+                                        size: 13,
+                                        color: Colors.red.shade700,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Sin acceso al Primhub',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.red.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              if ((u['Company'] ?? '').toString().trim().isNotEmpty && u['Company'] != 'Ninguna')
+                                Text(
+                                  '• ${u['Company']}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Theme.of(context).colorScheme.outline,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                     value: isSelected,
                     activeColor: Theme.of(context).colorScheme.primary,
                     onChanged: (val) {

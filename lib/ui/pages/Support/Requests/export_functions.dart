@@ -37,9 +37,20 @@ class ExportFunctions {
         headers.addAll(['Tercero', 'Usuario', 'Rep. Comercial']);
       }
       headers.addAll(['Descripción', 'Horas Consumidas', 'Ficha de Producto']);
+      if (AccessControl.isAdmin) {
+        headers.addAll(['Creado', 'Creado por']);
+      } else {
+        headers.add('Creado');
+      }
       rows.add(headers);
     } else {
-      rows.add(['Ticket', 'Descripción', 'Estado', 'Horas Consumidas', 'Ficha de Producto']);
+      List<String> headers = ['Ticket', 'Descripción', 'Estado', 'Horas Consumidas', 'Ficha de Producto'];
+      if (AccessControl.isAdmin) {
+        headers.addAll(['Creado', 'Creado por']);
+      } else {
+        headers.add('Creado');
+      }
+      rows.add(headers);
     }
 
     for (var req in requests) {
@@ -66,9 +77,40 @@ class ExportFunctions {
         description = '${description.substring(0, 297)}...';
       }
 
+      final original = req['original'] as Map<String, dynamic>? ?? {};
+      final createdRaw = original['Created']?.toString() ?? req['created']?.toString() ?? '';
+      String createdFormatted = createdRaw;
+      if (createdRaw.isNotEmpty) {
+        try {
+          final dt = DateTime.parse(createdRaw);
+          final day = dt.day.toString().padLeft(2, '0');
+          final month = dt.month.toString().padLeft(2, '0');
+          final year = dt.year.toString();
+          final hour24 = dt.hour;
+          final minute = dt.minute.toString().padLeft(2, '0');
+          final ampm = hour24 >= 12 ? 'PM' : 'AM';
+          final hour12 = hour24 > 12 ? hour24 - 12 : (hour24 == 0 ? 12 : hour24);
+          final hourStr = hour12.toString().padLeft(2, '0');
+          createdFormatted = '$day/$month/$year $hourStr:$minute $ampm';
+        } catch (_) {
+          createdFormatted = createdRaw.length >= 19 ? createdRaw.substring(0, 19) : createdRaw;
+        }
+      }
+
+      String createdBy = (req['createdByName']?.toString().isNotEmpty == true)
+          ? req['createdByName'].toString()
+          : (original['CreatedBy'] is Map 
+              ? (original['CreatedBy']['identifier'] ?? original['CreatedBy']['Name'] ?? '') 
+              : '');
+      if (createdBy.isEmpty && original['CreatedBy'] != null) {
+        final cById = (original['CreatedBy'] is num) ? original['CreatedBy'].toInt() : int.tryParse(original['CreatedBy'].toString());
+        if (cById != null) {
+          final found = GlobalCache.users.firstWhere((u) => ((u['AD_User_ID'] ?? u['id']) as num?)?.toInt() == cById, orElse: () => {});
+          if (found.isNotEmpty) createdBy = (found['Name'] ?? '').toString().trim();
+        }
+      }
+
       if (isMyRequests) {
-        final original = req['original'] as Map<String, dynamic>? ?? {};
-        
         final catData = original['R_Category_ID'];
         String catName = '';
         int? catId;
@@ -130,15 +172,32 @@ class ExportFunctions {
           hours,
           _sanitizeText(chipDesc),
         ]);
+        if (AccessControl.isAdmin) {
+          row.addAll([
+            _sanitizeText(createdFormatted),
+            _sanitizeText(createdBy),
+          ]);
+        } else {
+          row.add(_sanitizeText(createdFormatted));
+        }
         rows.add(row);
       } else {
-        rows.add([
+        List<String> row = [
           req['id']?.toString() ?? '',
           description,
           _sanitizeText((req['status'] ?? '').toString()),
           hours,
           _sanitizeText(chipDesc),
-        ]);
+        ];
+        if (AccessControl.isAdmin) {
+          row.addAll([
+            _sanitizeText(createdFormatted),
+            _sanitizeText(createdBy),
+          ]);
+        } else {
+          row.add(_sanitizeText(createdFormatted));
+        }
+        rows.add(row);
       }
     }
 
@@ -203,6 +262,9 @@ class ExportFunctions {
       var excel = Excel.createExcel();
       Sheet sheetObject = excel['Horas_Soporte'];
       excel.setDefaultSheet('Horas_Soporte');
+      if (excel.sheets.containsKey('Sheet1')) {
+        excel.delete('Sheet1');
+      }
 
       // Agregando las filas al sheet
       for (var row in rows) {
@@ -211,6 +273,87 @@ class ExportFunctions {
       
       sheetObject.appendRow([TextCellValue('')]);
       sheetObject.appendRow([TextCellValue('Generado desde Primhub')]);
+
+      if (rows.isNotEmpty) {
+        final headerRow = rows.first;
+        final headerStyle = CellStyle(
+          bold: true,
+          fontColorHex: ExcelColor.white,
+          backgroundColorHex: ExcelColor.blueGrey800,
+          verticalAlign: VerticalAlign.Center,
+          horizontalAlign: HorizontalAlign.Left,
+        );
+
+        for (int i = 0; i < headerRow.length; i++) {
+          final cell = sheetObject.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0));
+          cell.cellStyle = headerStyle;
+
+          final header = headerRow[i];
+          int maxLen = header.length;
+          for (int r = 1; r < rows.length; r++) {
+            if (i < rows[r].length) {
+              final len = rows[r][i].length;
+              if (len > maxLen) {
+                maxLen = len;
+              }
+            }
+          }
+
+          double colWidth = (maxLen + 4).toDouble();
+
+          switch (header) {
+            case 'Ticket':
+              colWidth = colWidth.clamp(14.0, 18.0);
+              break;
+            case 'Estado':
+              colWidth = colWidth.clamp(16.0, 22.0);
+              break;
+            case 'Tipo de Solicitud':
+              colWidth = colWidth.clamp(20.0, 28.0);
+              break;
+            case 'Categoría':
+              colWidth = colWidth.clamp(20.0, 28.0);
+              break;
+            case 'Asunto':
+              colWidth = colWidth.clamp(28.0, 48.0);
+              break;
+            case 'Prioridad':
+              colWidth = colWidth.clamp(14.0, 18.0);
+              break;
+            case 'Tercero':
+              colWidth = colWidth.clamp(22.0, 36.0);
+              break;
+            case 'Usuario':
+              colWidth = colWidth.clamp(20.0, 30.0);
+              break;
+            case 'Rep. Comercial':
+              colWidth = colWidth.clamp(20.0, 30.0);
+              break;
+            case 'Descripción':
+              colWidth = colWidth.clamp(45.0, 60.0);
+              break;
+            case 'Horas Consumidas':
+              colWidth = colWidth.clamp(18.0, 22.0);
+              break;
+            case 'Ficha de Producto':
+              colWidth = colWidth.clamp(20.0, 28.0);
+              break;
+            case 'Creado':
+              colWidth = colWidth.clamp(22.0, 26.0);
+              break;
+            case 'Creado por':
+              colWidth = colWidth.clamp(20.0, 30.0);
+              break;
+            default:
+              colWidth = colWidth.clamp(15.0, 35.0);
+          }
+
+          sheetObject.setColumnWidth(i, colWidth);
+        }
+
+        sheetObject.setDefaultRowHeight(20.0);
+        sheetObject.setRowHeight(0, 26.0);
+      }
 
       var bytes = excel.encode();
       if (bytes != null) {
@@ -275,47 +418,35 @@ class ExportFunctions {
               pw.Builder(
                 builder: (context) {
                   Map<int, pw.TableColumnWidth> widths = {};
-                  if (isMyRequests) {
-                    final headerRow = rows.first;
-                    for (int i = 0; i < headerRow.length; i++) {
-                      final h = headerRow[i];
-                      if (h == 'Descripción') {
-                        widths[i] = const pw.FlexColumnWidth(3);
-                      } else if (h == 'Asunto') {
-                        widths[i] = const pw.FlexColumnWidth(2);
-                      } else if (h == 'Ticket' || h == 'Estado' || h == 'Horas Consumidas') {
-                        widths[i] = const pw.FlexColumnWidth(0.8);
-                      } else {
-                        widths[i] = const pw.FlexColumnWidth(1.2);
-                      }
+                  final headerRow = rows.first;
+                  for (int i = 0; i < headerRow.length; i++) {
+                    final h = headerRow[i];
+                    if (h == 'Descripción') {
+                      widths[i] = pw.FlexColumnWidth(isMyRequests ? 2.5 : 3.5);
+                    } else if (h == 'Asunto') {
+                      widths[i] = const pw.FlexColumnWidth(1.8);
+                    } else if (h == 'Ticket' || h == 'Estado' || h == 'Horas Consumidas') {
+                      widths[i] = const pw.FlexColumnWidth(0.8);
+                    } else if (h == 'Creado') {
+                      widths[i] = const pw.FlexColumnWidth(1.4);
+                    } else if (h == 'Creado por') {
+                      widths[i] = const pw.FlexColumnWidth(1.2);
+                    } else {
+                      widths[i] = const pw.FlexColumnWidth(1.1);
                     }
-                  } else {
-                    widths = {
-                      0: const pw.FlexColumnWidth(1),
-                      1: const pw.FlexColumnWidth(4),
-                      2: const pw.FlexColumnWidth(1.5),
-                      3: const pw.FlexColumnWidth(1.5),
-                      4: const pw.FlexColumnWidth(2),
-                    };
                   }
                   
                   return pw.TableHelper.fromTextArray(
                     context: ctx,
                     data: rows,
-                    headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: isMyRequests ? 7 : 10),
+                    headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: isMyRequests ? 6.5 : 9),
                     headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
                     rowDecoration: const pw.BoxDecoration(border: pw.Border(bottom: pw.BorderSide(color: PdfColors.blueGrey100, width: .5))),
                     cellAlignment: pw.Alignment.centerLeft,
-                    cellAlignments: isMyRequests ? null : {
-                      0: pw.Alignment.center,
-                      2: pw.Alignment.center,
-                      3: pw.Alignment.center,
-                      4: pw.Alignment.center,
-                    },
                     columnWidths: widths,
-                    cellStyle: pw.TextStyle(fontSize: isMyRequests ? 6 : 10),
-                    headerHeight: isMyRequests ? 20 : 25,
-                    cellHeight: isMyRequests ? 15 : 20,
+                    cellStyle: pw.TextStyle(fontSize: isMyRequests ? 5.5 : 8.5),
+                    headerHeight: isMyRequests ? 18 : 24,
+                    cellHeight: isMyRequests ? 14 : 18,
                   );
                 }
               ),

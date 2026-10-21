@@ -216,13 +216,28 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
           initialStatuses.addAll(List<String>.from(args['selectedStatuses']));
         }
 
+        final rawCreatedFrom = args['createdFrom'];
+        final rawCreatedTo = args['createdTo'];
+        final DateTime? parsedCreatedFrom = rawCreatedFrom is DateTime
+            ? rawCreatedFrom
+            : (rawCreatedFrom is String ? DateTime.tryParse(rawCreatedFrom) : null);
+        final DateTime? parsedCreatedTo = rawCreatedTo is DateTime
+            ? rawCreatedTo
+            : (rawCreatedTo is String ? DateTime.tryParse(rawCreatedTo) : null);
+
         _filters = RequestFilterModel(
           statuses: initialStatuses,
           levels: args['selectedLevel'] != null ? [args['selectedLevel']] : [],
           productChipIds: args['chipId'] != null ? [args['chipId']] : [],
           bpIds: args['bpIds'] != null ? List<int>.from(args['bpIds']) : (args['bpId'] != null ? [args['bpId']] : []),
           salesRepIds: args['salesRepId'] != null ? [args['salesRepId']] : [],
+          createdFrom: parsedCreatedFrom,
+          createdTo: parsedCreatedTo,
         );
+
+        if (parsedCreatedFrom != null || parsedCreatedTo != null) {
+          _selectedYears = [];
+        }
 
         if (args['search'] != null) {
           _searchController.text = args['search'];
@@ -492,6 +507,24 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
           : 'ID: $userId';
       addChip('Usuario: $uName', ActiveFilterType.user);
     }
+    if (_filters.createdFrom != null || _filters.createdTo != null) {
+      String dateLabel = '';
+      final fmtFrom = _filters.createdFrom != null
+          ? '${_filters.createdFrom!.year}-${_filters.createdFrom!.month.toString().padLeft(2, '0')}-${_filters.createdFrom!.day.toString().padLeft(2, '0')}'
+          : null;
+      final fmtTo = _filters.createdTo != null
+          ? '${_filters.createdTo!.year}-${_filters.createdTo!.month.toString().padLeft(2, '0')}-${_filters.createdTo!.day.toString().padLeft(2, '0')}'
+          : null;
+
+      if (fmtFrom != null && fmtTo != null) {
+        dateLabel = 'Fecha creación: $fmtFrom al $fmtTo';
+      } else if (fmtFrom != null) {
+        dateLabel = 'Fecha creación: desde $fmtFrom';
+      } else if (fmtTo != null) {
+        dateLabel = 'Fecha creación: hasta $fmtTo';
+      }
+      addChip(dateLabel, ActiveFilterType.dateRange);
+    }
     if (chips.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -534,6 +567,12 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
           break;
         case ActiveFilterType.productChip:
           _filters = _filters.copyWith(productChipIds: []);
+          break;
+        case ActiveFilterType.dateRange:
+          _filters = _filters.copyWith(clearCreatedRange: true);
+          if (_selectedYears.isEmpty) {
+            _selectedYears = [DateTime.now().year];
+          }
           break;
       }
       _currentPage = 0; // Reinicia la paginación
@@ -599,6 +638,7 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
     if (result == null) return;
     setState(() {
       _selectedYears = result..sort((a, b) => b.compareTo(a));
+      _filters = _filters.copyWith(clearCreatedRange: true);
       _currentPage = 0;
     });
     _refreshRequest(fetchNetwork: true);
@@ -625,6 +665,11 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
     if (appliedFilters != null) {
       setState(() {
         _filters = appliedFilters;
+        if (_filters.createdFrom != null || _filters.createdTo != null) {
+          _selectedYears = [];
+        } else if (_selectedYears.isEmpty) {
+          _selectedYears = [DateTime.now().year];
+        }
         _currentPage = 0;
       });
 
@@ -792,11 +837,40 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
           return false;
         }
 
-        // A. Filtrado por Año (si aplica)
-        if (_selectedYears.isNotEmpty) {
+        // A. Filtrado por Rango de Fecha de Creación o Año
+        if (_filters.createdFrom != null || _filters.createdTo != null) {
+          final createdStr = req['Created']?.toString() ?? '';
+          if (createdStr.isEmpty) return false;
+          final createdDate = DateTime.tryParse(createdStr)?.toLocal();
+          if (createdDate == null) return false;
+
+          if (_filters.createdFrom != null) {
+            final fromDate = DateTime(
+              _filters.createdFrom!.year,
+              _filters.createdFrom!.month,
+              _filters.createdFrom!.day,
+              0,
+              0,
+              0,
+            );
+            if (createdDate.isBefore(fromDate)) return false;
+          }
+          if (_filters.createdTo != null) {
+            final toDate = DateTime(
+              _filters.createdTo!.year,
+              _filters.createdTo!.month,
+              _filters.createdTo!.day,
+              23,
+              59,
+              59,
+              999,
+            );
+            if (createdDate.isAfter(toDate)) return false;
+          }
+        } else if (_selectedYears.isNotEmpty) {
           final createdStr = req['Created']?.toString() ?? '';
           if (createdStr.isNotEmpty) {
-            final year = DateTime.tryParse(createdStr)?.year;
+            final year = DateTime.tryParse(createdStr)?.toLocal().year;
             if (year != null && !_selectedYears.contains(year)) return false;
           }
         }
@@ -1841,7 +1915,12 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
                                     style: Theme.of(context).textTheme.titleMedium,
                                   ),
                                 ),
-                                if (_selectedYears.length == 1 &&
+                                if (_filters.createdFrom != null || _filters.createdTo != null)
+                                  const Text(
+                                    'Rango de fechas personalizado',
+                                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                                  )
+                                else if (_selectedYears.length == 1 &&
                                     _selectedYears.first == DateTime.now().year)
                                   Text(
                                     AppLocale.currentYearRequests.getString(context),

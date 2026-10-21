@@ -19,6 +19,8 @@ class _BPartnerFlowModalState extends State<BPartnerFlowModal> {
   bool isCreating = false;
   bool isChecking = false;
   bool isSaving = false;
+  bool isLoadingDetails = false;
+  int? editingBPartnerId;
 
   final TextEditingController searchController = TextEditingController();
   final TextEditingController valueController = TextEditingController();
@@ -37,6 +39,7 @@ class _BPartnerFlowModalState extends State<BPartnerFlowModal> {
 
   List<Map<String, dynamic>> bpGroups = [];
   List<Map<String, dynamic>> taxIdTypes = [];
+  List<Map<String, dynamic>> matchingBPartners = [];
 
   @override
   void initState() {
@@ -62,13 +65,15 @@ class _BPartnerFlowModalState extends State<BPartnerFlowModal> {
       setState(() {
         bpGroups = g;
         taxIdTypes = t;
-        if (bpGroups.isNotEmpty) bpGroupId = (bpGroups.first['id'] as num? ?? bpGroups.first['C_BP_Group_ID'] as num?)?.toInt();
-        if (taxIdTypes.isNotEmpty) taxIdTypeId = (taxIdTypes.first['id'] as num? ?? taxIdTypes.first['LCO_TaxIdType_ID'] as num?)?.toInt();
+        if (bpGroups.isNotEmpty && bpGroupId == null) {
+          bpGroupId = (bpGroups.first['id'] as num? ?? bpGroups.first['C_BP_Group_ID'] as num?)?.toInt();
+        }
+        if (taxIdTypes.isNotEmpty && taxIdTypeId == null) {
+          taxIdTypeId = (taxIdTypes.first['id'] as num? ?? taxIdTypes.first['LCO_TaxIdType_ID'] as num?)?.toInt();
+        }
       });
     }
   }
-
-  List<Map<String, dynamic>> matchingBPartners = [];
 
   Future<void> _checkExists() async {
     final query = searchController.text.trim();
@@ -96,9 +101,100 @@ class _BPartnerFlowModalState extends State<BPartnerFlowModal> {
 
   void _proceedToCreate(String defaultName) {
     setState(() {
+      editingBPartnerId = null;
       isCreating = true;
       nameController.text = defaultName;
+      valueController.text = '';
+      taxIdController.text = '';
+      descriptionController.text = '';
+      isCustomer = true;
+      isVendor = false;
+      isEmployee = false;
+      isSalesRep = false;
+      salesRepId = null;
+      if (bpGroups.isNotEmpty) {
+        bpGroupId = (bpGroups.first['id'] as num? ?? bpGroups.first['C_BP_Group_ID'] as num?)?.toInt();
+      }
+      if (taxIdTypes.isNotEmpty) {
+        taxIdTypeId = (taxIdTypes.first['id'] as num? ?? taxIdTypes.first['LCO_TaxIdType_ID'] as num?)?.toInt();
+      }
     });
+  }
+
+  Future<void> _selectExistingBPartner(Map<String, dynamic> bp) async {
+    final bpId = (bp['id'] ?? bp['C_BPartner_ID'] as num?)?.toInt();
+    if (bpId == null) return;
+
+    setState(() {
+      editingBPartnerId = bpId;
+      isCreating = true;
+      isLoadingDetails = true;
+
+      nameController.text = (bp['Name'] ?? '').toString();
+      valueController.text = (bp['Value'] ?? '').toString();
+      taxIdController.text = (bp['TaxID'] ?? '').toString();
+      descriptionController.text = (bp['Description'] ?? '').toString();
+
+      _applyBPartnerData(bp);
+    });
+
+    // Cargar detalles completos del tercero por ID para asegurar todos los campos
+    final fullBp = await UserManagementLogic.fetchBPartnerById(bpId);
+    if (!mounted) return;
+
+    if (fullBp != null) {
+      setState(() {
+        _applyBPartnerData(fullBp);
+        nameController.text = (fullBp['Name'] ?? nameController.text).toString();
+        valueController.text = (fullBp['Value'] ?? valueController.text).toString();
+        taxIdController.text = (fullBp['TaxID'] ?? taxIdController.text).toString();
+        descriptionController.text = (fullBp['Description'] ?? descriptionController.text).toString();
+        isLoadingDetails = false;
+      });
+    } else {
+      setState(() => isLoadingDetails = false);
+    }
+  }
+
+  void _applyBPartnerData(Map<String, dynamic> data) {
+    // Grupo de tercero
+    if (data['C_BP_Group_ID'] != null) {
+      final gVal = data['C_BP_Group_ID'];
+      final gId = ((gVal is Map ? gVal['id'] : gVal) as num?)?.toInt();
+      if (gId != null && bpGroups.any((g) => ((g['id'] ?? g['C_BP_Group_ID']) as num?)?.toInt() == gId)) {
+        bpGroupId = gId;
+      }
+    }
+
+    // Tipo de identificación
+    if (data['LCO_TaxIdType_ID'] != null) {
+      final tVal = data['LCO_TaxIdType_ID'];
+      final tId = ((tVal is Map ? tVal['id'] : tVal) as num?)?.toInt();
+      if (tId != null && taxIdTypes.any((t) => ((t['id'] ?? t['LCO_TaxIdType_ID']) as num?)?.toInt() == tId)) {
+        taxIdTypeId = tId;
+      }
+    }
+
+    // Representante Comercial
+    if (data['SalesRep_ID'] != null) {
+      final sVal = data['SalesRep_ID'];
+      final sId = ((sVal is Map ? sVal['id'] : sVal) as num?)?.toInt();
+      salesRepId = sId;
+    }
+
+    // Roles
+    if (data.containsKey('IsCustomer')) {
+      isCustomer = UserManagementLogic.isTruthy(data['IsCustomer']);
+    }
+    if (data.containsKey('IsVendor')) {
+      isVendor = UserManagementLogic.isTruthy(data['IsVendor']);
+    }
+    if (data.containsKey('IsEmployee')) {
+      isEmployee = UserManagementLogic.isTruthy(data['IsEmployee']);
+    }
+    if (data.containsKey('IsSalesRep')) {
+      isSalesRep = UserManagementLogic.isTruthy(data['IsSalesRep']);
+    }
   }
 
   Future<void> _saveBPartner() async {
@@ -122,31 +218,77 @@ class _BPartnerFlowModalState extends State<BPartnerFlowModal> {
     if (valueController.text.trim().isNotEmpty) payload['Value'] = valueController.text.trim();
     if (taxIdController.text.trim().isNotEmpty) payload['TaxID'] = taxIdController.text.trim();
     if (descriptionController.text.trim().isNotEmpty) payload['Description'] = descriptionController.text.trim();
-    if (salesRepId != null) payload['SalesRep_ID'] = salesRepId;
+    if (salesRepId != null) {
+      payload['SalesRep_ID'] = salesRepId;
+    } else {
+      payload['SalesRep_ID'] = null;
+    }
 
-    final success = await UserManagementLogic.saveBPartner(payload);
+    bool success;
+    if (editingBPartnerId != null) {
+      success = await UserManagementLogic.updateBPartner(editingBPartnerId!, payload);
+    } else {
+      success = await UserManagementLogic.saveBPartner(payload);
+    }
 
     if (!mounted) return;
     setState(() => isSaving = false);
 
     if (success) {
+      // Si editamos un tercero existente que está en GlobalCache, actualizamos su información en memoria
+      if (editingBPartnerId != null && GlobalCache.bPartners.isNotEmpty) {
+        for (var i = 0; i < GlobalCache.bPartners.length; i++) {
+          final cur = GlobalCache.bPartners[i];
+          final curId = (cur['id'] ?? cur['C_BPartner_ID'] as num?)?.toInt();
+          if (curId == editingBPartnerId) {
+            GlobalCache.bPartners[i] = {
+              ...cur,
+              'Name': nameController.text.trim(),
+              'Value': valueController.text.trim(),
+              'TaxID': taxIdController.text.trim(),
+              'Description': descriptionController.text.trim(),
+              'IsCustomer': isCustomer,
+              'IsVendor': isVendor,
+              'IsEmployee': isEmployee,
+              'IsSalesRep': isSalesRep,
+            };
+            break;
+          }
+        }
+      }
+
       Navigator.pop(context);
-      ToastMessage.show(context: context, message: 'Tercero creado correctamente', type: ToastType.success);
+      ToastMessage.show(
+        context: context, 
+        message: editingBPartnerId != null ? 'Tercero actualizado correctamente' : 'Tercero creado correctamente', 
+        type: ToastType.success
+      );
       widget.onSuccess();
     } else {
-      ToastMessage.show(context: context, message: 'Error al crear Tercero', type: ToastType.failure);
+      ToastMessage.show(
+        context: context, 
+        message: editingBPartnerId != null ? 'Error al actualizar Tercero' : 'Error al crear Tercero', 
+        type: ToastType.failure
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (!isCreating) {
       return CustomModal(
         title: 'Verificar Existencia de Tercero',
-        width: 500,
+        width: 540,
         content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Antes de crear un nuevo Tercero, busque por Código o Nombre para verificar que no exista ya en el sistema.'),
+            Text(
+              'Antes de crear un nuevo Tercero, busque por Código o Nombre para verificar si ya existe en el sistema.',
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
+            ),
             const SizedBox(height: 16),
             CustomTextField(
               label: 'Buscar (ej. RUC, CI o Nombre)',
@@ -155,24 +297,108 @@ class _BPartnerFlowModalState extends State<BPartnerFlowModal> {
               onSubmitted: (_) => _checkExists(),
             ),
             if (matchingBPartners.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              const Text('Resultados encontrados:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 18),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Resultados encontrados:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                  Text(
+                    'Haz clic en uno para editarlo',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
               Container(
-                constraints: const BoxConstraints(maxHeight: 200),
+                constraints: const BoxConstraints(maxHeight: 240),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
+                  borderRadius: BorderRadius.circular(10),
+                  color: colorScheme.surfaceContainerHighest.withOpacity(0.2),
                 ),
-                child: ListView.builder(
+                child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: matchingBPartners.length,
+                  separatorBuilder: (_, _) => Divider(height: 1, color: colorScheme.outline.withOpacity(0.15)),
                   itemBuilder: (context, index) {
                     final bp = matchingBPartners[index];
-                    return ListTile(
-                      leading: const Icon(Icons.business),
-                      title: Text(bp['Name'] ?? 'Sin nombre'),
-                      subtitle: Text(bp['Value'] ?? 'Sin código'),
+                    final bpName = (bp['Name'] ?? 'Sin nombre').toString();
+                    final bpCode = (bp['Value'] ?? 'Sin código').toString();
+                    final taxId = (bp['TaxID'] ?? '').toString();
+
+                    return Tooltip(
+                      message: 'Clic para editar los datos generales de este tercero',
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: () => _selectExistingBPartner(bp),
+                        hoverColor: colorScheme.primary.withOpacity(0.08),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primary.withOpacity(0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.business_rounded, size: 20, color: colorScheme.primary),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      bpName,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      'Código: $bpCode${taxId.isNotEmpty ? '  •  Identificación: $taxId' : ''}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.edit_outlined, size: 14, color: colorScheme.onPrimaryContainer),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Editar',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -190,7 +416,7 @@ class _BPartnerFlowModalState extends State<BPartnerFlowModal> {
             ),
           CustomButton(
             text: isChecking ? 'Verificando...' : 'Verificar',
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: colorScheme.primary,
             isLoading: isChecking,
             onPressed: isChecking ? null : _checkExists,
           ),
@@ -198,13 +424,44 @@ class _BPartnerFlowModalState extends State<BPartnerFlowModal> {
       );
     }
 
+    final isEditMode = editingBPartnerId != null;
+
     return CustomModal(
-      title: 'Crear Nuevo Tercero / Empresa',
+      title: isEditMode
+          ? 'Editar Tercero: ${nameController.text.trim().isNotEmpty ? nameController.text.trim() : "Existente"}'
+          : 'Crear Nuevo Tercero / Empresa',
       width: 700,
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (isLoadingDetails) ...[
+              LinearProgressIndicator(color: colorScheme.primary),
+              const SizedBox(height: 12),
+            ],
+            if (isEditMode) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 18, color: colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Editando los datos generales del tercero existente (ID: $editingBPartnerId). Los cambios se actualizarán directamente en el sistema.',
+                        style: TextStyle(fontSize: 12.5, color: colorScheme.onSurface),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             Row(
               children: [
                 Expanded(
@@ -327,13 +584,27 @@ class _BPartnerFlowModalState extends State<BPartnerFlowModal> {
         CustomButton(
           text: 'Volver',
           backgroundColor: Colors.grey,
-          onPressed: () => setState(() => isCreating = false),
+          onPressed: isSaving
+              ? null
+              : () => setState(() {
+                    isCreating = false;
+                    editingBPartnerId = null;
+                  }),
         ),
         CustomButton(
-          text: isSaving ? 'Guardando...' : 'Crear Tercero',
-          backgroundColor: Colors.teal,
+          text: isSaving
+              ? 'Guardando...'
+              : (isEditMode ? 'Guardar Cambios' : 'Crear Tercero'),
+          backgroundColor: colorScheme.primary,
           isLoading: isSaving,
-          onPressed: (isSaving || nameController.text.trim().isEmpty || bpGroupId == null || taxIdTypeId == null) ? null : _saveBPartner,
+          onPressed: (isSaving ||
+                  isLoadingDetails ||
+                  nameController.text.trim().isEmpty ||
+                  bpGroupId == null ||
+                  taxIdTypeId == null ||
+                  valueController.text.trim().isEmpty)
+              ? null
+              : _saveBPartner,
         ),
       ],
     );
