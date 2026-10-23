@@ -223,7 +223,8 @@ class _SupportDashboardPageState extends State<SupportDashboardPage> {
       final rawBp = chip['C_BPartner_ID'];
       final chipBpId = rawBp is Map ? (rawBp['id'] as num?)?.toInt() : (rawBp as num?)?.toInt();
 
-      final isActive = chip['IsActive'] == 'Y' || chip['IsActive'] == true;
+      final rawActive = chip['IsActive'] ?? chip['isActive'];
+      final isActive = rawActive == 'Y' || rawActive == true || rawActive == 'true' || rawActive == null;
       if (_showInactiveChips) {
         if (isActive) return false; // Solo queremos las inactivas
       } else {
@@ -1276,7 +1277,11 @@ class _DesktopRecordTable extends StatelessWidget {
               Text(() {
                 final chipId = record['productChipId'];
                 if (chipId == null) return 'N/A';
-                final found = GlobalCache.productChips.firstWhere((c) => c['id'] == chipId, orElse: () => {});
+                final cIdNum = (chipId is num) ? chipId.toInt() : int.tryParse(chipId.toString());
+                final found = GlobalCache.productChips.firstWhere((c) {
+                  final cId = (c['id'] as num?)?.toInt() ?? int.tryParse(c['id']?.toString() ?? '') ?? (c['C_BPartner_Product_Chip_ID'] as num?)?.toInt();
+                  return cId != null && cId == cIdNum;
+                }, orElse: () => <String, dynamic>{});
                 if (found.isEmpty) return '#$chipId';
                 return found['Description'] ?? found['Name'] ?? '#$chipId';
               }()),

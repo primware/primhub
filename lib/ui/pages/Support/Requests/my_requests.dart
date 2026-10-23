@@ -1121,7 +1121,8 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
       final chipBpId = rawBp is Map
           ? (rawBp['id'] as num?)?.toInt()
           : (rawBp as num?)?.toInt();
-      final isActive = chip['IsActive'] == 'Y' || chip['IsActive'] == true;
+      final rawActive = chip['IsActive'] ?? chip['isActive'];
+      final isActive = rawActive == 'Y' || rawActive == true || rawActive == 'true' || rawActive == null;
 
       if (selectedBpIds.isNotEmpty && !selectedBpIds.contains(chipBpId)) {
         return false;

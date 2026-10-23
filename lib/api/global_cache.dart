@@ -111,6 +111,10 @@ class GlobalCache {
       
       bpWithChipsIdx = fetchFutures.length;
       fetchFutures.add(ContractApi.getBPartnersWithProductChips());
+    } else {
+      // Para clientes o roles de proyecto, cargar sus fichas de producto asociadas a su BPartner
+      supportChipsIdx = fetchFutures.length;
+      fetchFutures.add(ContractApi.getSupportProductChips(includeInactive: true));
     }
 
     if (isAdmin) {

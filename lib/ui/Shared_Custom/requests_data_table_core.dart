@@ -473,7 +473,7 @@ class _RequestsDataTableCoreState extends State<RequestsDataTableCore> {
               : original['C_BPartner_Product_Chip_ID']);
       String chipDesc = 'N/A';
       if (chipId != null) {
-        final cIdNum = (chipId as num?)?.toInt();
+        final cIdNum = (chipId is num) ? chipId.toInt() : int.tryParse(chipId.toString());
         if (cIdNum != null) {
           final found = GlobalCache.productChips.firstWhere((c) {
             final cId =

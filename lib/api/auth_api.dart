@@ -266,7 +266,7 @@ Future<bool> getPrimConfig({required int rolId, required BuildContext context}) 
 //Ficha de Producto
 Future<void> getProductChip() async {
   try {
-    final response = await get(Uri.parse('${Endpoint.productChip}?\$filter=C_BPartner_ID eq ${User.cBPartnerID} and IsActive eq \'Y\'&\$orderBy=Created desc'), headers: {'Content-Type': 'application/json', 'Authorization': Token.token});
+    final response = await get(Uri.parse('${Endpoint.productChip}?\$filter=C_BPartner_ID eq ${User.cBPartnerID} and IsActive eq true&\$orderBy=Created desc'), headers: {'Content-Type': 'application/json', 'Authorization': Token.token});
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
       final records = jsonResponse['records'] as List;

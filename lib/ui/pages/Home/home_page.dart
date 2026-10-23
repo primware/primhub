@@ -948,9 +948,14 @@ class _HomePageState extends State<HomePage> {
                                                           ?.toInt()
                                                     : (rawBp as num?)?.toInt();
 
+                                                final rawActive =
+                                                    chip['IsActive'] ??
+                                                    chip['isActive'];
                                                 final isActive =
-                                                    chip['IsActive'] == 'Y' ||
-                                                    chip['IsActive'] == true;
+                                                    rawActive == 'Y' ||
+                                                    rawActive == true ||
+                                                    rawActive == 'true' ||
+                                                    rawActive == null;
                                                 return bpsToRender.contains(
                                                       chipBpId,
                                                     ) &&

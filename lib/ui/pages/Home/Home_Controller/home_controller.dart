@@ -112,7 +112,7 @@ class HomeController extends ChangeNotifier {
         await loadDocumentStats();
       }
       
-      if (isAdmin || isSupport) {
+      if (isAdmin || isSupport || User.cBPartnerID != null) {
         List<int> bpsToFetch = [];
         if (isAdmin && selectedSupportBpIds.isNotEmpty) {
           bpsToFetch = selectedSupportBpIds;
@@ -481,7 +481,8 @@ class HomeController extends ChangeNotifier {
       final rawBp = c['C_BPartner_ID'];
       final chipBpId = rawBp is Map ? (rawBp['id'] as num?)?.toInt() : (rawBp as num?)?.toInt();
       
-      final isActive = c['IsActive'] == 'Y' || c['IsActive'] == true;
+      final rawActive = c['IsActive'] ?? c['isActive'];
+      final isActive = rawActive == true || rawActive == 'Y' || rawActive == 'true' || rawActive == null;
       return bpIdsForQuery!.contains(chipBpId) && isActive;
     }).toList();
 

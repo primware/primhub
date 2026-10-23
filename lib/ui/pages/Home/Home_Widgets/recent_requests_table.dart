@@ -156,10 +156,11 @@ class _DesktopRequestTable extends StatelessWidget {
         final chipId = alert['productChipId'];
         String chipDesc = 'N/A';
         if (chipId != null) {
+          final cIdNum = (chipId is num) ? chipId.toInt() : int.tryParse(chipId.toString());
           final found = GlobalCache.productChips.firstWhere(
             (c) {
               final cId = int.tryParse(c['id']?.toString() ?? '') ?? int.tryParse(c['C_BPartner_Product_Chip_ID']?.toString() ?? '');
-              return cId == chipId;
+              return cId != null && cId == cIdNum;
             },
             orElse: () => <String, dynamic>{},
           );
